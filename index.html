@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Инструктажи по ОТ — ПАО «Северсталь»</title>
   <link rel="icon" type="image/png" href="media/brand/symbol_red.png">
-  <!-- Современный шрифт Inter (в офлайне плавно переключается на системный шрифт) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -21,6 +20,9 @@
         <div class="brand-subtitle">Цифровая медиатека инструктажей по ОТ</div>
       </button>
       <div class="header-actions">
+        <button type="button" id="openMasterBtn" class="btn btn-outline">
+          &#128203; Мастеру
+        </button>
         <button type="button" id="openGlossaryBtn" class="btn btn-outline">
           &#128214; Глоссарий
         </button>
@@ -37,7 +39,7 @@
           <h1>Визуализированные инструктажи по охране труда</h1>
           <p class="hero-lead">
             Чёткие инструкции о том, какие действия необходимы для безопасной работы.
-            Выберите профессию, чтобы изучить видео, инфографику, памятку и пройти проверку знаний.
+            Выберите профессию, чтобы изучить видео, плакат А4, СИЗ, ошибки и пройти тест.
           </p>
           <div class="hero-stats">
             <span class="stat-chip"><strong>6</strong> профессий</span>
@@ -52,14 +54,13 @@
         <span class="muted">Нажмите на карточку, чтобы открыть материалы</span>
       </div>
 
-      <!-- Сетка карточек профессий (заполняется через JS) -->
       <div id="professionsGrid" class="professions-grid"></div>
     </section>
 
     <!-- ЭКРАН 2: Профессия и выбор вида инструктажа -->
     <section id="professionScreen" class="screen" hidden>
       <div class="top-nav">
-        <button type="button" id="backToHomeBtn" class="btn btn-secondary">
+        <button type="button" id="backToHomeBtn" class="btn btn-secondary btn-back">
           &larr; Все профессии
         </button>
         <span id="profBadge" class="prof-badge"></span>
@@ -67,9 +68,9 @@
 
       <div class="prof-header-card">
         <img id="profHeaderImg" class="prof-header-img" src="" alt="">
-        <div>
+        <div class="prof-header-text">
           <div id="profIotBadge" class="iot-pill">ИОТ</div>
-          <h2 id="profTitle">Название профессии</h2>
+          <h1 id="profTitle" class="prof-title-h1">Название профессии</h1>
           <p id="profDesc" class="muted" style="margin-bottom: 0;"></p>
         </div>
       </div>
@@ -95,13 +96,16 @@
         <p id="briefingSummary" class="muted"></p>
         <div id="briefingFocusBox" class="briefing-focus-box"></div>
 
-        <!-- Вкладки (Видео / Инфографика / Тест) -->
+        <!-- Вкладки (компактные под 9:16 без обрезания) -->
         <div class="tabs" role="tablist" aria-label="Материалы инструктажа">
           <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-tab="video">
             &#9654; Видео
           </button>
           <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="infographic">
-            &#128202; Инфографика (Плакат А4)
+            &#128202; Плакат А4
+          </button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="ppe">
+            &#129466; СИЗ
           </button>
           <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="quiz">
             &#9989; Мини-тест
@@ -122,17 +126,29 @@
             <p id="videoPlaceholderText" class="muted"></p>
             <p class="small-hint">Совет: выберите вкладку «Вводный», чтобы посмотреть готовый видеоролик.</p>
           </div>
+          <!-- Текстовая расшифровка видео (по требованию KPI) -->
+          <details id="videoTranscriptBox" class="transcript-details">
+            <summary>Текстовая расшифровка / субтитры видеоролика</summary>
+            <div id="videoTranscriptBody" class="transcript-body"></div>
+          </details>
         </div>
 
         <div id="tabPanelInfographic" class="tab-panel" role="tabpanel" hidden>
           <div class="infographic-toolbar">
-            <span>Готовая памятка-плакат для размещения в цеху (формат А4)</span>
+            <span>Памятка-плакат для размещения в цеху (формат А4)</span>
             <button type="button" id="printPosterBtn" class="btn btn-primary-sm">
-              &#128424; Печать / Сохранить в PDF
+              &#128424; Печать / PDF
             </button>
           </div>
-          <!-- Автоматически генерируемый плакат-инфографика для профессии -->
           <div id="posterContainer" class="poster-sheet"></div>
+        </div>
+
+        <!-- Новая вкладка: Реальные СИЗ с картинками и последствиями -->
+        <div id="tabPanelPpe" class="tab-panel" role="tabpanel" hidden>
+          <p class="muted" style="font-size: 0.9rem;">
+            Комплект средств индивидуальной защиты (СИЗ) для данной профессии и последствия их неприменения.
+          </p>
+          <div id="ppeTabCards" class="ppe-cards-grid"></div>
         </div>
 
         <div id="tabPanelQuiz" class="tab-panel" role="tabpanel" hidden>
@@ -141,48 +157,62 @@
         </div>
       </div>
 
-      <!-- Отдельный блок: Памятка по безопасности и Чек-лист -->
+      <!-- Отдельный блок: Памятка по безопасности и Чек-лист (компактные спойлеры для 9:16) -->
       <div class="briefing-card" style="margin-top: 16px;">
         <div class="checklist-header">
           <div>
-            <h3 style="margin: 0; color: var(--primary);">Памятка по безопасности и чек-лист</h3>
-            <p class="muted" style="margin: 4px 0 0; font-size: 0.88rem;">Отметки чек-листа автоматически сохраняются на вашем устройстве</p>
+            <h3 style="margin: 0; color: var(--primary);">Памятка и чек-лист работника</h3>
+            <p class="muted" style="margin: 4px 0 0; font-size: 0.86rem;">Нажимайте на разделы, чтобы раскрыть детали (удобно с телефона)</p>
           </div>
           <span id="checklistProgress" class="progress-badge">0 / 3</span>
         </div>
 
-        <div class="info-grid">
-          <div class="info-block info-risk">
-            <h4>&#9888; Главные риски (TOP-10)</h4>
-            <ul id="risksList"></ul>
-          </div>
-          <div class="info-block info-ppe">
-            <h4>&#129466; Обязательные СИЗ</h4>
-            <ul id="ppeList"></ul>
-          </div>
-          <div class="info-block info-forbidden">
-            <h4>&#128683; Категорически запрещено (из ИОТ)</h4>
-            <ul id="forbiddenList"></ul>
-          </div>
-          <div class="info-block info-emergency">
-            <h4>&#128680; Алгоритм при ЧС / аварии</h4>
-            <ol id="emergencyList"></ol>
-          </div>
+        <div class="accordion-stack">
+          <details class="acc-item" open>
+            <summary class="acc-summary acc-risk">&#9888; Главные риски (TOP-10) и Запреты ИОТ</summary>
+            <div class="acc-body">
+              <div class="info-grid">
+                <div class="info-block info-risk">
+                  <h4>Главные риски</h4>
+                  <ul id="risksList"></ul>
+                </div>
+                <div class="info-block info-forbidden">
+                  <h4>Категорически запрещено (из ИОТ)</h4>
+                  <ul id="forbiddenList"></ul>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details class="acc-item">
+            <summary class="acc-summary acc-mistakes">&#9889; Популярные ошибки (Действие &rarr; Последствие)</summary>
+            <div class="acc-body">
+              <div id="mistakesList" class="consequence-grid"></div>
+            </div>
+          </details>
+
+          <details class="acc-item">
+            <summary class="acc-summary acc-ppe">&#129466; Обязательные СИЗ и последствия без них</summary>
+            <div class="acc-body">
+              <div class="info-block info-ppe" style="margin-bottom: 10px;">
+                <h4>Обязательный комплект СИЗ</h4>
+                <ul id="ppeList"></ul>
+              </div>
+              <div id="ppeConsequencesList" class="consequence-grid"></div>
+            </div>
+          </details>
+
+          <details class="acc-item">
+            <summary class="acc-summary acc-emergency">&#128680; Алгоритм действий при ЧС / аварии</summary>
+            <div class="acc-body">
+              <div class="info-block info-emergency">
+                <ol id="emergencyList"></ol>
+              </div>
+            </div>
+          </details>
         </div>
 
-        <!-- Типовые ошибки: Действие -> Последствие -->
-        <div class="deep-section">
-          <h4>&#9889; Популярные ошибки работников (Действие &rarr; Последствие)</h4>
-          <div id="mistakesList" class="consequence-grid"></div>
-        </div>
-
-        <!-- Последствия неприменения СИЗ -->
-        <div class="deep-section">
-          <h4>&#129466; Последствия неиспользования СИЗ для этой профессии</h4>
-          <div id="ppeConsequencesList" class="consequence-grid"></div>
-        </div>
-
-        <h4 style="margin: 18px 0 8px;">Чек-лист перед началом смены:</h4>
+        <h4 style="margin: 16px 0 8px;">Чек-лист перед началом смены:</h4>
         <ul id="checklistItems" class="checklist"></ul>
       </div>
     </section>
@@ -194,19 +224,27 @@
     </div>
   </footer>
 
-  <!-- Модальное окно Глоссария (нативный HTML <dialog>) -->
+  <!-- Модальное окно Глоссария -->
   <dialog id="glossaryDialog" class="dialog">
     <div class="dialog-header">
       <h3>Глоссарий терминов охраны труда</h3>
       <button type="button" id="closeGlossaryBtn" class="btn-close" aria-label="Закрыть">&times;</button>
     </div>
     <div class="dialog-search-wrap">
-      <input type="search" id="glossarySearch" class="dialog-search" placeholder="Поиск термина (например: СИЗ, LOTO, LTIFR)...">
+      <input type="search" id="glossarySearch" class="dialog-search" placeholder="Поиск термина (СИЗ, LOTO, ПЛА)...">
     </div>
     <div id="glossaryList" class="dialog-body"></div>
   </dialog>
 
-  <!-- Подключаем данные и логику (работает даже без сервера с флешки!) -->
+  <!-- Модальное окно Памятка мастеру -->
+  <dialog id="masterDialog" class="dialog">
+    <div class="dialog-header">
+      <h3>Методичка для руководителя цеха</h3>
+      <button type="button" id="closeMasterBtn" class="btn-close" aria-label="Закрыть">&times;</button>
+    </div>
+    <div id="masterGuideList" class="dialog-body"></div>
+  </dialog>
+
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>
 </body>

@@ -4,7 +4,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const data = window.SAFETY_DATA;
   const STORAGE_KEY = "severstal_safety_progress_v1";
 
-  // Загружаем сохранённый прогресс (чек-листы и пройденные тесты)
   let progress = loadProgress();
 
   function loadProgress() {
@@ -48,29 +47,38 @@ document.addEventListener("DOMContentLoaded", () => {
   const tabPanels = {
     video: document.getElementById("tabPanelVideo"),
     infographic: document.getElementById("tabPanelInfographic"),
+    ppe: document.getElementById("tabPanelPpe"),
     quiz: document.getElementById("tabPanelQuiz")
   };
   const videoPlayerWrap = document.getElementById("videoPlayerWrap");
   const videoPlaceholderWrap = document.getElementById("videoPlaceholderWrap");
   const briefingVideo = document.getElementById("briefingVideo");
   const videoPlaceholderText = document.getElementById("videoPlaceholderText");
+  const videoTranscriptBox = document.getElementById("videoTranscriptBox");
+  const videoTranscriptBody = document.getElementById("videoTranscriptBody");
   const posterContainer = document.getElementById("posterContainer");
   const printPosterBtn = document.getElementById("printPosterBtn");
+  const ppeTabCards = document.getElementById("ppeTabCards");
   const checklistItems = document.getElementById("checklistItems");
   const checklistProgress = document.getElementById("checklistProgress");
   const quizContainer = document.getElementById("quizContainer");
 
-  // Глоссарий (нативный <dialog>)
+  // Модальные окна: Глоссарий и Памятка мастеру
   const glossaryDialog = document.getElementById("glossaryDialog");
   const openGlossaryBtn = document.getElementById("openGlossaryBtn");
   const closeGlossaryBtn = document.getElementById("closeGlossaryBtn");
   const glossarySearch = document.getElementById("glossarySearch");
   const glossaryList = document.getElementById("glossaryList");
 
+  const masterDialog = document.getElementById("masterDialog");
+  const openMasterBtn = document.getElementById("openMasterBtn");
+  const closeMasterBtn = document.getElementById("closeMasterBtn");
+  const masterGuideList = document.getElementById("masterGuideList");
+
   let currentProfession = null;
   let currentBriefing = data.briefingTypes[0];
 
-  // 1. Отрисовка карточек профессий на главном экране
+  // 1. Отрисовка карточек профессий (лёгкие .webp)
   function renderProfessions() {
     professionsGrid.innerHTML = "";
     data.professions.forEach((prof) => {
@@ -79,7 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
       card.type = "button";
       card.className = "prof-card";
       card.innerHTML = `
-        <img class="prof-card-img" src="media/professions/${prof.id}.png" alt="${prof.title}" loading="lazy">
+        <img class="prof-card-img" src="media/professions/${prof.id}.webp" alt="${prof.title}" loading="lazy">
         <div class="prof-card-top">
           <span class="prof-card-dept">${prof.department}</span>
           ${isPassed ? '<span class="prof-card-done">&#10003; Тест пройден</span>' : ""}
@@ -100,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     profBadge.textContent = prof.department;
     profIotBadge.textContent = `На базе ${prof.iotNumber} (${prof.iotPages} стр. оригинала)`;
-    profHeaderImg.src = `media/professions_square/${prof.id}.png`;
+    profHeaderImg.src = `media/professions_square/${prof.id}.webp`;
     profHeaderImg.alt = prof.title;
     profTitle.textContent = prof.title;
     profDesc.textContent = prof.description;
@@ -114,6 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderBriefingButtons();
     renderBriefingContent();
     renderPoster();
+    renderPpeTab();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -144,7 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const focusText = currentProfession.briefingFocus[currentBriefing.id] || "";
     briefingFocusBox.innerHTML = `<strong>Главный акцент этого инструктажа:</strong> ${focusText}`;
 
-    // Видео: для Вводного инструктажа показываем реальный ролик во всех профессиях
+    // Видео и текстовая расшифровка
     if (currentBriefing.id === "vvodny") {
       briefingStatusPill.textContent = "Видеоролик доступен";
       const videoSrc = "media/videos/vvodny.mp4";
@@ -154,11 +163,14 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       videoPlayerWrap.hidden = false;
       videoPlaceholderWrap.hidden = true;
+      videoTranscriptBox.hidden = false;
+      videoTranscriptBody.innerHTML = data.vvodnyTranscript.map((line) => `<p>${line}</p>`).join("");
     } else {
       briefingStatusPill.textContent = "Памятка и тест готовы • видео в разработке";
       briefingVideo.pause();
       videoPlayerWrap.hidden = true;
       videoPlaceholderWrap.hidden = false;
+      videoTranscriptBox.hidden = true;
       videoPlaceholderText.textContent = `Видео для: "${currentProfession.title}" (${currentBriefing.name} инструктаж).`;
     }
 
@@ -168,7 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("forbiddenList").innerHTML = currentProfession.forbidden.map((f) => `<li>${f}</li>`).join("");
     document.getElementById("emergencyList").innerHTML = currentProfession.emergency.map((e) => `<li>${e}</li>`).join("");
 
-    // Типовые ошибки (Действие -> Последствие) и последствия без СИЗ
+    // Популярные ошибки и последствия СИЗ
     document.getElementById("mistakesList").innerHTML = currentProfession.mistakes
       .map(
         (m) => `
@@ -191,11 +203,26 @@ document.addEventListener("DOMContentLoaded", () => {
       )
       .join("");
 
-    // Чек-лист с сохранением галочек
     renderChecklist();
-
-    // Мини-тест (3 вопроса)
     renderQuiz(currentProfession.quiz);
+  }
+
+  // Вкладка СИЗ (готовые карточки под будущие реальные фото СИЗ)
+  function renderPpeTab() {
+    ppeTabCards.innerHTML = currentProfession.ppe
+      .map((item, idx) => {
+        const conseq = currentProfession.ppeConsequences[idx];
+        return `
+        <div class="ppe-card">
+          <div class="ppe-card-photo">
+            <span>Место для фото СИЗ<br>(<code>media/ppe/${currentProfession.id}_${idx + 1}.webp</code>)</span>
+          </div>
+          <div class="ppe-card-title">${item}</div>
+          ${conseq ? `<div class="ppe-card-conseq"><strong>Если не надеть:</strong> ${conseq.consequence}</div>` : ""}
+        </div>
+      `;
+      })
+      .join("");
   }
 
   function renderChecklist() {
@@ -235,7 +262,7 @@ document.addEventListener("DOMContentLoaded", () => {
     checklistProgress.textContent = `${checkedCount} / ${total}`;
   }
 
-  // Генератор плаката-инфографики А4 прямо в браузере
+  // Генератор плаката А4
   function renderPoster() {
     posterContainer.innerHTML = `
       <div class="poster-head">
@@ -256,7 +283,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <ul>${currentProfession.ppe.map((p) => `<li>${p}</li>`).join("")}</ul>
         </div>
         <div class="poster-box">
-          <h5>&#128683; Запрещено</h5>
+          <h5>&#128683; Запрещено (ИОТ)</h5>
           <ul>${currentProfession.forbidden.map((f) => `<li>${f}</li>`).join("")}</ul>
         </div>
         <div class="poster-box">
@@ -269,7 +296,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   printPosterBtn.addEventListener("click", () => window.print());
 
-  // 5. Отрисовка мини-теста из 3 вопросов
+  // 5. Мини-тест
   function renderQuiz(questions) {
     quizContainer.innerHTML = "";
     let answered = 0;
@@ -321,7 +348,7 @@ document.addEventListener("DOMContentLoaded", () => {
     quizContainer.appendChild(scoreBox);
   }
 
-  // 6. Переключение вкладок (Видео / Инфографика / Тест)
+  // 6. Переключение вкладок
   function switchTab(target) {
     tabButtons.forEach((b) => {
       const isActive = b.dataset.tab === target;
@@ -337,7 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", () => switchTab(btn.dataset.tab));
   });
 
-  // Кнопка "Назад" и клик по логотипу в шапке
+  // Возврат на главную
   function goHome() {
     briefingVideo.pause();
     professionScreen.hidden = true;
@@ -369,7 +396,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   glossarySearch.addEventListener("input", (e) => renderGlossary(e.target.value));
-
   openGlossaryBtn.addEventListener("click", () => {
     glossarySearch.value = "";
     renderGlossary();
@@ -377,11 +403,26 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   closeGlossaryBtn.addEventListener("click", () => glossaryDialog.close());
   glossaryDialog.addEventListener("click", (e) => {
-    if (e.target === glossaryDialog) {
-      glossaryDialog.close();
-    }
+    if (e.target === glossaryDialog) glossaryDialog.close();
   });
 
-  // Старт приложения
+  // 8. Памятка мастеру / руководителю цеха
+  masterGuideList.innerHTML = data.masterGuide
+    .map(
+      (m) => `
+      <div class="glossary-item">
+        <strong>${m.step}</strong><br>
+        <span class="muted">${m.text}</span>
+      </div>
+    `
+    )
+    .join("");
+
+  openMasterBtn.addEventListener("click", () => masterDialog.showModal());
+  closeMasterBtn.addEventListener("click", () => masterDialog.close());
+  masterDialog.addEventListener("click", (e) => {
+    if (e.target === masterDialog) masterDialog.close();
+  });
+
   renderProfessions();
 });
