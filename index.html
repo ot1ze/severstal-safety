@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Инструктажи по ОТ — ПАО «Северсталь» (Прототип)</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Верхняя шапка сайта -->
+  <header class="header">
+    <div class="container header-inner">
+      <div class="brand">
+        <span class="brand-badge">ОТ</span>
+        <div>
+          <div class="brand-title">ПАО «Северсталь»</div>
+          <div class="brand-subtitle">Визуализированные инструктажи по охране труда</div>
+        </div>
+      </div>
+      <button type="button" id="openGlossaryBtn" class="btn btn-outline">
+        Глоссарий терминов
+      </button>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    <!-- ЭКРАН 1: Выбор профессии -->
+    <section id="homeScreen" class="screen active">
+      <div class="hero-box">
+        <h1>Выберите вашу профессию</h1>
+        <p>Интерактивная медиатека по 5 видам инструктажей. Тестовый прототип интерфейса.</p>
+      </div>
+
+      <!-- Сетка карточек профессий (заполняется через JS) -->
+      <div id="professionsGrid" class="professions-grid"></div>
+    </section>
+
+    <!-- ЭКРАН 2: Профессия и выбор вида инструктажа -->
+    <section id="professionScreen" class="screen" hidden>
+      <div class="top-nav">
+        <button type="button" id="backToHomeBtn" class="btn btn-secondary">
+          &larr; Все профессии
+        </button>
+        <span id="profBadge" class="prof-badge"></span>
+      </div>
+
+      <div class="prof-header">
+        <h2 id="profTitle">Название профессии</h2>
+        <p id="profDesc" class="muted"></p>
+      </div>
+
+      <!-- Кнопки 5 видов инструктажей -->
+      <div class="briefing-selector">
+        <h3>1. Выберите вид инструктажа:</h3>
+        <div id="briefingButtons" class="briefing-buttons"></div>
+      </div>
+
+      <!-- Контент выбранного инструктажа -->
+      <div id="briefingContent" class="briefing-card">
+        <div class="briefing-card-head">
+          <h3 id="briefingTitle">Вид инструктажа</h3>
+          <span class="status-pill">Тестовый режим</span>
+        </div>
+        <p id="briefingSummary" class="muted"></p>
+
+        <!-- Вкладки (Видео / Инфографика / Памятка / Тест) -->
+        <div class="tabs" role="tablist" aria-label="Материалы инструктажа">
+          <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-tab="video">
+            Видео
+          </button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="infographic">
+            Инфографика
+          </button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="checklist">
+            Памятка / Чек-лист
+          </button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="quiz">
+            Мини-тест
+          </button>
+        </div>
+
+        <!-- Содержимое вкладок -->
+        <div id="tabPanelVideo" class="tab-panel active" role="tabpanel">
+          <div class="placeholder-box">
+            <div class="placeholder-icon">&#9654;</div>
+            <h4>Здесь будет видеоролик инструктажа (MP4 + субтитры)</h4>
+            <p id="videoPlaceholderText" class="muted"></p>
+          </div>
+        </div>
+
+        <div id="tabPanelInfographic" class="tab-panel" role="tabpanel" hidden>
+          <div class="placeholder-box">
+            <div class="placeholder-icon">&#128202;</div>
+            <h4>Здесь будут карточки инфографики (А3/А4)</h4>
+            <p id="infoPlaceholderText" class="muted"></p>
+          </div>
+        </div>
+
+        <div id="tabPanelChecklist" class="tab-panel" role="tabpanel" hidden>
+          <h4>Чек-лист перед началом работы (можно отмечать):</h4>
+          <ul id="checklistItems" class="checklist"></ul>
+        </div>
+
+        <div id="tabPanelQuiz" class="tab-panel" role="tabpanel" hidden>
+          <h4>Мини-проверка знаний (тестовый вопрос):</h4>
+          <div id="quizContainer"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      Учебный проект ЧГУ для ПАО «Северсталь» • Веб-прототип (HTML/CSS/JS)
+    </div>
+  </footer>
+
+  <!-- Модальное окно Глоссария (нативный HTML <dialog>) -->
+  <dialog id="glossaryDialog" class="dialog">
+    <div class="dialog-header">
+      <h3>Глоссарий терминов (тест)</h3>
+      <button type="button" id="closeGlossaryBtn" class="btn-close" aria-label="Закрыть">&times;</button>
+    </div>
+    <div id="glossaryList" class="dialog-body"></div>
+  </dialog>
+
+  <!-- Подключаем данные и логику (работает даже без сервера с флешки!) -->
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
