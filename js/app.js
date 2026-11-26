@@ -82,6 +82,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const zoomCaption = document.getElementById("zoomCaption");
   const closeZoomBtn = document.getElementById("closeZoomBtn");
 
+  const protocolDialog = document.getElementById("protocolDialog");
+  const openProtocolBtn = document.getElementById("openProtocolBtn");
+  const closeProtocolBtn = document.getElementById("closeProtocolBtn");
+  const generateProtocolBtn = document.getElementById("generateProtocolBtn");
+  const printProtocolBtn = document.getElementById("printProtocolBtn");
+  const protocolPreview = document.getElementById("protocolPreview");
+  const protocolActions = document.getElementById("protocolActions");
+  const journalHistoryWrap = document.getElementById("journalHistoryWrap");
+  const journalHistoryList = document.getElementById("journalHistoryList");
+
+  let lastQuizResult = null;
+
   let currentProfession = null;
   let currentBriefing = data.briefingTypes[0];
 
@@ -124,6 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
     professionScreen.hidden = false;
 
     // Сбрасываем активную вкладку на "Видео" при входе в профессию
+    lastQuizResult = null;
     switchTab("video");
 
     renderBriefingButtons();
@@ -378,6 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
             scoreBox.hidden = false;
             const passThreshold = Math.ceil(questions.length * 0.8);
             const passed = score >= passThreshold;
+            lastQuizResult = { score, total: questions.length, passed };
             scoreBox.textContent = `Результат: ${score} из ${questions.length} (${Math.round((score / questions.length) * 100)}%). ${
               passed ? "Отлично! Инструктаж усвоен." : `Для зачёта нужно минимум ${passThreshold} правильных ответа. Попробуйте ещё раз.`
             }`;
@@ -480,3 +494,105 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderProfessions();
 });
+
+// Логика имитации «Электронного журнала инструктажей» (Демо-протокол)
+(function initElectronicJournal() {
+  const JOURNAL_KEY = "severstal_demo_journal_v1";
+  const openBtn = document.getElementById("openProtocolBtn");
+  const closeBtn = document.getElementById("closeProtocolBtn");
+  const genBtn = document.getElementById("generateProtocolBtn");
+  const printBtn = document.getElementById("printProtocolBtn");
+  const dialog = document.getElementById("protocolDialog");
+  const preview = document.getElementById("protocolPreview");
+  const actions = document.getElementById("protocolActions");
+  const histWrap = document.getElementById("journalHistoryWrap");
+  const histList = document.getElementById("journalHistoryList");
+
+  function getHistory() {
+    try {
+      return JSON.parse(localStorage.getItem(JOURNAL_KEY)) || [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveHistory(arr) {
+    try {
+      localStorage.setItem(JOURNAL_KEY, JSON.stringify(arr.slice(0, 6)));
+    } catch {}
+  }
+
+  function renderHistory() {
+    const items = getHistory();
+    if (!items.length) {
+      histWrap.hidden = true;
+      return;
+    }
+    histWrap.hidden = false;
+    histList.innerHTML = items
+      .map((it) => `<li><strong>${it.id}</strong> • ${it.date} — ${it.worker} (${it.prof}, ${it.briefing}) — ${it.result}</li>`)
+      .join("");
+  }
+
+  function buildProtocol(saveToJournal) {
+    const worker = document.getElementById("protoWorkerName").value.trim() || "Иванов Иван Иванович";
+    const tabNum = document.getElementById("protoTabNum").value.trim() || "48291";
+    const master = document.getElementById("protoMasterName").value.trim() || "Петров А.С.";
+    const profTitle = document.getElementById("profTitle").textContent;
+    const dept = document.getElementById("profBadge").textContent;
+    const iot = document.getElementById("profIotBadge").textContent;
+    const briefing = document.getElementById("briefingTitle").textContent;
+    const chk = document.getElementById("checklistProgress").textContent;
+    const quizScoreText = document.querySelector(".quiz-score:not([hidden])")?.textContent;
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString("ru-RU") + " " + now.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+    const recordId = "SEV-" + now.getFullYear() + "-" + String(Math.floor(1000 + Math.random() * 9000));
+    const resultLabel = quizScoreText ? quizScoreText.split(".")[0] : "Демо-режим (тест не завершён)";
+    const isOk = quizScoreText && !quizScoreText.includes("минимум");
+
+    preview.innerHTML = `
+      <div class="protocol-sheet-head">
+        <img src="media/brand/logo_color.png" alt="Северсталь" style="height: 36px;">
+        <span class="protocol-demo-stamp">ДЕМО-ПРОТОКОЛ (ПРИМЕР)</span>
+      </div>
+      <div style="font-weight: 700; color: var(--primary); margin-bottom: 6px;">
+        ПРОТОКОЛ № ${recordId} ПРОХОЖДЕНИЯ ИНСТРУКТАЖА ПО ОХРАНЕ ТРУДА
+      </div>
+      <table class="protocol-table">
+        <tr><td>Дата и время</td><td><strong>${dateStr}</strong></td></tr>
+        <tr><td>Работник</td><td><strong>${worker}</strong> (таб. № ${tabNum})</td></tr>
+        <tr><td>Подразделение</td><td>${dept}</td></tr>
+        <tr><td>Профессия</td><td>${profTitle}</td></tr>
+        <tr><td>Вид инструктажа</td><td><strong>${briefing}</strong></td></tr>
+        <tr><td>Основание</td><td>${iot}</td></tr>
+        <tr><td>Чек-лист СИЗ</td><td>Отмечено пунктов: <strong>${chk}</strong></td></tr>
+        <tr><td>Проверка знаний</td><td><span class="${isOk ? "protocol-status-ok" : "protocol-status-pending"}">${resultLabel}</span></td></tr>
+        <tr><td>Инструктирующий</td><td>${master} (подтверждено в системе)</td></tr>
+      </table>
+      <div style="font-size: 0.76rem; color: var(--muted); margin-top: 8px;">
+        * Учебный демонстрационный образец для защиты проекта ЧГУ. В реальной системе запись подписывается ЭЦП и передаётся в АСУ ОТ предприятия.
+      </div>
+    `;
+    actions.hidden = false;
+
+    if (saveToJournal) {
+      const history = getHistory();
+      history.unshift({ id: recordId, date: dateStr, worker, prof: profTitle, briefing, result: resultLabel });
+      saveHistory(history);
+      renderHistory();
+    }
+  }
+
+  openBtn.addEventListener("click", () => {
+    buildProtocol(false);
+    renderHistory();
+    dialog.showModal();
+  });
+  genBtn.addEventListener("click", () => buildProtocol(true));
+  printBtn.addEventListener("click", () => window.print());
+  closeBtn.addEventListener("click", () => dialog.close());
+  dialog.addEventListener("click", (e) => {
+    if (e.target === dialog) dialog.close();
+  });
+})();

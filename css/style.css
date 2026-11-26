@@ -1224,3 +1224,165 @@ body:has(dialog[open]) {
     display: none !important;
   }
 }
+
+/* Блок вызова электронного журнала и бланк демо-протокола */
+.protocol-cta-bar {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f0f7ff;
+  border: 1px solid #bfdbfe;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.protocol-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.protocol-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.protocol-form input {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.protocol-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 8px;
+}
+
+.protocol-sheet {
+  border: 2px solid var(--primary);
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: #ffffff;
+  font-size: 0.88rem;
+}
+
+.protocol-sheet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 3px solid var(--accent);
+  margin-bottom: 10px;
+}
+
+.protocol-demo-stamp {
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 5px;
+  letter-spacing: 0.4px;
+}
+
+.protocol-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+}
+
+.protocol-table td {
+  padding: 5px 6px;
+  border-bottom: 1px solid var(--bg);
+  vertical-align: top;
+}
+
+.protocol-table td:first-child {
+  color: var(--muted);
+  width: 42%;
+}
+
+.protocol-status-ok {
+  display: inline-block;
+  background: #dcfce7;
+  color: #14532d;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 6px;
+}
+
+.protocol-status-pending {
+  display: inline-block;
+  background: #fef3c7;
+  color: #92400e;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 6px;
+}
+
+.protocol-actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.journal-history {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.journal-history h4 {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  color: var(--primary);
+}
+
+.journal-history ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+@media (max-width: 520px) {
+  .protocol-form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Когда открыт протокол, печатаем только сам бланк протокола */
+@media print {
+  body:has(#protocolDialog[open]) > *:not(#protocolDialog) {
+    display: none !important;
+  }
+  #protocolDialog[open] {
+    position: static;
+    width: 100%;
+    max-width: 100%;
+    box-shadow: none;
+  }
+  #protocolDialog .dialog-header,
+  #protocolDialog .protocol-form,
+  #protocolDialog .protocol-actions,
+  #protocolDialog .journal-history {
+    display: none !important;
+  }
+}

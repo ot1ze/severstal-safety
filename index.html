@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=7">
+  <link rel="stylesheet" href="css/style.css?v=8">
 </head>
 <body>
   <!-- Верхняя шапка сайта -->
@@ -161,6 +161,15 @@
             </button>
           </div>
           <div id="quizContainer"></div>
+          <div class="protocol-cta-bar">
+            <div>
+              <strong>Электронный журнал инструктажей (демо-модуль)</strong>
+              <div class="muted" style="margin: 2px 0 0; font-size: 0.84rem;">Сформируйте условный протокол прохождения для примера</div>
+            </div>
+            <button type="button" id="openProtocolBtn" class="btn btn-primary-sm">
+              &#128221; Сформировать протокол
+            </button>
+          </div>
         </div>
       </div>
 
@@ -272,7 +281,51 @@
     </div>
   </dialog>
 
-  <script src="js/data.js?v=7"></script>
-  <script src="js/app.js?v=7"></script>
+  <!-- Модальное окно Электронного журнала и Протокола (демо) -->
+  <dialog id="protocolDialog" class="dialog dialog-zoom">
+    <div class="dialog-header">
+      <h3>Электронный журнал (Демо-протокол)</h3>
+      <button type="button" id="closeProtocolBtn" class="btn-close" aria-label="Закрыть">&times;</button>
+    </div>
+    <div class="dialog-body">
+      <div class="protocol-form">
+        <label>
+          <span>ФИО работника (для примера):</span>
+          <input type="text" id="protoWorkerName" value="Иванов Иван Иванович" placeholder="Введите ФИО">
+        </label>
+        <div class="protocol-form-row">
+          <label>
+            <span>Табельный №:</span>
+            <input type="text" id="protoTabNum" value="48291" placeholder="№">
+          </label>
+          <label>
+            <span>Инструктирующий (мастер):</span>
+            <input type="text" id="protoMasterName" value="Петров А.С." placeholder="ФИО мастера">
+          </label>
+        </div>
+        <button type="button" id="generateProtocolBtn" class="btn btn-primary-sm" style="width: 100%; margin-top: 4px;">
+          Сформировать запись в журнале
+        </button>
+      </div>
+
+      <!-- Готовый бланк-протокол -->
+      <div id="protocolPreview" class="protocol-sheet"></div>
+
+      <div id="protocolActions" class="protocol-actions" hidden>
+        <button type="button" id="printProtocolBtn" class="btn btn-secondary btn-sm">
+          &#128424; Печать / Сохранить протокол в PDF
+        </button>
+      </div>
+
+      <!-- Мини-журнал последних записей на устройстве -->
+      <div id="journalHistoryWrap" class="journal-history" hidden>
+        <h4>Последние записи в демо-журнале (на этом устройстве):</h4>
+        <ul id="journalHistoryList"></ul>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="js/data.js?v=8"></script>
+  <script src="js/app.js?v=8"></script>
 </body>
 </html>
