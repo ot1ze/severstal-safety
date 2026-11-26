@@ -286,34 +286,42 @@ document.addEventListener("DOMContentLoaded", () => {
     checklistProgress.textContent = `${checkedCount} / ${total}`;
   }
 
-  // Генератор плаката А4
+  // Генератор плаката А4 (контрастный и при просмотре, и при печати на принтере / в PDF)
   function renderPoster() {
     posterContainer.innerHTML = `
-      <div class="poster-head">
-        <div>
-          <img src="media/brand/logo_white.png" alt="Северсталь" style="height: 36px; margin-bottom: 4px; display: block;">
-          <div style="font-size: 0.78rem; opacity: 0.85;">ПАМЯТКА ПО ОХРАНЕ ТРУДА • ${currentProfession.iotNumber}</div>
-          <h4>${currentProfession.title}</h4>
+      <div class="poster-head poster-head-light">
+        <div class="poster-head-left">
+          <img src="media/brand/logo_color.png" alt="Северсталь" class="poster-logo">
+          <div>
+            <div class="poster-iot-label">ПАМЯТКА ПО ОХРАНЕ ТРУДА • ${currentProfession.iotNumber}</div>
+            <h4 class="poster-title">${currentProfession.title}</h4>
+          </div>
         </div>
-        <span style="background:#e30613; padding:4px 10px; border-radius:6px; font-weight:700; font-size:0.8rem;">TOP-10 РИСКОВ</span>
+        <div class="poster-head-right">
+          <img src="media/professions_square/${currentProfession.id}.webp" alt="" class="poster-prof-img">
+          <span class="poster-risk-badge">TOP-10 РИСКОВ</span>
+        </div>
       </div>
       <div class="poster-grid">
-        <div class="poster-box">
+        <div class="poster-box poster-box-risk">
           <h5>&#9888; Главные опасности</h5>
           <ul>${currentProfession.risks.map((r) => `<li>${r}</li>`).join("")}</ul>
         </div>
-        <div class="poster-box">
+        <div class="poster-box poster-box-ppe">
           <h5>&#129466; Обязательные СИЗ</h5>
           <ul>${currentProfession.ppe.map((p) => `<li>${p}</li>`).join("")}</ul>
         </div>
-        <div class="poster-box">
+        <div class="poster-box poster-box-forbidden">
           <h5>&#128683; Запрещено (ИОТ)</h5>
           <ul>${currentProfession.forbidden.map((f) => `<li>${f}</li>`).join("")}</ul>
         </div>
-        <div class="poster-box">
+        <div class="poster-box poster-box-emergency">
           <h5>&#128680; Действия при ЧС</h5>
           <ol>${currentProfession.emergency.map((e) => `<li>${e}</li>`).join("")}</ol>
         </div>
+      </div>
+      <div class="poster-footer">
+        <strong>Чек-лист перед сменой:</strong> ${currentProfession.checklist.join(" • ")}
       </div>
     `;
   }

@@ -1137,3 +1137,90 @@ body:has(dialog[open]) {
   padding: 3px 8px;
   border-radius: 6px;
 }
+
+/* Чёткий плакат А4 для печати и PDF */
+.poster-head-light {
+  background: #ffffff;
+  color: var(--primary);
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-bottom: 4px solid var(--accent);
+}
+
+.poster-head-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.poster-logo {
+  height: 44px;
+  width: auto;
+  align-self: flex-start;
+  display: block;
+}
+
+.poster-iot-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #475569;
+  letter-spacing: 0.3px;
+}
+
+.poster-title {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--primary);
+}
+
+.poster-head-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.poster-prof-img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+  background: #f8fafc;
+}
+
+.poster-risk-badge {
+  background: var(--accent);
+  color: #ffffff;
+  padding: 6px 11px;
+  border-radius: 6px;
+  font-weight: 800;
+  font-size: 0.8rem;
+}
+
+.poster-box-risk { border-left: 4px solid #d97706; }
+.poster-box-ppe { border-left: 4px solid var(--primary); }
+.poster-box-forbidden { border-left: 4px solid var(--accent); }
+.poster-box-emergency { border-left: 4px solid var(--success); }
+
+.poster-footer {
+  background: #f1f5f9;
+  border-top: 1px solid var(--border);
+  padding: 10px 16px;
+  font-size: 0.82rem;
+  color: var(--text);
+}
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .briefing-card + .briefing-card + .briefing-card {
+    display: none !important;
+  }
+}
