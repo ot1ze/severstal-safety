@@ -87,7 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
       card.type = "button";
       card.className = "prof-card";
       card.innerHTML = `
-        <img class="prof-card-img" src="media/professions/${prof.id}.webp" alt="${prof.title}" loading="lazy">
+        <img class="prof-card-img" src="media/professions/${prof.id}.webp" alt="${prof.title}">
         <div class="prof-card-top">
           <span class="prof-card-dept">${prof.department}</span>
           ${isPassed ? '<span class="prof-card-done">&#10003; Тест пройден</span>' : ""}
