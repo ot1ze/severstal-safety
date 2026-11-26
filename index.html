@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=3">
+  <link rel="stylesheet" href="css/style.css?v=5">
 </head>
 <body>
   <!-- Верхняя шапка сайта -->
@@ -247,7 +247,18 @@
     <div id="masterGuideList" class="dialog-body"></div>
   </dialog>
 
-  <script src="js/data.js?v=4"></script>
-  <script src="js/app.js?v=4"></script>
+  <!-- Модальное окно увеличения картинки СИЗ -->
+  <dialog id="imageZoomDialog" class="dialog dialog-zoom">
+    <div class="dialog-header">
+      <h3 id="zoomCaption">Просмотр СИЗ</h3>
+      <button type="button" id="closeZoomBtn" class="btn-close" aria-label="Закрыть">&times;</button>
+    </div>
+    <div class="zoom-body">
+      <img id="zoomImage" src="" alt="">
+    </div>
+  </dialog>
+
+  <script src="js/data.js?v=5"></script>
+  <script src="js/app.js?v=5"></script>
 </body>
 </html>

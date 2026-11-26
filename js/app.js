@@ -75,6 +75,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeMasterBtn = document.getElementById("closeMasterBtn");
   const masterGuideList = document.getElementById("masterGuideList");
 
+  const imageZoomDialog = document.getElementById("imageZoomDialog");
+  const zoomImage = document.getElementById("zoomImage");
+  const zoomCaption = document.getElementById("zoomCaption");
+  const closeZoomBtn = document.getElementById("closeZoomBtn");
+
   let currentProfession = null;
   let currentBriefing = data.briefingTypes[0];
 
@@ -207,7 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderQuiz(currentProfession.quiz);
   }
 
-  // Вкладка СИЗ (показывает реальное фото СИЗ, а если его ещё нет — заглушку с подсказкой)
+  // Вкладка СИЗ (показывает крупное фото СИЗ с увеличением по клику)
   function renderPpeTab() {
     ppeTabCards.innerHTML = currentProfession.ppe
       .map((item, idx) => {
@@ -216,7 +221,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return `
         <div class="ppe-card">
           <div class="ppe-card-photo">
-            <img src="${imgPath}" alt="${item}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <img src="${imgPath}" alt="${item}" data-zoom-title="${item}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
             <span style="display:none;">Место для фото СИЗ<br>(<code>${imgPath}</code>)</span>
           </div>
           <div class="ppe-card-title">${item}</div>
@@ -225,7 +230,21 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
       })
       .join("");
+
+    ppeTabCards.querySelectorAll("img").forEach((img) => {
+      img.addEventListener("click", () => {
+        zoomImage.src = img.src;
+        zoomImage.alt = img.alt;
+        zoomCaption.textContent = img.dataset.zoomTitle || "Просмотр СИЗ";
+        imageZoomDialog.showModal();
+      });
+    });
   }
+
+  closeZoomBtn.addEventListener("click", () => imageZoomDialog.close());
+  imageZoomDialog.addEventListener("click", (e) => {
+    if (e.target === imageZoomDialog) imageZoomDialog.close();
+  });
 
   function renderChecklist() {
     checklistItems.innerHTML = "";
