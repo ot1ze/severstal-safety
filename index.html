@@ -10,13 +10,13 @@
   <!-- Верхняя шапка сайта -->
   <header class="header">
     <div class="container header-inner">
-      <div class="brand">
+      <button type="button" id="brandHomeBtn" class="brand brand-btn" title="На главную">
         <span class="brand-badge">ОТ</span>
         <div>
           <div class="brand-title">ПАО «Северсталь»</div>
           <div class="brand-subtitle">Визуализированные инструктажи по охране труда</div>
         </div>
-      </div>
+      </button>
       <button type="button" id="openGlossaryBtn" class="btn btn-outline">
         Глоссарий терминов
       </button>
@@ -63,16 +63,13 @@
         </div>
         <p id="briefingSummary" class="muted"></p>
 
-        <!-- Вкладки (Видео / Инфографика / Памятка / Тест) -->
+        <!-- Вкладки (Видео / Инфографика / Тест) -->
         <div class="tabs" role="tablist" aria-label="Материалы инструктажа">
           <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-tab="video">
             Видео
           </button>
           <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="infographic">
             Инфографика
-          </button>
-          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="checklist">
-            Памятка / Чек-лист
           </button>
           <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="quiz">
             Мини-тест
@@ -96,34 +93,36 @@
           </div>
         </div>
 
-        <div id="tabPanelChecklist" class="tab-panel" role="tabpanel" hidden>
-          <div class="info-grid">
-            <div class="info-block info-risk">
-              <h4>Главные риски (TOP-10)</h4>
-              <ul id="risksList"></ul>
-            </div>
-            <div class="info-block info-ppe">
-              <h4>Обязательные СИЗ</h4>
-              <ul id="ppeList"></ul>
-            </div>
-            <div class="info-block info-forbidden">
-              <h4>Категорически запрещено</h4>
-              <ul id="forbiddenList"></ul>
-            </div>
-            <div class="info-block info-emergency">
-              <h4>Алгоритм при ЧС / аварии</h4>
-              <ol id="emergencyList"></ol>
-            </div>
-          </div>
-
-          <h4 style="margin-top: 18px;">Чек-лист перед началом работы (можно отмечать):</h4>
-          <ul id="checklistItems" class="checklist"></ul>
-        </div>
-
         <div id="tabPanelQuiz" class="tab-panel" role="tabpanel" hidden>
-          <h4>Мини-проверка знаний (тестовый вопрос):</h4>
+          <h4>Мини-проверка знаний:</h4>
           <div id="quizContainer"></div>
         </div>
+      </div>
+
+      <!-- Отдельный блок: Памятка по безопасности и Чек-лист -->
+      <div class="briefing-card" style="margin-top: 16px;">
+        <h3 style="margin: 0 0 10px; color: var(--primary);">Памятка по безопасности и чек-лист</h3>
+        <div class="info-grid">
+          <div class="info-block info-risk">
+            <h4>Главные риски (TOP-10)</h4>
+            <ul id="risksList"></ul>
+          </div>
+          <div class="info-block info-ppe">
+            <h4>Обязательные СИЗ</h4>
+            <ul id="ppeList"></ul>
+          </div>
+          <div class="info-block info-forbidden">
+            <h4>Категорически запрещено</h4>
+            <ul id="forbiddenList"></ul>
+          </div>
+          <div class="info-block info-emergency">
+            <h4>Алгоритм при ЧС / аварии</h4>
+            <ol id="emergencyList"></ol>
+          </div>
+        </div>
+
+        <h4 style="margin-top: 18px;">Чек-лист перед началом работы (можно отмечать):</h4>
+        <ul id="checklistItems" class="checklist"></ul>
       </div>
     </section>
   </main>

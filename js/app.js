@@ -22,7 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const tabPanels = {
     video: document.getElementById("tabPanelVideo"),
     infographic: document.getElementById("tabPanelInfographic"),
-    checklist: document.getElementById("tabPanelChecklist"),
     quiz: document.getElementById("tabPanelQuiz")
   };
   const videoPlaceholderText = document.getElementById("videoPlaceholderText");
@@ -47,6 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
       card.type = "button";
       card.className = "prof-card";
       card.innerHTML = `
+        <img class="prof-card-img" src="media/professions/${prof.id}.png" alt="${prof.title}" loading="lazy">
         <span class="prof-card-dept">${prof.department}</span>
         <span class="prof-card-title">${prof.title}</span>
         <span class="prof-card-desc">${prof.description}</span>
@@ -182,11 +182,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Кнопка "Назад"
-  backToHomeBtn.addEventListener("click", () => {
+  // Кнопка "Назад" и клик по логотипу в шапке
+  function goHome() {
     professionScreen.hidden = true;
     homeScreen.hidden = false;
-  });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  backToHomeBtn.addEventListener("click", goHome);
+  document.getElementById("brandHomeBtn").addEventListener("click", goHome);
 
   // 7. Глоссарий (модальное окно <dialog>)
   glossaryList.innerHTML = data.glossary

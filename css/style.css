@@ -490,3 +490,40 @@ body {
   color: var(--primary);
   font-weight: 700;
 }
+
+/* Иллюстрация на карточке профессии */
+.prof-card-img {
+  width: 100%;
+  height: 170px;
+  object-fit: contain;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 6px;
+  margin-bottom: 4px;
+}
+
+/* Блокировка скролла страницы при открытом глоссарии */
+body:has(dialog[open]) {
+  overflow: hidden;
+}
+
+/* Кнопка-логотип в шапке для возврата на главную */
+.brand-btn {
+  background: transparent;
+  border: none;
+  color: inherit;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+
+.brand-btn:hover {
+  opacity: 0.9;
+}
+
+/* Плашка статуса всегда на отдельной строке под названием инструктажа */
+.briefing-card-head {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
