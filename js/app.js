@@ -207,15 +207,17 @@ document.addEventListener("DOMContentLoaded", () => {
     renderQuiz(currentProfession.quiz);
   }
 
-  // Вкладка СИЗ (готовые карточки под будущие реальные фото СИЗ)
+  // Вкладка СИЗ (показывает реальное фото СИЗ, а если его ещё нет — заглушку с подсказкой)
   function renderPpeTab() {
     ppeTabCards.innerHTML = currentProfession.ppe
       .map((item, idx) => {
         const conseq = currentProfession.ppeConsequences[idx];
+        const imgPath = `media/ppe/${currentProfession.id}_${idx + 1}.webp`;
         return `
         <div class="ppe-card">
           <div class="ppe-card-photo">
-            <span>Место для фото СИЗ<br>(<code>media/ppe/${currentProfession.id}_${idx + 1}.webp</code>)</span>
+            <img src="${imgPath}" alt="${item}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <span style="display:none;">Место для фото СИЗ<br>(<code>${imgPath}</code>)</span>
           </div>
           <div class="ppe-card-title">${item}</div>
           ${conseq ? `<div class="ppe-card-conseq"><strong>Если не надеть:</strong> ${conseq.consequence}</div>` : ""}
