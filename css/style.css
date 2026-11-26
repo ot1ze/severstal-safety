@@ -1078,3 +1078,62 @@ body:has(dialog[open]) {
   max-height: 75vh;
   object-fit: contain;
 }
+
+/* На ПК карточки СИЗ строго 2 в ряд (ровно 2x2), на телефоне 1 в ряд */
+@media (min-width: 601px) {
+  .ppe-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.quiz-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.82rem;
+}
+
+/* Блок скачивания официальных PDF-инструкций */
+.docs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.doc-download-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f8fafc;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.88rem;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.doc-download-btn:hover {
+  border-color: var(--primary);
+  background: #eef4ff;
+}
+
+.doc-size-tag {
+  flex-shrink: 0;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #475569;
+  background: #e2e8f0;
+  padding: 3px 8px;
+  border-radius: 6px;
+}

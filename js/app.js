@@ -62,6 +62,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const checklistItems = document.getElementById("checklistItems");
   const checklistProgress = document.getElementById("checklistProgress");
   const quizContainer = document.getElementById("quizContainer");
+  const resetQuizBtn = document.getElementById("resetQuizBtn");
+  const docsDownloadList = document.getElementById("docsDownloadList");
 
   // Модальные окна: Глоссарий и Памятка мастеру
   const glossaryDialog = document.getElementById("glossaryDialog");
@@ -128,6 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderBriefingContent();
     renderPoster();
     renderPpeTab();
+    renderDocs();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -317,7 +320,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   printPosterBtn.addEventListener("click", () => window.print());
 
-  // 5. Мини-тест
+  // Кнопки скачивания официальных PDF-инструкций
+  function renderDocs() {
+    const docs = currentProfession.docs || [];
+    docsDownloadList.innerHTML = docs
+      .map(
+        (d) => `
+      <a class="doc-download-btn" href="${d.file}" download target="_blank" rel="noopener">
+        <span>&#128229; ${d.title}</span>
+        <span class="doc-size-tag">${d.size}</span>
+      </a>
+    `
+      )
+      .join("");
+  }
+
+  // 5. Тест (10 вопросов, зачёт от 80%)
   function renderQuiz(questions) {
     quizContainer.innerHTML = "";
     let answered = 0;
@@ -350,9 +368,10 @@ document.addEventListener("DOMContentLoaded", () => {
           }
           if (answered === questions.length) {
             scoreBox.hidden = false;
-            const passed = score >= 2;
-            scoreBox.textContent = `Результат: ${score} из ${questions.length}. ${
-              passed ? "Отлично! Знания подтверждены." : "Рекомендуем повторить памятку и попробовать снова."
+            const passThreshold = Math.ceil(questions.length * 0.8);
+            const passed = score >= passThreshold;
+            scoreBox.textContent = `Результат: ${score} из ${questions.length} (${Math.round((score / questions.length) * 100)}%). ${
+              passed ? "Отлично! Инструктаж усвоен." : `Для зачёта нужно минимум ${passThreshold} правильных ответа. Попробуйте ещё раз.`
             }`;
             if (passed) {
               progress.passedQuizzes[currentProfession.id] = true;
@@ -368,6 +387,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     quizContainer.appendChild(scoreBox);
   }
+
+  resetQuizBtn.addEventListener("click", () => {
+    if (currentProfession) {
+      renderQuiz(currentProfession.quiz);
+    }
+  });
 
   // 6. Переключение вкладок
   function switchTab(target) {
