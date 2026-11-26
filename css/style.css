@@ -1386,3 +1386,281 @@ body:has(dialog[open]) {
     display: none !important;
   }
 }
+
+/* Кнопка SOS в шапке */
+.btn-sos {
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.btn-sos:hover {
+  background: #b91c1c;
+}
+
+.dialog-header-sos {
+  background: var(--accent);
+}
+
+/* Поиск на главной */
+.search-wrap {
+  flex: 1;
+  max-width: 340px;
+  min-width: 220px;
+}
+
+.prof-search-input {
+  width: 100%;
+  padding: 9px 13px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  background: #ffffff;
+}
+
+.prof-search-input:focus {
+  outline: 2px solid var(--primary);
+  border-color: var(--primary);
+}
+
+/* Баннер оценки на главной */
+.feedback-banner {
+  margin-top: 22px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.link-btn {
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* 5 вкладок: на ПК 5 в ряд, на телефоне ровная сетка */
+.tabs-5 {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+@media (max-width: 720px) {
+  .tabs-5 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .tabs-5 .tab-btn:last-child {
+    grid-column: span 2;
+  }
+  .header-inner {
+    flex-wrap: wrap;
+  }
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .header-actions .btn {
+    flex: 1;
+    padding: 7px 6px;
+    font-size: 0.78rem;
+  }
+}
+
+/* Вкладка Аварии / ЧС */
+.emerg-tab-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.emerg-cases-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 700px) {
+  .emerg-cases-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.emerg-case-card {
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--accent);
+  border-radius: 10px;
+  padding: 13px 14px;
+  background: #ffffff;
+}
+
+.emerg-case-title {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 0.96rem;
+  margin-bottom: 4px;
+}
+
+.emerg-case-cause {
+  font-size: 0.82rem;
+  color: #7f1d1d;
+  background: #fef2f2;
+  padding: 5px 8px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.emerg-case-card ol {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.85rem;
+}
+
+.emerg-case-card li {
+  margin-bottom: 4px;
+}
+
+/* SOS-карточки и телефоны */
+.sos-phones-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.sos-phone-card {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 9px 11px;
+}
+
+.sos-phone-num {
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+/* QR-код внутри плаката А4 */
+.poster-footer-qr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: #f1f5f9;
+  border-top: 1px solid var(--border);
+  padding: 10px 16px;
+  font-size: 0.82rem;
+}
+
+.poster-qr-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.poster-qr-img {
+  width: 72px;
+  height: 72px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  padding: 3px;
+}
+
+/* Сводный журнал */
+.dialog-wide {
+  max-width: 720px;
+}
+
+.journal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.83rem;
+}
+
+.journal-table th,
+.journal-table td {
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.journal-table th {
+  background: #f1f5f9;
+  color: var(--primary);
+}
+
+/* Оценка 1-5 и форма отзыва */
+.rating-stars {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.star-btn {
+  padding: 10px 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #f8fafc;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  color: #475569;
+}
+
+.star-btn.selected {
+  background: #fef3c7;
+  border-color: #d97706;
+  color: #92400e;
+}
+
+.feedback-form-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fb-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.fb-label textarea,
+.fb-label input {
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.feedback-status {
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 0.86rem;
+  background: #dcfce7;
+  color: #14532d;
+  font-weight: 600;
+}

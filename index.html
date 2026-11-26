@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=8">
+  <link rel="stylesheet" href="css/style.css?v=9">
 </head>
 <body>
   <!-- Верхняя шапка сайта -->
@@ -20,6 +20,12 @@
         <div class="brand-subtitle">Цифровая медиатека инструктажей по ОТ</div>
       </button>
       <div class="header-actions">
+        <button type="button" id="openSosBtn" class="btn btn-sos" title="Экстренная помощь и телефоны">
+          &#128680; SOS
+        </button>
+        <button type="button" id="openJournalAllBtn" class="btn btn-outline">
+          &#128221; Журнал
+        </button>
         <button type="button" id="openMasterBtn" class="btn btn-outline">
           &#128203; Мастеру
         </button>
@@ -39,22 +45,38 @@
           <h1>Визуализированные инструктажи по охране труда</h1>
           <p class="hero-lead">
             Чёткие инструкции о том, какие действия необходимы для безопасной работы.
-            Выберите профессию, чтобы изучить видео, плакат А4, СИЗ, ошибки и пройти тест.
+            Выберите профессию, чтобы изучить видео, плакат А4 с QR-кодом, СИЗ, разбор ЧС и пройти тест.
           </p>
           <div class="hero-stats">
             <span class="stat-chip"><strong>6</strong> профессий</span>
             <span class="stat-chip"><strong>5</strong> видов инструктажей</span>
-            <span class="stat-chip">Фокус на <strong>TOP-10</strong> рисков</span>
+            <span class="stat-chip"><strong>36</strong> аварийных сценариев</span>
+            <span class="stat-chip"><strong>90</strong> вопросов теста</span>
           </div>
         </div>
       </div>
 
       <div class="section-head">
         <h2>Основные производственные профессии</h2>
-        <span class="muted">Нажмите на карточку, чтобы открыть материалы</span>
+        <div class="search-wrap">
+          <input type="search" id="profSearchInput" class="prof-search-input" placeholder="&#128269; Поиск профессии, цеха или ИОТ...">
+        </div>
       </div>
 
       <div id="professionsGrid" class="professions-grid"></div>
+
+      <!-- Блок обратной связи для пилотного тестирования / фокус-группы -->
+      <div class="feedback-banner">
+        <div>
+          <strong>Оцените удобство и понятность материалов (пилотное тестирование)</strong>
+          <div class="muted" style="margin: 2px 0 0; font-size: 0.86rem;">
+            Ваши отзывы помогают улучшить платформу • Почта разработчиков: <a href="mailto:mevostriakov@chsu.ru">mevostriakov@chsu.ru</a>
+          </div>
+        </div>
+        <button type="button" id="openFeedbackBtn" class="btn btn-primary-sm">
+          &#11088; Оценить проект
+        </button>
+      </div>
     </section>
 
     <!-- ЭКРАН 2: Профессия и выбор вида инструктажа -->
@@ -98,8 +120,8 @@
         <p id="briefingSummary" class="muted"></p>
         <div id="briefingFocusBox" class="briefing-focus-box"></div>
 
-        <!-- Вкладки (компактные под 9:16 без обрезания) -->
-        <div class="tabs" role="tablist" aria-label="Материалы инструктажа">
+        <!-- Вкладки (5 компактных кнопок, адаптивно для 9:16) -->
+        <div class="tabs tabs-5" role="tablist" aria-label="Материалы инструктажа">
           <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-tab="video">
             &#9654; Видео
           </button>
@@ -109,12 +131,15 @@
           <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="ppe">
             &#129466; СИЗ
           </button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="emergency">
+            &#128680; Аварии / ЧС
+          </button>
           <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="quiz">
-            &#9989; Мини-тест
+            &#9989; Тест (15)
           </button>
         </div>
 
-        <!-- Содержимое вкладок -->
+        <!-- Вкладка 1: Видео -->
         <div id="tabPanelVideo" class="tab-panel active" role="tabpanel">
           <div id="videoPlayerWrap" class="video-wrap" hidden>
             <video id="briefingVideo" class="briefing-video" controls playsinline preload="metadata">
@@ -128,16 +153,16 @@
             <p id="videoPlaceholderText" class="muted"></p>
             <p class="small-hint">Совет: выберите вкладку «Вводный», чтобы посмотреть готовый видеоролик.</p>
           </div>
-          <!-- Текстовая расшифровка видео (по требованию KPI) -->
           <details id="videoTranscriptBox" class="transcript-details">
             <summary>Текстовая расшифровка / субтитры видеоролика</summary>
             <div id="videoTranscriptBody" class="transcript-body"></div>
           </details>
         </div>
 
+        <!-- Вкладка 2: Плакат А4 с QR-кодом -->
         <div id="tabPanelInfographic" class="tab-panel" role="tabpanel" hidden>
           <div class="infographic-toolbar">
-            <span>Памятка-плакат для размещения в цеху (формат А4)</span>
+            <span>Памятка-плакат с QR-кодом для размещения в цеху (А4)</span>
             <button type="button" id="printPosterBtn" class="btn btn-primary-sm">
               &#128424; Печать / PDF
             </button>
@@ -145,7 +170,7 @@
           <div id="posterContainer" class="poster-sheet"></div>
         </div>
 
-        <!-- Новая вкладка: Реальные СИЗ с картинками и последствиями -->
+        <!-- Вкладка 3: СИЗ -->
         <div id="tabPanelPpe" class="tab-panel" role="tabpanel" hidden>
           <p class="muted" style="font-size: 0.9rem;">
             Комплект средств индивидуальной защиты (СИЗ) для данной профессии и последствия их неприменения.
@@ -153,9 +178,26 @@
           <div id="ppeTabCards" class="ppe-cards-grid"></div>
         </div>
 
+        <!-- Вкладка 4: Аварии / ЧС (6 подробных сценариев) -->
+        <div id="tabPanelEmergency" class="tab-panel" role="tabpanel" hidden>
+          <div class="emerg-tab-head">
+            <div>
+              <h4 style="margin: 0; color: var(--accent);">Вероятные аварии и несчастные случаи на рабочем месте</h4>
+              <p class="muted" style="margin: 4px 0 0; font-size: 0.86rem;">
+                6 типовых нештатных ситуаций с причинами и пошаговым алгоритмом действий (вопросы включены в тест).
+              </p>
+            </div>
+            <button type="button" id="openSosFromTabBtn" class="btn btn-sos btn-sm">
+              &#128680; Телефоны и первая помощь
+            </button>
+          </div>
+          <div id="emergencyCasesList" class="emerg-cases-grid"></div>
+        </div>
+
+        <!-- Вкладка 5: Тест (15 вопросов) -->
         <div id="tabPanelQuiz" class="tab-panel" role="tabpanel" hidden>
           <div class="quiz-head-row">
-            <h4 style="margin: 0;">Проверка знаний по профессии и ИОТ (10 вопросов):</h4>
+            <h4 style="margin: 0;">Проверка знаний по профессии, ИОТ и ЧС (15 вопросов):</h4>
             <button type="button" id="resetQuizBtn" class="btn btn-secondary btn-sm">
               &#8635; Пройти заново
             </button>
@@ -173,12 +215,12 @@
         </div>
       </div>
 
-      <!-- Отдельный блок: Памятка по безопасности и Чек-лист (компактные спойлеры для 9:16) -->
+      <!-- Отдельный блок: Памятка по безопасности и Чек-лист -->
       <div class="briefing-card" style="margin-top: 16px;">
         <div class="checklist-header">
           <div>
             <h3 style="margin: 0; color: var(--primary);">Памятка и чек-лист работника</h3>
-            <p class="muted" style="margin: 4px 0 0; font-size: 0.86rem;">Нажимайте на разделы, чтобы раскрыть детали (удобно с телефона)</p>
+            <p class="muted" style="margin: 4px 0 0; font-size: 0.86rem;">Нажимайте на разделы, чтобы раскрыть детали</p>
           </div>
           <span id="checklistProgress" class="progress-badge">0 / 3</span>
         </div>
@@ -219,7 +261,7 @@
           </details>
 
           <details class="acc-item">
-            <summary class="acc-summary acc-emergency">&#128680; Алгоритм действий при ЧС / аварии</summary>
+            <summary class="acc-summary acc-emergency">&#128680; Базовый порядок действий при ЧС</summary>
             <div class="acc-body">
               <div class="info-block info-emergency">
                 <ol id="emergencyList"></ol>
@@ -245,7 +287,9 @@
 
   <footer class="footer">
     <div class="container">
-      Учебный проектный прототип (ЧГУ) для ПАО «Северсталь» • «Правильная информация в нужное время для нужных людей»
+      Учебный проектный прототип (ЧГУ) для ПАО «Северсталь» • Обратная связь:
+      <a href="mailto:mevostriakov@chsu.ru">mevostriakov@chsu.ru</a> •
+      <button type="button" id="footerFeedbackBtn" class="link-btn">Оценить проект</button>
     </div>
   </footer>
 
@@ -270,6 +314,15 @@
     <div id="masterGuideList" class="dialog-body"></div>
   </dialog>
 
+  <!-- Модальное окно SOS (Экстренная помощь и телефоны) -->
+  <dialog id="sosDialog" class="dialog dialog-zoom">
+    <div class="dialog-header dialog-header-sos">
+      <h3>&#128680; Экстренная помощь (первые 60 секунд)</h3>
+      <button type="button" id="closeSosBtn" class="btn-close" aria-label="Закрыть">&times;</button>
+    </div>
+    <div id="sosBody" class="dialog-body"></div>
+  </dialog>
+
   <!-- Модальное окно увеличения картинки СИЗ -->
   <dialog id="imageZoomDialog" class="dialog dialog-zoom">
     <div class="dialog-header">
@@ -281,7 +334,24 @@
     </div>
   </dialog>
 
-  <!-- Модальное окно Электронного журнала и Протокола (демо) -->
+  <!-- Модальное окно Сводного электронного журнала (из шапки) -->
+  <dialog id="journalAllDialog" class="dialog dialog-wide">
+    <div class="dialog-header">
+      <h3>&#128221; Электронный журнал инструктажей (Демо)</h3>
+      <button type="button" id="closeJournalAllBtn" class="btn-close" aria-label="Закрыть">&times;</button>
+    </div>
+    <div class="dialog-body">
+      <p class="muted" style="font-size: 0.86rem;">
+        Здесь отображаются все сформированные на этом устройстве демо-протоколы прохождения инструктажей.
+      </p>
+      <div id="journalAllBody"></div>
+      <div style="margin-top: 12px; display: flex; justify-content: flex-end;">
+        <button type="button" id="clearJournalBtn" class="btn btn-secondary btn-sm">Очистить демо-записи</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Модальное окно Демо-протокола (из вкладки Тест) -->
   <dialog id="protocolDialog" class="dialog dialog-zoom">
     <div class="dialog-header">
       <h3>Электронный журнал (Демо-протокол)</h3>
@@ -307,25 +377,55 @@
           Сформировать запись в журнале
         </button>
       </div>
-
-      <!-- Готовый бланк-протокол -->
       <div id="protocolPreview" class="protocol-sheet"></div>
-
       <div id="protocolActions" class="protocol-actions" hidden>
         <button type="button" id="printProtocolBtn" class="btn btn-secondary btn-sm">
           &#128424; Печать / Сохранить протокол в PDF
         </button>
       </div>
-
-      <!-- Мини-журнал последних записей на устройстве -->
       <div id="journalHistoryWrap" class="journal-history" hidden>
-        <h4>Последние записи в демо-журнале (на этом устройстве):</h4>
+        <h4>Последние записи в демо-журнале:</h4>
         <ul id="journalHistoryList"></ul>
       </div>
     </div>
   </dialog>
 
-  <script src="js/data.js?v=8"></script>
-  <script src="js/app.js?v=8"></script>
+  <!-- Модальное окно Обратной связи и оценки (1-5 звёзд + отправка на mevostriakov@chsu.ru) -->
+  <dialog id="feedbackDialog" class="dialog">
+    <div class="dialog-header">
+      <h3>&#11088; Оценка и обратная связь</h3>
+      <button type="button" id="closeFeedbackBtn" class="btn-close" aria-label="Закрыть">&times;</button>
+    </div>
+    <div class="dialog-body">
+      <p class="muted" style="font-size: 0.88rem;">
+        Помогите улучшить учебный проект для ПАО «Северсталь». Почта команды: <strong>mevostriakov@chsu.ru</strong>
+      </p>
+      <div class="rating-stars" id="ratingStars" role="group" aria-label="Оценка от 1 до 5">
+        <button type="button" class="star-btn" data-val="1">1 &#9733;</button>
+        <button type="button" class="star-btn" data-val="2">2 &#9733;</button>
+        <button type="button" class="star-btn" data-val="3">3 &#9733;</button>
+        <button type="button" class="star-btn" data-val="4">4 &#9733;</button>
+        <button type="button" class="star-btn" data-val="5">5 &#9733;</button>
+      </div>
+
+      <div id="feedbackFormWrap" class="feedback-form-wrap" hidden>
+        <label class="fb-label">
+          <span>Расскажите, почему поставили такую оценку / ваши предложения:</span>
+          <textarea id="feedbackComment" rows="4" placeholder="Например: всё понятно и удобно на телефоне, но хотелось бы добавить..."></textarea>
+        </label>
+        <label class="fb-label">
+          <span>Ваше имя или роль (необязательно):</span>
+          <input type="text" id="feedbackAuthor" placeholder="Студент / преподаватель / сотрудник">
+        </label>
+        <button type="button" id="sendFeedbackBtn" class="btn btn-primary-sm" style="width: 100%;">
+          Отправить отзыв на mevostriakov@chsu.ru
+        </button>
+        <div id="feedbackStatus" class="feedback-status" hidden></div>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="js/data.js?v=9"></script>
+  <script src="js/app.js?v=9"></script>
 </body>
 </html>

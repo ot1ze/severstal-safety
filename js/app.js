@@ -3,6 +3,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   const data = window.SAFETY_DATA;
   const STORAGE_KEY = "severstal_safety_progress_v1";
+  const JOURNAL_KEY = "severstal_demo_journal_v1";
+  const FEEDBACK_KEY = "severstal_demo_feedback_v1";
 
   let progress = loadProgress();
 
@@ -17,15 +19,14 @@ document.addEventListener("DOMContentLoaded", () => {
   function saveProgress() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
-    } catch {
-      // Игнорируем, если localStorage недоступен
-    }
+    } catch {}
   }
 
-  // Элементы экранов
+  // Элементы экранов и поиска
   const homeScreen = document.getElementById("homeScreen");
   const professionScreen = document.getElementById("professionScreen");
   const professionsGrid = document.getElementById("professionsGrid");
+  const profSearchInput = document.getElementById("profSearchInput");
 
   // Элементы экрана профессии
   const backToHomeBtn = document.getElementById("backToHomeBtn");
@@ -48,6 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
     video: document.getElementById("tabPanelVideo"),
     infographic: document.getElementById("tabPanelInfographic"),
     ppe: document.getElementById("tabPanelPpe"),
+    emergency: document.getElementById("tabPanelEmergency"),
     quiz: document.getElementById("tabPanelQuiz")
   };
   const videoPlayerWrap = document.getElementById("videoPlayerWrap");
@@ -59,13 +61,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const posterContainer = document.getElementById("posterContainer");
   const printPosterBtn = document.getElementById("printPosterBtn");
   const ppeTabCards = document.getElementById("ppeTabCards");
+  const emergencyCasesList = document.getElementById("emergencyCasesList");
   const checklistItems = document.getElementById("checklistItems");
   const checklistProgress = document.getElementById("checklistProgress");
   const quizContainer = document.getElementById("quizContainer");
   const resetQuizBtn = document.getElementById("resetQuizBtn");
   const docsDownloadList = document.getElementById("docsDownloadList");
 
-  // Модальные окна: Глоссарий и Памятка мастеру
+  // Модальные окна
   const glossaryDialog = document.getElementById("glossaryDialog");
   const openGlossaryBtn = document.getElementById("openGlossaryBtn");
   const closeGlossaryBtn = document.getElementById("closeGlossaryBtn");
@@ -77,30 +80,44 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeMasterBtn = document.getElementById("closeMasterBtn");
   const masterGuideList = document.getElementById("masterGuideList");
 
+  const sosDialog = document.getElementById("sosDialog");
+  const openSosBtn = document.getElementById("openSosBtn");
+  const openSosFromTabBtn = document.getElementById("openSosFromTabBtn");
+  const closeSosBtn = document.getElementById("closeSosBtn");
+  const sosBody = document.getElementById("sosBody");
+
   const imageZoomDialog = document.getElementById("imageZoomDialog");
   const zoomImage = document.getElementById("zoomImage");
   const zoomCaption = document.getElementById("zoomCaption");
   const closeZoomBtn = document.getElementById("closeZoomBtn");
 
-  const protocolDialog = document.getElementById("protocolDialog");
-  const openProtocolBtn = document.getElementById("openProtocolBtn");
-  const closeProtocolBtn = document.getElementById("closeProtocolBtn");
-  const generateProtocolBtn = document.getElementById("generateProtocolBtn");
-  const printProtocolBtn = document.getElementById("printProtocolBtn");
-  const protocolPreview = document.getElementById("protocolPreview");
-  const protocolActions = document.getElementById("protocolActions");
-  const journalHistoryWrap = document.getElementById("journalHistoryWrap");
-  const journalHistoryList = document.getElementById("journalHistoryList");
-
-  let lastQuizResult = null;
+  const journalAllDialog = document.getElementById("journalAllDialog");
+  const openJournalAllBtn = document.getElementById("openJournalAllBtn");
+  const closeJournalAllBtn = document.getElementById("closeJournalAllBtn");
+  const journalAllBody = document.getElementById("journalAllBody");
+  const clearJournalBtn = document.getElementById("clearJournalBtn");
 
   let currentProfession = null;
   let currentBriefing = data.briefingTypes[0];
 
-  // 1. Отрисовка карточек профессий (лёгкие .webp)
-  function renderProfessions() {
+  // 1. Отрисовка карточек профессий с живым поиском
+  function renderProfessions(filter = "") {
+    const q = filter.trim().toLowerCase();
+    const list = data.professions.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        p.department.toLowerCase().includes(q) ||
+        p.iotNumber.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q)
+    );
+
     professionsGrid.innerHTML = "";
-    data.professions.forEach((prof) => {
+    if (!list.length) {
+      professionsGrid.innerHTML = '<p class="muted">По вашему запросу профессия не найдена.</p>';
+      return;
+    }
+
+    list.forEach((prof) => {
       const isPassed = Boolean(progress.passedQuizzes[prof.id]);
       const card = document.createElement("button");
       card.type = "button";
@@ -120,6 +137,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  profSearchInput.addEventListener("input", (e) => renderProfessions(e.target.value));
+
   // 2. Открытие экрана конкретной профессии
   function openProfession(prof) {
     currentProfession = prof;
@@ -135,19 +154,18 @@ document.addEventListener("DOMContentLoaded", () => {
     homeScreen.hidden = true;
     professionScreen.hidden = false;
 
-    // Сбрасываем активную вкладку на "Видео" при входе в профессию
-    lastQuizResult = null;
     switchTab("video");
 
     renderBriefingButtons();
     renderBriefingContent();
     renderPoster();
     renderPpeTab();
+    renderEmergencyCases();
     renderDocs();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  // 3. Отрисовка 5 кнопок видов инструктажей
+  // 3. 5 кнопок видов инструктажей
   function renderBriefingButtons() {
     briefingButtons.innerHTML = "";
     data.briefingTypes.forEach((bType) => {
@@ -174,7 +192,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const focusText = currentProfession.briefingFocus[currentBriefing.id] || "";
     briefingFocusBox.innerHTML = `<strong>Главный акцент этого инструктажа:</strong> ${focusText}`;
 
-    // Видео и текстовая расшифровка
     if (currentBriefing.id === "vvodny") {
       briefingStatusPill.textContent = "Видеоролик доступен";
       const videoSrc = "media/videos/vvodny.mp4";
@@ -187,7 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
       videoTranscriptBox.hidden = false;
       videoTranscriptBody.innerHTML = data.vvodnyTranscript.map((line) => `<p>${line}</p>`).join("");
     } else {
-      briefingStatusPill.textContent = "Памятка и тест готовы • видео в разработке";
+      briefingStatusPill.textContent = "Памятка, ЧС и тест готовы • видео в разработке";
       briefingVideo.pause();
       videoPlayerWrap.hidden = true;
       videoPlaceholderWrap.hidden = false;
@@ -195,13 +212,11 @@ document.addEventListener("DOMContentLoaded", () => {
       videoPlaceholderText.textContent = `Видео для: "${currentProfession.title}" (${currentBriefing.name} инструктаж).`;
     }
 
-    // Риски, СИЗ, запреты, ЧС
     document.getElementById("risksList").innerHTML = currentProfession.risks.map((r) => `<li>${r}</li>`).join("");
     document.getElementById("ppeList").innerHTML = currentProfession.ppe.map((p) => `<li>${p}</li>`).join("");
     document.getElementById("forbiddenList").innerHTML = currentProfession.forbidden.map((f) => `<li>${f}</li>`).join("");
     document.getElementById("emergencyList").innerHTML = currentProfession.emergency.map((e) => `<li>${e}</li>`).join("");
 
-    // Популярные ошибки и последствия СИЗ
     document.getElementById("mistakesList").innerHTML = currentProfession.mistakes
       .map(
         (m) => `
@@ -228,7 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderQuiz(currentProfession.quiz);
   }
 
-  // Вкладка СИЗ (показывает крупное фото СИЗ с увеличением по клику)
+  // Вкладка СИЗ с зумом
   function renderPpeTab() {
     ppeTabCards.innerHTML = currentProfession.ppe
       .map((item, idx) => {
@@ -261,6 +276,22 @@ document.addEventListener("DOMContentLoaded", () => {
   imageZoomDialog.addEventListener("click", (e) => {
     if (e.target === imageZoomDialog) imageZoomDialog.close();
   });
+
+  // Вкладка Аварии / ЧС (6 подробных кейсов)
+  function renderEmergencyCases() {
+    const cases = currentProfession.emergencies || [];
+    emergencyCasesList.innerHTML = cases
+      .map(
+        (c) => `
+      <div class="emerg-case-card">
+        <div class="emerg-case-title">${c.title}</div>
+        <div class="emerg-case-cause"><strong>Причина:</strong> ${c.cause}</div>
+        <ol>${c.steps.map((s) => `<li>${s}</li>`).join("")}</ol>
+      </div>
+    `
+      )
+      .join("");
+  }
 
   function renderChecklist() {
     checklistItems.innerHTML = "";
@@ -299,7 +330,7 @@ document.addEventListener("DOMContentLoaded", () => {
     checklistProgress.textContent = `${checkedCount} / ${total}`;
   }
 
-  // Генератор плаката А4 (контрастный и при просмотре, и при печати на принтере / в PDF)
+  // Плакат А4 с QR-кодом
   function renderPoster() {
     posterContainer.innerHTML = `
       <div class="poster-head poster-head-light">
@@ -333,15 +364,23 @@ document.addEventListener("DOMContentLoaded", () => {
           <ol>${currentProfession.emergency.map((e) => `<li>${e}</li>`).join("")}</ol>
         </div>
       </div>
-      <div class="poster-footer">
-        <strong>Чек-лист перед сменой:</strong> ${currentProfession.checklist.join(" • ")}
+      <div class="poster-footer-qr">
+        <div>
+          <strong>Чек-лист перед сменой:</strong> ${currentProfession.checklist.join(" • ")}
+        </div>
+        <div class="poster-qr-box">
+          <img src="media/qr/${currentProfession.id}.png" alt="QR-код инструктажа" class="poster-qr-img">
+          <div style="font-size: 0.74rem; color: var(--muted); max-width: 120px;">
+            Сканируйте для видео и теста с телефона
+          </div>
+        </div>
       </div>
     `;
   }
 
   printPosterBtn.addEventListener("click", () => window.print());
 
-  // Кнопки скачивания официальных PDF-инструкций
+  // Кнопки скачивания PDF-инструкций
   function renderDocs() {
     const docs = currentProfession.docs || [];
     docsDownloadList.innerHTML = docs
@@ -356,7 +395,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .join("");
   }
 
-  // 5. Тест (10 вопросов, зачёт от 80%)
+  // 5. Тест (15 вопросов, зачёт от 80%)
   function renderQuiz(questions) {
     quizContainer.innerHTML = "";
     let answered = 0;
@@ -391,7 +430,6 @@ document.addEventListener("DOMContentLoaded", () => {
             scoreBox.hidden = false;
             const passThreshold = Math.ceil(questions.length * 0.8);
             const passed = score >= passThreshold;
-            lastQuizResult = { score, total: questions.length, passed };
             scoreBox.textContent = `Результат: ${score} из ${questions.length} (${Math.round((score / questions.length) * 100)}%). ${
               passed ? "Отлично! Инструктаж усвоен." : `Для зачёта нужно минимум ${passThreshold} правильных ответа. Попробуйте ещё раз.`
             }`;
@@ -411,9 +449,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   resetQuizBtn.addEventListener("click", () => {
-    if (currentProfession) {
-      renderQuiz(currentProfession.quiz);
-    }
+    if (currentProfession) renderQuiz(currentProfession.quiz);
   });
 
   // 6. Переключение вкладок
@@ -437,7 +473,7 @@ document.addEventListener("DOMContentLoaded", () => {
     briefingVideo.pause();
     professionScreen.hidden = true;
     homeScreen.hidden = false;
-    renderProfessions();
+    renderProfessions(profSearchInput.value);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
   backToHomeBtn.addEventListener("click", goHome);
@@ -474,7 +510,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === glossaryDialog) glossaryDialog.close();
   });
 
-  // 8. Памятка мастеру / руководителю цеха
+  // 8. Памятка мастеру
   masterGuideList.innerHTML = data.masterGuide
     .map(
       (m) => `
@@ -492,23 +528,48 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === masterDialog) masterDialog.close();
   });
 
-  renderProfessions();
-});
+  // 9. Экстренная памятка SOS
+  function openSosModal() {
+    const phonesHtml = data.sosGuide.phones
+      .map(
+        (p) => `
+      <div class="sos-phone-card">
+        <div style="font-size:0.78rem; color:var(--muted);">${p.name}</div>
+        <div class="sos-phone-num">${p.number}</div>
+      </div>
+    `
+      )
+      .join("");
 
-// Логика имитации «Электронного журнала инструктажей» (Демо-протокол)
-(function initElectronicJournal() {
-  const JOURNAL_KEY = "severstal_demo_journal_v1";
-  const openBtn = document.getElementById("openProtocolBtn");
-  const closeBtn = document.getElementById("closeProtocolBtn");
-  const genBtn = document.getElementById("generateProtocolBtn");
-  const printBtn = document.getElementById("printProtocolBtn");
-  const dialog = document.getElementById("protocolDialog");
-  const preview = document.getElementById("protocolPreview");
-  const actions = document.getElementById("protocolActions");
-  const histWrap = document.getElementById("journalHistoryWrap");
-  const histList = document.getElementById("journalHistoryList");
+    const cardsHtml = data.sosGuide.cards
+      .map(
+        (c) => `
+      <div class="emerg-case-card" style="margin-bottom:10px;">
+        <div class="emerg-case-title">${c.title}</div>
+        <ol>${c.steps.map((s) => `<li>${s}</li>`).join("")}</ol>
+      </div>
+    `
+      )
+      .join("");
 
-  function getHistory() {
+    sosBody.innerHTML = `
+      <h4 style="margin:0 0 8px; color:var(--accent);">Экстренные телефоны</h4>
+      <div class="sos-phones-grid">${phonesHtml}</div>
+      <h4 style="margin:10px 0 8px; color:var(--primary);">Первая помощь в первые 60 секунд</h4>
+      ${cardsHtml}
+    `;
+    sosDialog.showModal();
+  }
+
+  openSosBtn.addEventListener("click", openSosModal);
+  openSosFromTabBtn.addEventListener("click", openSosModal);
+  closeSosBtn.addEventListener("click", () => sosDialog.close());
+  sosDialog.addEventListener("click", (e) => {
+    if (e.target === sosDialog) sosDialog.close();
+  });
+
+  // 10. Сводный Электронный журнал из шапки
+  function getJournalHistory() {
     try {
       return JSON.parse(localStorage.getItem(JOURNAL_KEY)) || [];
     } catch {
@@ -516,83 +577,236 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function saveHistory(arr) {
-    try {
-      localStorage.setItem(JOURNAL_KEY, JSON.stringify(arr.slice(0, 6)));
-    } catch {}
-  }
-
-  function renderHistory() {
-    const items = getHistory();
+  function renderAllJournal() {
+    const items = getJournalHistory();
     if (!items.length) {
-      histWrap.hidden = true;
+      journalAllBody.innerHTML =
+        '<p class="muted">Записей пока нет. Откройте любую профессию &rarr; вкладка «Тест (15)» &rarr; «Сформировать протокол».</p>';
       return;
     }
-    histWrap.hidden = false;
-    histList.innerHTML = items
-      .map((it) => `<li><strong>${it.id}</strong> • ${it.date} — ${it.worker} (${it.prof}, ${it.briefing}) — ${it.result}</li>`)
-      .join("");
-  }
-
-  function buildProtocol(saveToJournal) {
-    const worker = document.getElementById("protoWorkerName").value.trim() || "Иванов Иван Иванович";
-    const tabNum = document.getElementById("protoTabNum").value.trim() || "48291";
-    const master = document.getElementById("protoMasterName").value.trim() || "Петров А.С.";
-    const profTitle = document.getElementById("profTitle").textContent;
-    const dept = document.getElementById("profBadge").textContent;
-    const iot = document.getElementById("profIotBadge").textContent;
-    const briefing = document.getElementById("briefingTitle").textContent;
-    const chk = document.getElementById("checklistProgress").textContent;
-    const quizScoreText = document.querySelector(".quiz-score:not([hidden])")?.textContent;
-
-    const now = new Date();
-    const dateStr = now.toLocaleDateString("ru-RU") + " " + now.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
-    const recordId = "SEV-" + now.getFullYear() + "-" + String(Math.floor(1000 + Math.random() * 9000));
-    const resultLabel = quizScoreText ? quizScoreText.split(".")[0] : "Демо-режим (тест не завершён)";
-    const isOk = quizScoreText && !quizScoreText.includes("минимум");
-
-    preview.innerHTML = `
-      <div class="protocol-sheet-head">
-        <img src="media/brand/logo_color.png" alt="Северсталь" style="height: 36px;">
-        <span class="protocol-demo-stamp">ДЕМО-ПРОТОКОЛ (ПРИМЕР)</span>
-      </div>
-      <div style="font-weight: 700; color: var(--primary); margin-bottom: 6px;">
-        ПРОТОКОЛ № ${recordId} ПРОХОЖДЕНИЯ ИНСТРУКТАЖА ПО ОХРАНЕ ТРУДА
-      </div>
-      <table class="protocol-table">
-        <tr><td>Дата и время</td><td><strong>${dateStr}</strong></td></tr>
-        <tr><td>Работник</td><td><strong>${worker}</strong> (таб. № ${tabNum})</td></tr>
-        <tr><td>Подразделение</td><td>${dept}</td></tr>
-        <tr><td>Профессия</td><td>${profTitle}</td></tr>
-        <tr><td>Вид инструктажа</td><td><strong>${briefing}</strong></td></tr>
-        <tr><td>Основание</td><td>${iot}</td></tr>
-        <tr><td>Чек-лист СИЗ</td><td>Отмечено пунктов: <strong>${chk}</strong></td></tr>
-        <tr><td>Проверка знаний</td><td><span class="${isOk ? "protocol-status-ok" : "protocol-status-pending"}">${resultLabel}</span></td></tr>
-        <tr><td>Инструктирующий</td><td>${master} (подтверждено в системе)</td></tr>
-      </table>
-      <div style="font-size: 0.76rem; color: var(--muted); margin-top: 8px;">
-        * Учебный демонстрационный образец для защиты проекта ЧГУ. В реальной системе запись подписывается ЭЦП и передаётся в АСУ ОТ предприятия.
+    journalAllBody.innerHTML = `
+      <div style="overflow-x:auto;">
+        <table class="journal-table">
+          <thead>
+            <tr>
+              <th>№ записи</th>
+              <th>Дата</th>
+              <th>Работник</th>
+              <th>Профессия</th>
+              <th>Инструктаж</th>
+              <th>Итог</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items
+              .map(
+                (it) => `
+              <tr>
+                <td><strong>${it.id}</strong></td>
+                <td>${it.date}</td>
+                <td>${it.worker}</td>
+                <td>${it.prof}</td>
+                <td>${it.briefing}</td>
+                <td>${it.result}</td>
+              </tr>
+            `
+              )
+              .join("")}
+          </tbody>
+        </table>
       </div>
     `;
-    actions.hidden = false;
-
-    if (saveToJournal) {
-      const history = getHistory();
-      history.unshift({ id: recordId, date: dateStr, worker, prof: profTitle, briefing, result: resultLabel });
-      saveHistory(history);
-      renderHistory();
-    }
   }
 
-  openBtn.addEventListener("click", () => {
-    buildProtocol(false);
-    renderHistory();
-    dialog.showModal();
+  openJournalAllBtn.addEventListener("click", () => {
+    renderAllJournal();
+    journalAllDialog.showModal();
   });
-  genBtn.addEventListener("click", () => buildProtocol(true));
-  printBtn.addEventListener("click", () => window.print());
-  closeBtn.addEventListener("click", () => dialog.close());
-  dialog.addEventListener("click", (e) => {
-    if (e.target === dialog) dialog.close();
+  closeJournalAllBtn.addEventListener("click", () => journalAllDialog.close());
+  journalAllDialog.addEventListener("click", (e) => {
+    if (e.target === journalAllDialog) journalAllDialog.close();
   });
-})();
+  clearJournalBtn.addEventListener("click", () => {
+    localStorage.removeItem(JOURNAL_KEY);
+    renderAllJournal();
+  });
+
+  // 11. Демо-протокол из вкладки Тест
+  (function initProtocolDialog() {
+    const openBtn = document.getElementById("openProtocolBtn");
+    const closeBtn = document.getElementById("closeProtocolBtn");
+    const genBtn = document.getElementById("generateProtocolBtn");
+    const printBtn = document.getElementById("printProtocolBtn");
+    const dialog = document.getElementById("protocolDialog");
+    const preview = document.getElementById("protocolPreview");
+    const actions = document.getElementById("protocolActions");
+    const histWrap = document.getElementById("journalHistoryWrap");
+    const histList = document.getElementById("journalHistoryList");
+
+    function renderHistory() {
+      const items = getJournalHistory();
+      if (!items.length) {
+        histWrap.hidden = true;
+        return;
+      }
+      histWrap.hidden = false;
+      histList.innerHTML = items
+        .map((it) => `<li><strong>${it.id}</strong> • ${it.date} — ${it.worker} (${it.prof}) — ${it.result}</li>`)
+        .join("");
+    }
+
+    function buildProtocol(saveToJournal) {
+      const worker = document.getElementById("protoWorkerName").value.trim() || "Иванов Иван Иванович";
+      const tabNum = document.getElementById("protoTabNum").value.trim() || "48291";
+      const master = document.getElementById("protoMasterName").value.trim() || "Петров А.С.";
+      const profTitleText = profTitle.textContent;
+      const dept = profBadge.textContent;
+      const iot = profIotBadge.textContent;
+      const briefing = briefingTitle.textContent;
+      const chk = checklistProgress.textContent;
+      const quizScoreText = document.querySelector(".quiz-score:not([hidden])")?.textContent;
+
+      const now = new Date();
+      const dateStr = now.toLocaleDateString("ru-RU") + " " + now.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+      const recordId = "SEV-" + now.getFullYear() + "-" + String(Math.floor(1000 + Math.random() * 9000));
+      const resultLabel = quizScoreText ? quizScoreText.split(".")[0] : "Демо-режим (тест не завершён)";
+      const isOk = quizScoreText && !quizScoreText.includes("минимум");
+
+      preview.innerHTML = `
+        <div class="protocol-sheet-head">
+          <img src="media/brand/logo_color.png" alt="Северсталь" style="height: 36px;">
+          <span class="protocol-demo-stamp">ДЕМО-ПРОТОКОЛ (ПРИМЕР)</span>
+        </div>
+        <div style="font-weight: 700; color: var(--primary); margin-bottom: 6px;">
+          ПРОТОКОЛ № ${recordId} ПРОХОЖДЕНИЯ ИНСТРУКТАЖА ПО ОХРАНЕ ТРУДА
+        </div>
+        <table class="protocol-table">
+          <tr><td>Дата и время</td><td><strong>${dateStr}</strong></td></tr>
+          <tr><td>Работник</td><td><strong>${worker}</strong> (таб. № ${tabNum})</td></tr>
+          <tr><td>Подразделение</td><td>${dept}</td></tr>
+          <tr><td>Профессия</td><td>${profTitleText}</td></tr>
+          <tr><td>Вид инструктажа</td><td><strong>${briefing}</strong></td></tr>
+          <tr><td>Основание</td><td>${iot}</td></tr>
+          <tr><td>Чек-лист СИЗ</td><td>Отмечено пунктов: <strong>${chk}</strong></td></tr>
+          <tr><td>Проверка знаний</td><td><span class="${isOk ? "protocol-status-ok" : "protocol-status-pending"}">${resultLabel}</span></td></tr>
+          <tr><td>Инструктирующий</td><td>${master} (подтверждено в системе)</td></tr>
+        </table>
+        <div style="font-size: 0.76rem; color: var(--muted); margin-top: 8px;">
+          * Учебный демонстрационный образец для защиты проекта ЧГУ.
+        </div>
+      `;
+      actions.hidden = false;
+
+      if (saveToJournal) {
+        const history = getJournalHistory();
+        history.unshift({ id: recordId, date: dateStr, worker, prof: profTitleText, briefing, result: resultLabel });
+        try {
+          localStorage.setItem(JOURNAL_KEY, JSON.stringify(history.slice(0, 20)));
+        } catch {}
+        renderHistory();
+      }
+    }
+
+    openBtn.addEventListener("click", () => {
+      buildProtocol(false);
+      renderHistory();
+      dialog.showModal();
+    });
+    genBtn.addEventListener("click", () => buildProtocol(true));
+    printBtn.addEventListener("click", () => window.print());
+    closeBtn.addEventListener("click", () => dialog.close());
+    dialog.addEventListener("click", (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+  })();
+
+  // 12. Обратная связь (1-5 звёзд + отправка на mevostriakov@chsu.ru)
+  (function initFeedback() {
+    const dialog = document.getElementById("feedbackDialog");
+    const openBtns = [document.getElementById("openFeedbackBtn"), document.getElementById("footerFeedbackBtn")];
+    const closeBtn = document.getElementById("closeFeedbackBtn");
+    const starBtns = document.querySelectorAll(".star-btn");
+    const formWrap = document.getElementById("feedbackFormWrap");
+    const commentInput = document.getElementById("feedbackComment");
+    const authorInput = document.getElementById("feedbackAuthor");
+    const sendBtn = document.getElementById("sendFeedbackBtn");
+    const statusBox = document.getElementById("feedbackStatus");
+
+    let selectedRating = 0;
+
+    openBtns.forEach((b) => {
+      if (b) {
+        b.addEventListener("click", () => {
+          statusBox.hidden = true;
+          dialog.showModal();
+        });
+      }
+    });
+    closeBtn.addEventListener("click", () => dialog.close());
+    dialog.addEventListener("click", (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+
+    starBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        selectedRating = Number(btn.dataset.val);
+        starBtns.forEach((s) => s.classList.toggle("selected", Number(s.dataset.val) === selectedRating));
+        formWrap.hidden = false;
+        statusBox.hidden = true;
+      });
+    });
+
+    sendBtn.addEventListener("click", async () => {
+      if (!selectedRating) return;
+      const comment = commentInput.value.trim() || "Без комментария";
+      const author = authorInput.value.trim() || "Анонимный участник";
+
+      sendBtn.disabled = true;
+      sendBtn.textContent = "Отправка...";
+
+      // Сохраняем локально
+      try {
+        const list = JSON.parse(localStorage.getItem(FEEDBACK_KEY) || "[]");
+        list.unshift({ rating: selectedRating, comment, author, date: new Date().toLocaleString("ru-RU") });
+        localStorage.setItem(FEEDBACK_KEY, JSON.stringify(list));
+      } catch {}
+
+      // Отправляем через FormSubmit.co на mevostriakov@chsu.ru
+      try {
+        const res = await fetch("https://formsubmit.co/ajax/mevostriakov@chsu.ru", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            _subject: `Оценка проекта «Инструктажи Северсталь»: ${selectedRating}/5`,
+            Оценка: `${selectedRating} из 5`,
+            Комментарий: comment,
+            Автор: author
+          })
+        });
+        if (res.ok) {
+          statusBox.textContent = `Спасибо! Оценка (${selectedRating}/5) отправлена на mevostriakov@chsu.ru.`;
+        } else {
+          throw new Error("FormSubmit error");
+        }
+      } catch {
+        const subject = encodeURIComponent(`Оценка проекта Северсталь: ${selectedRating}/5`);
+        const body = encodeURIComponent(`Оценка: ${selectedRating} из 5\nАвтор: ${author}\nКомментарий: ${comment}`);
+        statusBox.innerHTML = `Отзыв сохранён на устройстве! <a href="mailto:mevostriakov@chsu.ru?subject=${subject}&body=${body}">Нажмите здесь, чтобы открыть почту и отправить письмо</a>.`;
+      }
+
+      statusBox.hidden = false;
+      sendBtn.disabled = false;
+      sendBtn.textContent = "Отправить отзыв на mevostriakov@chsu.ru";
+      commentInput.value = "";
+    });
+  })();
+
+  // Старт приложения + поддержка прямой ссылки по QR-коду (?prof=steelmaker)
+  renderProfessions();
+  const params = new URLSearchParams(window.location.search);
+  const startProfId = params.get("prof");
+  if (startProfId) {
+    const found = data.professions.find((p) => p.id === startProfId);
+    if (found) openProfession(found);
+  }
+});
