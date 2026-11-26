@@ -93,10 +93,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // 4. Заполнение контента выбранного инструктажа
   function renderBriefingContent() {
     briefingTitle.textContent = `${currentBriefing.name} инструктаж`;
-    briefingSummary.textContent = `Профессия: ${currentProfession.title}. Здесь позже появится выжимка из реальной ИОТ.`;
+    briefingSummary.textContent = `${currentBriefing.desc} Профессия: ${currentProfession.title}.`;
 
     videoPlaceholderText.textContent = `Видео для: "${currentProfession.title}" (${currentBriefing.name} инструктаж).`;
     infoPlaceholderText.textContent = `Инфографика для: "${currentProfession.title}" (${currentBriefing.name} инструктаж).`;
+
+    // Риски, СИЗ, запреты, ЧС
+    document.getElementById("risksList").innerHTML = currentProfession.risks.map((r) => `<li>${r}</li>`).join("");
+    document.getElementById("ppeList").innerHTML = currentProfession.ppe.map((p) => `<li>${p}</li>`).join("");
+    document.getElementById("forbiddenList").innerHTML = currentProfession.forbidden.map((f) => `<li>${f}</li>`).join("");
+    document.getElementById("emergencyList").innerHTML = currentProfession.emergency.map((e) => `<li>${e}</li>`).join("");
 
     // Чек-лист
     checklistItems.innerHTML = "";
@@ -110,30 +116,53 @@ document.addEventListener("DOMContentLoaded", () => {
       checklistItems.appendChild(li);
     });
 
-    // Мини-тест
+    // Мини-тест (3 вопроса)
     renderQuiz(currentProfession.quiz);
   }
 
-  // 5. Отрисовка тестового вопроса
-  function renderQuiz(quiz) {
-    quizContainer.innerHTML = `<p><strong>${quiz.question}</strong></p>`;
-    quiz.options.forEach((opt, idx) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "quiz-option";
-      btn.textContent = opt;
-      btn.addEventListener("click", () => {
-        const allBtns = quizContainer.querySelectorAll(".quiz-option");
-        allBtns.forEach((b) => (b.disabled = true));
-        if (idx === quiz.correctIndex) {
-          btn.classList.add("correct");
-        } else {
-          btn.classList.add("wrong");
-          allBtns[quiz.correctIndex].classList.add("correct");
-        }
+  // 5. Отрисовка мини-теста из нескольких вопросов
+  function renderQuiz(questions) {
+    quizContainer.innerHTML = "";
+    let answered = 0;
+    let score = 0;
+
+    const scoreBox = document.createElement("div");
+    scoreBox.className = "quiz-score";
+    scoreBox.hidden = true;
+
+    questions.forEach((q, qIdx) => {
+      const box = document.createElement("div");
+      box.className = "quiz-question-box";
+      box.innerHTML = `<p><strong>${qIdx + 1}. ${q.question}</strong></p>`;
+
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "quiz-option";
+        btn.textContent = opt;
+        btn.addEventListener("click", () => {
+          const allBtns = box.querySelectorAll(".quiz-option");
+          allBtns.forEach((b) => (b.disabled = true));
+          answered++;
+          if (idx === q.correctIndex) {
+            btn.classList.add("correct");
+            score++;
+          } else {
+            btn.classList.add("wrong");
+            allBtns[q.correctIndex].classList.add("correct");
+          }
+          if (answered === questions.length) {
+            scoreBox.hidden = false;
+            scoreBox.textContent = `Результат: ${score} из ${questions.length} правильных ответов`;
+          }
+        });
+        box.appendChild(btn);
       });
-      quizContainer.appendChild(btn);
+
+      quizContainer.appendChild(box);
     });
+
+    quizContainer.appendChild(scoreBox);
   }
 
   // 6. Переключение вкладок (Видео / Инфографика / Памятка / Тест)
