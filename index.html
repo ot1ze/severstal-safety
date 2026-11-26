@@ -3,32 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Инструктажи по ОТ — ПАО «Северсталь» (Прототип)</title>
+  <title>Инструктажи по ОТ — ПАО «Северсталь»</title>
+  <link rel="icon" type="image/png" href="media/brand/symbol_red.png">
+  <!-- Современный шрифт Inter (в офлайне плавно переключается на системный шрифт) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <!-- Верхняя шапка сайта -->
   <header class="header">
     <div class="container header-inner">
-      <button type="button" id="brandHomeBtn" class="brand brand-btn" title="На главную">
-        <span class="brand-badge">ОТ</span>
-        <div>
-          <div class="brand-title">ПАО «Северсталь»</div>
-          <div class="brand-subtitle">Визуализированные инструктажи по охране труда</div>
-        </div>
+      <button type="button" id="brandHomeBtn" class="brand brand-btn" title="Вернуться на главную">
+        <img src="media/brand/logo_color.png" alt="Северсталь" class="brand-logo-img">
+        <span class="brand-divider"></span>
+        <div class="brand-subtitle">Цифровая медиатека инструктажей по ОТ</div>
       </button>
-      <button type="button" id="openGlossaryBtn" class="btn btn-outline">
-        Глоссарий терминов
-      </button>
+      <div class="header-actions">
+        <button type="button" id="openGlossaryBtn" class="btn btn-outline">
+          &#128214; Глоссарий
+        </button>
+      </div>
     </div>
   </header>
 
   <main class="container main-content">
     <!-- ЭКРАН 1: Выбор профессии -->
     <section id="homeScreen" class="screen active">
-      <div class="hero-box">
-        <h1>Выберите вашу профессию</h1>
-        <p>Интерактивная медиатека по 5 видам инструктажей. Тестовый прототип интерфейса.</p>
+      <div class="hero-banner">
+        <div class="hero-content">
+          <div class="severstal-motto">Политика ПАО «Северсталь»: «Безопасность превыше всего»</div>
+          <h1>Визуализированные инструктажи по охране труда</h1>
+          <p class="hero-lead">
+            Чёткие инструкции о том, какие действия необходимы для безопасной работы.
+            Выберите профессию, чтобы изучить видео, инфографику, памятку и пройти проверку знаний.
+          </p>
+          <div class="hero-stats">
+            <span class="stat-chip"><strong>6</strong> профессий</span>
+            <span class="stat-chip"><strong>5</strong> видов инструктажей</span>
+            <span class="stat-chip">Фокус на <strong>TOP-10</strong> рисков</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <h2>Основные производственные профессии</h2>
+        <span class="muted">Нажмите на карточку, чтобы открыть материалы</span>
       </div>
 
       <!-- Сетка карточек профессий (заполняется через JS) -->
@@ -44,84 +65,124 @@
         <span id="profBadge" class="prof-badge"></span>
       </div>
 
-      <div class="prof-header">
-        <h2 id="profTitle">Название профессии</h2>
-        <p id="profDesc" class="muted"></p>
+      <div class="prof-header-card">
+        <img id="profHeaderImg" class="prof-header-img" src="" alt="">
+        <div>
+          <div id="profIotBadge" class="iot-pill">ИОТ</div>
+          <h2 id="profTitle">Название профессии</h2>
+          <p id="profDesc" class="muted" style="margin-bottom: 0;"></p>
+        </div>
       </div>
 
       <!-- Кнопки 5 видов инструктажей -->
       <div class="briefing-selector">
-        <h3>1. Выберите вид инструктажа:</h3>
+        <h3>1. Выберите вид инструктажа (ГОСТ 12.0.004):</h3>
         <div id="briefingButtons" class="briefing-buttons"></div>
+      </div>
+
+      <!-- Мета-информация выбранного вида инструктажа -->
+      <div id="briefingMetaBar" class="briefing-meta-bar">
+        <div><span class="meta-label">Когда проводится:</span> <strong id="metaPeriod"></strong></div>
+        <div><span class="meta-label">Кто проводит:</span> <strong id="metaInstructor"></strong></div>
       </div>
 
       <!-- Контент выбранного инструктажа -->
       <div id="briefingContent" class="briefing-card">
         <div class="briefing-card-head">
           <h3 id="briefingTitle">Вид инструктажа</h3>
-          <span class="status-pill">Тестовый режим</span>
+          <span id="briefingStatusPill" class="status-pill">Интерактивный модуль</span>
         </div>
         <p id="briefingSummary" class="muted"></p>
+        <div id="briefingFocusBox" class="briefing-focus-box"></div>
 
         <!-- Вкладки (Видео / Инфографика / Тест) -->
         <div class="tabs" role="tablist" aria-label="Материалы инструктажа">
           <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-tab="video">
-            Видео
+            &#9654; Видео
           </button>
           <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="infographic">
-            Инфографика
+            &#128202; Инфографика (Плакат А4)
           </button>
           <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="quiz">
-            Мини-тест
+            &#9989; Мини-тест
           </button>
         </div>
 
         <!-- Содержимое вкладок -->
         <div id="tabPanelVideo" class="tab-panel active" role="tabpanel">
-          <div class="placeholder-box">
+          <div id="videoPlayerWrap" class="video-wrap" hidden>
+            <video id="briefingVideo" class="briefing-video" controls playsinline preload="metadata">
+              <source src="" type="video/mp4">
+              Ваш браузер не поддерживает воспроизведение видео.
+            </video>
+          </div>
+          <div id="videoPlaceholderWrap" class="placeholder-box">
             <div class="placeholder-icon">&#9654;</div>
-            <h4>Здесь будет видеоролик инструктажа (MP4 + субтитры)</h4>
+            <h4>Видеоролик по данному виду инструктажа готовится к загрузке</h4>
             <p id="videoPlaceholderText" class="muted"></p>
+            <p class="small-hint">Совет: выберите вкладку «Вводный», чтобы посмотреть готовый видеоролик.</p>
           </div>
         </div>
 
         <div id="tabPanelInfographic" class="tab-panel" role="tabpanel" hidden>
-          <div class="placeholder-box">
-            <div class="placeholder-icon">&#128202;</div>
-            <h4>Здесь будут карточки инфографики (А3/А4)</h4>
-            <p id="infoPlaceholderText" class="muted"></p>
+          <div class="infographic-toolbar">
+            <span>Готовая памятка-плакат для размещения в цеху (формат А4)</span>
+            <button type="button" id="printPosterBtn" class="btn btn-primary-sm">
+              &#128424; Печать / Сохранить в PDF
+            </button>
           </div>
+          <!-- Автоматически генерируемый плакат-инфографика для профессии -->
+          <div id="posterContainer" class="poster-sheet"></div>
         </div>
 
         <div id="tabPanelQuiz" class="tab-panel" role="tabpanel" hidden>
-          <h4>Мини-проверка знаний:</h4>
+          <h4>Мини-проверка знаний (3 вопроса):</h4>
           <div id="quizContainer"></div>
         </div>
       </div>
 
       <!-- Отдельный блок: Памятка по безопасности и Чек-лист -->
       <div class="briefing-card" style="margin-top: 16px;">
-        <h3 style="margin: 0 0 10px; color: var(--primary);">Памятка по безопасности и чек-лист</h3>
+        <div class="checklist-header">
+          <div>
+            <h3 style="margin: 0; color: var(--primary);">Памятка по безопасности и чек-лист</h3>
+            <p class="muted" style="margin: 4px 0 0; font-size: 0.88rem;">Отметки чек-листа автоматически сохраняются на вашем устройстве</p>
+          </div>
+          <span id="checklistProgress" class="progress-badge">0 / 3</span>
+        </div>
+
         <div class="info-grid">
           <div class="info-block info-risk">
-            <h4>Главные риски (TOP-10)</h4>
+            <h4>&#9888; Главные риски (TOP-10)</h4>
             <ul id="risksList"></ul>
           </div>
           <div class="info-block info-ppe">
-            <h4>Обязательные СИЗ</h4>
+            <h4>&#129466; Обязательные СИЗ</h4>
             <ul id="ppeList"></ul>
           </div>
           <div class="info-block info-forbidden">
-            <h4>Категорически запрещено</h4>
+            <h4>&#128683; Категорически запрещено (из ИОТ)</h4>
             <ul id="forbiddenList"></ul>
           </div>
           <div class="info-block info-emergency">
-            <h4>Алгоритм при ЧС / аварии</h4>
+            <h4>&#128680; Алгоритм при ЧС / аварии</h4>
             <ol id="emergencyList"></ol>
           </div>
         </div>
 
-        <h4 style="margin-top: 18px;">Чек-лист перед началом работы (можно отмечать):</h4>
+        <!-- Типовые ошибки: Действие -> Последствие -->
+        <div class="deep-section">
+          <h4>&#9889; Популярные ошибки работников (Действие &rarr; Последствие)</h4>
+          <div id="mistakesList" class="consequence-grid"></div>
+        </div>
+
+        <!-- Последствия неприменения СИЗ -->
+        <div class="deep-section">
+          <h4>&#129466; Последствия неиспользования СИЗ для этой профессии</h4>
+          <div id="ppeConsequencesList" class="consequence-grid"></div>
+        </div>
+
+        <h4 style="margin: 18px 0 8px;">Чек-лист перед началом смены:</h4>
         <ul id="checklistItems" class="checklist"></ul>
       </div>
     </section>
@@ -129,15 +190,18 @@
 
   <footer class="footer">
     <div class="container">
-      Учебный проект ЧГУ для ПАО «Северсталь» • Веб-прототип (HTML/CSS/JS)
+      Учебный проектный прототип (ЧГУ) для ПАО «Северсталь» • «Правильная информация в нужное время для нужных людей»
     </div>
   </footer>
 
   <!-- Модальное окно Глоссария (нативный HTML <dialog>) -->
   <dialog id="glossaryDialog" class="dialog">
     <div class="dialog-header">
-      <h3>Глоссарий терминов (тест)</h3>
+      <h3>Глоссарий терминов охраны труда</h3>
       <button type="button" id="closeGlossaryBtn" class="btn-close" aria-label="Закрыть">&times;</button>
+    </div>
+    <div class="dialog-search-wrap">
+      <input type="search" id="glossarySearch" class="dialog-search" placeholder="Поиск термина (например: СИЗ, LOTO, LTIFR)...">
     </div>
     <div id="glossaryList" class="dialog-body"></div>
   </dialog>

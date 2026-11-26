@@ -1,15 +1,17 @@
-/* Корпоративные цвета ПАО «Северсталь» и базовые настройки */
+/* Корпоративная палитра ПАО «Северсталь» и современный UI */
 :root {
-  --primary: #002f6c;      /* Тёмно-синий */
-  --primary-dark: #001f49;
-  --accent: #e30613;       /* Красный акцент */
-  --bg: #f3f5f8;
+  --primary: #002f6c;      /* Глубокий синий */
+  --primary-light: #0a4694;
+  --accent: #e30613;       /* Фирменный красный */
+  --bg: #f1f5f9;
   --surface: #ffffff;
-  --text: #1f2937;
-  --muted: #6b7280;
-  --border: #d1d5db;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
   --success: #15803d;
-  --radius: 12px;
+  --radius: 14px;
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 10px 25px rgba(0, 47, 108, 0.12);
 }
 
 * {
@@ -18,18 +20,24 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   background-color: var(--bg);
   color: var(--text);
-  line-height: 1.5;
+  line-height: 1.55;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Блокировка скролла фона при открытом модальном окне */
+body:has(dialog[open]) {
+  overflow: hidden;
 }
 
 .container {
   width: 100%;
-  max-width: 1040px;
+  max-width: 1080px;
   margin: 0 auto;
   padding: 0 16px;
 }
@@ -38,8 +46,12 @@ body {
 .header {
   background: var(--primary);
   color: #ffffff;
-  padding: 14px 0;
+  padding: 12px 0;
   border-bottom: 4px solid var(--accent);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .header-inner {
@@ -47,7 +59,6 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  flex-wrap: wrap;
 }
 
 .brand {
@@ -56,23 +67,39 @@ body {
   gap: 12px;
 }
 
+.brand-btn {
+  background: transparent;
+  border: none;
+  color: inherit;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.brand-btn:hover {
+  opacity: 0.9;
+}
+
 .brand-badge {
   background: var(--accent);
   color: #fff;
   font-weight: 800;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   padding: 8px 11px;
-  border-radius: 8px;
+  border-radius: 9px;
+  letter-spacing: 0.5px;
 }
 
 .brand-title {
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.08rem;
+  line-height: 1.2;
 }
 
 .brand-subtitle {
-  font-size: 0.85rem;
-  opacity: 0.85;
+  font-size: 0.82rem;
+  opacity: 0.82;
 }
 
 /* Кнопки */
@@ -80,89 +107,182 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 16px;
-  font-size: 0.95rem;
+  gap: 6px;
+  padding: 9px 15px;
+  font-family: inherit;
+  font-size: 0.92rem;
   font-weight: 600;
-  border-radius: 8px;
+  border-radius: 9px;
   border: none;
   cursor: pointer;
   transition: background 0.15s ease, transform 0.1s ease;
 }
 
 .btn:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 
 .btn-outline {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
 .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .btn-secondary {
-  background: #e5e7eb;
+  background: #e2e8f0;
   color: var(--text);
 }
 
 .btn-secondary:hover {
-  background: #d1d5db;
+  background: #cbd5e1;
+}
+
+.btn-primary-sm {
+  background: var(--primary);
+  color: #ffffff;
+  padding: 8px 13px;
+  font-size: 0.86rem;
+}
+
+.btn-primary-sm:hover {
+  background: var(--primary-light);
 }
 
 /* Основной контент */
 .main-content {
   flex: 1;
-  padding: 20px 16px 32px;
+  padding: 20px 16px 36px;
 }
 
-.hero-box {
-  margin-bottom: 20px;
+/* Hero-баннер на главной */
+.hero-banner {
+  background: linear-gradient(135deg, var(--primary) 0%, #0a4694 100%);
+  color: #ffffff;
+  border-radius: var(--radius);
+  padding: 24px 22px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
 }
 
-.hero-box h1 {
-  margin: 0 0 6px;
-  font-size: 1.5rem;
-  color: var(--primary);
+.hero-banner::after {
+  content: "";
+  position: absolute;
+  right: -40px;
+  top: -40px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(227, 6, 19, 0.18);
+  pointer-events: none;
 }
 
-.hero-box p {
+.severstal-motto {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #ffffff;
+  background: var(--accent);
+  padding: 4px 11px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+
+.hero-banner h1 {
+  margin: 0 0 8px;
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.hero-lead {
+  margin: 0 0 14px;
+  font-size: 0.96rem;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 720px;
+}
+
+.hero-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.stat-chip {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  padding: 5px 11px;
+  border-radius: 8px;
+  font-size: 0.84rem;
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.section-head h2 {
   margin: 0;
-  color: var(--muted);
+  font-size: 1.22rem;
+  color: var(--primary);
 }
 
 /* Сетка карточек профессий */
 .professions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
 }
 
 .prof-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 18px;
+  padding: 16px;
   text-align: left;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.18s, box-shadow 0.18s, transform 0.15s;
 }
 
 .prof-card:hover {
   border-color: var(--primary);
-  box-shadow: 0 6px 18px rgba(0, 47, 108, 0.1);
-  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+}
+
+.prof-card-img {
+  width: 100%;
+  height: 175px;
+  object-fit: contain;
+  background: radial-gradient(circle at center, #ffffff 0%, #f1f5f9 100%);
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.prof-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .prof-card-dept {
-  display: inline-block;
-  align-self: flex-start;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 700;
   color: var(--primary);
   background: #e0ebff;
@@ -170,15 +290,32 @@ body {
   border-radius: 6px;
 }
 
+.prof-card-done {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--success);
+  background: #dcfce7;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
 .prof-card-title {
-  font-size: 1.12rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--text);
 }
 
 .prof-card-desc {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--muted);
+  flex: 1;
+}
+
+.prof-card-cta {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-top: 4px;
 }
 
 /* Экран профессии */
@@ -187,30 +324,52 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .prof-badge {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--primary);
   background: #e0ebff;
-  padding: 5px 10px;
+  padding: 5px 11px;
   border-radius: 6px;
 }
 
-.prof-header h2 {
+.prof-header-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.prof-header-img {
+  width: 82px;
+  height: 82px;
+  object-fit: contain;
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+.prof-header-card h2 {
   margin: 0 0 4px;
   color: var(--primary);
+  font-size: 1.3rem;
 }
 
 .muted {
   color: var(--muted);
-  margin: 0 0 12px;
+  margin: 0 0 10px;
 }
 
 .briefing-selector {
-  margin: 18px 0;
+  margin: 18px 0 12px;
 }
 
 .briefing-selector h3 {
@@ -225,20 +384,43 @@ body {
 }
 
 .briefing-btn {
-  padding: 10px 14px;
-  border-radius: 8px;
+  padding: 10px 15px;
+  border-radius: 9px;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
+  font-family: inherit;
   font-weight: 600;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
   cursor: pointer;
+  transition: all 0.15s;
+}
+
+.briefing-btn:hover {
+  border-color: var(--primary);
 }
 
 .briefing-btn.active {
   background: var(--primary);
   color: #ffffff;
   border-color: var(--primary);
+  box-shadow: 0 4px 10px rgba(0, 47, 108, 0.2);
+}
+
+.briefing-meta-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  background: #e8effa;
+  border-left: 4px solid var(--primary);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  margin-bottom: 14px;
+}
+
+.meta-label {
+  color: var(--muted);
 }
 
 /* Карточка инструктажа */
@@ -247,20 +429,21 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 18px;
+  box-shadow: var(--shadow-sm);
 }
 
 .briefing-card-head {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 6px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 8px;
 }
 
 .briefing-card-head h3 {
   margin: 0;
   color: var(--primary);
+  font-size: 1.2rem;
 }
 
 .status-pill {
@@ -268,7 +451,7 @@ body {
   font-weight: 600;
   background: #fef3c7;
   color: #92400e;
-  padding: 3px 8px;
+  padding: 3px 10px;
   border-radius: 999px;
 }
 
@@ -279,7 +462,7 @@ body {
   border-bottom: 2px solid var(--bg);
   margin: 14px 0;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding-bottom: 6px;
 }
 
 .tab-btn {
@@ -287,6 +470,7 @@ body {
   border: none;
   background: transparent;
   color: var(--muted);
+  font-family: inherit;
   font-weight: 600;
   font-size: 0.92rem;
   cursor: pointer;
@@ -295,8 +479,23 @@ body {
 }
 
 .tab-btn.active {
-  background: #eef2ff;
+  background: #e8effa;
   color: var(--primary);
+}
+
+/* Видеоплеер и заглушка */
+.video-wrap {
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid var(--border);
+}
+
+.briefing-video {
+  display: block;
+  width: 100%;
+  max-height: 460px;
+  background: #000;
 }
 
 .placeholder-box {
@@ -304,7 +503,7 @@ body {
   border-radius: 10px;
   padding: 28px 16px;
   text-align: center;
-  background: #fafafa;
+  background: #f8fafc;
 }
 
 .placeholder-icon {
@@ -316,11 +515,132 @@ body {
   margin: 0 0 6px;
 }
 
-/* Чек-лист */
+.small-hint {
+  font-size: 0.85rem;
+  color: var(--primary);
+  font-weight: 600;
+  margin: 8px 0 0;
+}
+
+/* Инфографика (Плакат А4) */
+.infographic-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.poster-sheet {
+  border: 2px solid var(--primary);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.poster-head {
+  background: var(--primary);
+  color: #ffffff;
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 4px solid var(--accent);
+}
+
+.poster-head h4 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.poster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  padding: 16px;
+}
+
+.poster-box {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.poster-box h5 {
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+  color: var(--primary);
+}
+
+.poster-box ul,
+.poster-box ol {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.85rem;
+}
+
+/* Памятка и чек-лист */
+.checklist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.progress-badge {
+  background: #e8effa;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.86rem;
+  padding: 5px 11px;
+  border-radius: 999px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.info-block {
+  border-radius: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  background: #f8fafc;
+}
+
+.info-block h4 {
+  margin: 0 0 8px;
+  font-size: 0.94rem;
+}
+
+.info-block ul,
+.info-block ol {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.87rem;
+}
+
+.info-block li {
+  margin-bottom: 4px;
+}
+
+.info-risk { border-left: 4px solid #d97706; }
+.info-ppe { border-left: 4px solid var(--primary); }
+.info-forbidden { border-left: 4px solid var(--accent); }
+.info-emergency { border-left: 4px solid var(--success); }
+
 .checklist {
   list-style: none;
   padding: 0;
-  margin: 10px 0 0;
+  margin: 0;
 }
 
 .checklist li {
@@ -331,15 +651,23 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  cursor: pointer;
 }
 
 .checklist input[type="checkbox"] {
   width: 20px;
   height: 20px;
   accent-color: var(--primary);
+  flex-shrink: 0;
 }
 
 /* Мини-тест */
+.quiz-question-box {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--bg);
+}
+
 .quiz-option {
   display: block;
   width: 100%;
@@ -349,8 +677,9 @@ body {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: #fff;
+  font-family: inherit;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 0.93rem;
 }
 
 .quiz-option.correct {
@@ -366,12 +695,21 @@ body {
   color: #7f1d1d;
 }
 
+.quiz-score {
+  margin-top: 10px;
+  padding: 11px 14px;
+  border-radius: 8px;
+  background: #e8effa;
+  color: var(--primary);
+  font-weight: 700;
+}
+
 /* Подвал */
 .footer {
   background: #ffffff;
   border-top: 1px solid var(--border);
   padding: 14px 0;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   color: var(--muted);
   text-align: center;
 }
@@ -381,13 +719,13 @@ body {
   border: none;
   border-radius: var(--radius);
   padding: 0;
-  max-width: 520px;
+  max-width: 540px;
   width: calc(100% - 24px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.28);
 }
 
 .dialog::backdrop {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.55);
 }
 
 .dialog-header {
@@ -413,9 +751,22 @@ body {
   cursor: pointer;
 }
 
+.dialog-search-wrap {
+  padding: 12px 16px 0;
+}
+
+.dialog-search {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.92rem;
+}
+
 .dialog-body {
-  padding: 16px;
-  max-height: 70vh;
+  padding: 14px 16px 16px;
+  max-height: 64vh;
   overflow-y: auto;
 }
 
@@ -429,101 +780,147 @@ body {
   border-bottom: none;
 }
 
-/* Сетка блоков рисков, СИЗ, запретов и ЧС */
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 12px;
-  margin-top: 8px;
+/* Печать плаката А4 */
+@media print {
+  .header, .top-nav, .prof-header-card, .briefing-selector, .briefing-meta-bar,
+  .briefing-card-head, #briefingSummary, .tabs, .infographic-toolbar,
+  .footer, .briefing-card + .briefing-card {
+    display: none !important;
+  }
+  body, .briefing-card {
+    background: #fff !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  .poster-sheet {
+    border: 2px solid #002f6c !important;
+  }
 }
 
-.info-block {
-  border-radius: 10px;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  background: #f9fafb;
+/* Официальный логотип ПАО «Северсталь» в шапке */
+.brand-logo-img {
+  height: 32px;
+  width: auto;
+  display: block;
 }
 
-.info-block h4 {
-  margin: 0 0 8px;
-  font-size: 0.95rem;
+.brand-divider {
+  width: 1px;
+  height: 26px;
+  background: rgba(255, 255, 255, 0.3);
 }
 
-.info-block ul,
-.info-block ol {
-  margin: 0;
-  padding-left: 18px;
-  font-size: 0.88rem;
+@media (max-width: 520px) {
+  .brand-logo-img {
+    height: 24px;
+  }
+  .brand-divider,
+  .brand-subtitle {
+    display: none;
+  }
 }
 
-.info-block li {
-  margin-bottom: 4px;
-}
-
-.info-risk {
-  border-left: 4px solid #d97706;
-}
-
-.info-ppe {
-  border-left: 4px solid var(--primary);
-}
-
-.info-forbidden {
-  border-left: 4px solid var(--accent);
-}
-
-.info-emergency {
-  border-left: 4px solid var(--success);
-}
-
-.quiz-question-box {
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--bg);
-}
-
-.quiz-score {
-  margin-top: 10px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  background: #eef2ff;
+/* Корпоративная белая шапка в стиле severstal.com/rus/ */
+.header {
+  background: #ffffff;
   color: var(--primary);
-  font-weight: 700;
+  padding: 10px 0;
+  border-bottom: 3px solid var(--accent);
+  box-shadow: 0 2px 10px rgba(0, 47, 108, 0.08);
 }
 
-/* Иллюстрация на карточке профессии */
-.prof-card-img {
-  width: 100%;
-  height: 170px;
-  object-fit: contain;
-  background: #f8fafc;
+.brand-logo-img {
+  height: 54px;
+  width: auto;
+  display: block;
+}
+
+.brand-divider {
+  width: 1px;
+  height: 28px;
+  background: #cbd5e1;
+}
+
+.brand-subtitle {
+  color: #475569;
+  font-size: 0.88rem;
+  font-weight: 500;
+  opacity: 1;
+}
+
+.header .btn-outline {
+  background: #f1f5f9;
+  color: var(--primary);
+  border: 1px solid #cbd5e1;
+}
+
+.header .btn-outline:hover {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+@media (max-width: 520px) {
+  .brand-logo-img {
+    height: 42px;
+  }
+}
+
+/* Бейдж реального номера ИОТ и объёма оригинала */
+.iot-pill {
+  display: inline-block;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: #e0ebff;
+  padding: 3px 9px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+/* Уникальный фокус выбранного вида инструктажа */
+.briefing-focus-box {
+  background: #f0f7ff;
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid var(--primary);
   border-radius: 8px;
-  padding: 6px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  margin-bottom: 14px;
+}
+
+/* Блоки "Действие -> Последствие" и "Последствия без СИЗ" */
+.deep-section {
+  margin-top: 20px;
+}
+
+.deep-section h4 {
+  margin: 0 0 10px;
+  color: var(--primary);
+  font-size: 1rem;
+}
+
+.consequence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.consequence-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 11px 13px;
+  font-size: 0.87rem;
+}
+
+.consequence-action {
+  font-weight: 700;
+  color: var(--accent);
   margin-bottom: 4px;
 }
 
-/* Блокировка скролла страницы при открытом глоссарии */
-body:has(dialog[open]) {
-  overflow: hidden;
-}
-
-/* Кнопка-логотип в шапке для возврата на главную */
-.brand-btn {
-  background: transparent;
-  border: none;
-  color: inherit;
-  text-align: left;
-  padding: 0;
-  cursor: pointer;
-}
-
-.brand-btn:hover {
-  opacity: 0.9;
-}
-
-/* Плашка статуса всегда на отдельной строке под названием инструктажа */
-.briefing-card-head {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
+.consequence-result {
+  color: var(--text);
 }
