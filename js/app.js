@@ -720,11 +720,20 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   })();
 
-  // 12. Обратная связь (1-5 звёзд + отправка на mevostriakov@chsu.ru)
+  // 12. Обратная связь (1-5 звёзд) + Панель разработчика (ot1ze) + Google Таблица
   (function initFeedback() {
+    // Сюда позже вставь ссылку своего Google Apps Script (см. ГАЙД_ОТЗЫВЫ_GOOGLE_ТАБЛИЦА.md), чтобы отзывы летели с любых телефонов
+    const GOOGLE_SCRIPT_URL = "";
+    const AUTH_USER = "ot1ze";
+    // SHA-256 хэш пароля 141otz141 (чтобы пароль не лежал открытым текстом в коде)
+    const AUTH_PASS_HASH = "ec95e177f99cec044567e838340bae7a4c89371963d7c72bb9b3a48b3bf0ac04";
+
     const dialog = document.getElementById("feedbackDialog");
     const openBtns = [document.getElementById("openFeedbackBtn"), document.getElementById("footerFeedbackBtn")];
     const closeBtn = document.getElementById("closeFeedbackBtn");
+    const userPane = document.getElementById("feedbackUserPane");
+    const adminPane = document.getElementById("feedbackAdminPane");
+
     const starBtns = document.querySelectorAll(".star-btn");
     const formWrap = document.getElementById("feedbackFormWrap");
     const commentInput = document.getElementById("feedbackComment");
@@ -732,12 +741,113 @@ document.addEventListener("DOMContentLoaded", () => {
     const sendBtn = document.getElementById("sendFeedbackBtn");
     const statusBox = document.getElementById("feedbackStatus");
 
+    const toggleDevBtn = document.getElementById("toggleDevLoginBtn");
+    const devLoginBox = document.getElementById("devLoginBox");
+    const devLoginInput = document.getElementById("devLoginInput");
+    const devPassInput = document.getElementById("devPassInput");
+    const devLoginBtn = document.getElementById("devLoginBtn");
+    const devLoginError = document.getElementById("devLoginError");
+
+    const refreshReviewsBtn = document.getElementById("refreshReviewsBtn");
+    const exportReviewsCsvBtn = document.getElementById("exportReviewsCsvBtn");
+    const devLogoutBtn = document.getElementById("devLogoutBtn");
+    const adminKpiCards = document.getElementById("adminKpiCards");
+    const adminReviewsList = document.getElementById("adminReviewsList");
+
     let selectedRating = 0;
+    let cachedReviews = [];
+
+    async function sha256(str) {
+      if (window.crypto && window.crypto.subtle) {
+        const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+        return Array.from(new Uint8Array(buf))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+      }
+      return str === "141otz141" ? AUTH_PASS_HASH : "";
+    }
+
+    function getLocalReviews() {
+      try {
+        return JSON.parse(localStorage.getItem(FEEDBACK_KEY) || "[]");
+      } catch {
+        return [];
+      }
+    }
+
+    async function loadAllReviews() {
+      let list = getLocalReviews();
+      if (GOOGLE_SCRIPT_URL) {
+        try {
+          const res = await fetch(GOOGLE_SCRIPT_URL);
+          const remote = await res.json();
+          if (Array.isArray(remote)) {
+            list = remote;
+          }
+        } catch {}
+      }
+      cachedReviews = list;
+      renderAdminReviews(list);
+    }
+
+    function renderAdminReviews(list) {
+      const total = list.length;
+      const avg = total ? (list.reduce((s, r) => s + Number(r.rating || 0), 0) / total).toFixed(1) : "—";
+      const positive = total ? Math.round((list.filter((r) => Number(r.rating) >= 4).length / total) * 100) : 0;
+
+      adminKpiCards.innerHTML = `
+        <div class="admin-kpi-card">
+          <div class="admin-kpi-val">${total}</div>
+          <div class="admin-kpi-lbl">Всего отзывов</div>
+        </div>
+        <div class="admin-kpi-card">
+          <div class="admin-kpi-val">${avg} &#9733;</div>
+          <div class="admin-kpi-lbl">Средняя оценка</div>
+        </div>
+        <div class="admin-kpi-card">
+          <div class="admin-kpi-val">${total ? positive + "%" : "—"}</div>
+          <div class="admin-kpi-lbl">Положительных (KPI &ge; 80%)</div>
+        </div>
+      `;
+
+      if (!total) {
+        adminReviewsList.innerHTML = '<p class="muted">Отзывов пока нет.</p>';
+        return;
+      }
+
+      adminReviewsList.innerHTML = `
+        <table class="journal-table">
+          <thead>
+            <tr>
+              <th>Дата</th>
+              <th>Оценка</th>
+              <th>Автор</th>
+              <th>Комментарий</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${list
+              .map(
+                (r) => `
+              <tr>
+                <td>${r.date || ""}</td>
+                <td><strong>${r.rating} &#9733;</strong></td>
+                <td>${r.author || "Аноним"}</td>
+                <td>${r.comment || ""}</td>
+              </tr>
+            `
+              )
+              .join("")}
+          </tbody>
+        </table>
+      `;
+    }
 
     openBtns.forEach((b) => {
       if (b) {
         b.addEventListener("click", () => {
           statusBox.hidden = true;
+          devLoginError.hidden = true;
           dialog.showModal();
         });
       }
@@ -760,44 +870,68 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!selectedRating) return;
       const comment = commentInput.value.trim() || "Без комментария";
       const author = authorInput.value.trim() || "Анонимный участник";
+      const entry = { rating: selectedRating, comment, author, date: new Date().toLocaleString("ru-RU") };
 
       sendBtn.disabled = true;
-      sendBtn.textContent = "Отправка...";
+      sendBtn.textContent = "Сохранение...";
 
-      // Сохраняем локально
       try {
-        const list = JSON.parse(localStorage.getItem(FEEDBACK_KEY) || "[]");
-        list.unshift({ rating: selectedRating, comment, author, date: new Date().toLocaleString("ru-RU") });
+        const list = getLocalReviews();
+        list.unshift(entry);
         localStorage.setItem(FEEDBACK_KEY, JSON.stringify(list));
       } catch {}
 
-      // Отправляем через FormSubmit.co на mevostriakov@chsu.ru
-      try {
-        const res = await fetch("https://formsubmit.co/ajax/mevostriakov@chsu.ru", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify({
-            _subject: `Оценка проекта «Инструктажи Северсталь»: ${selectedRating}/5`,
-            Оценка: `${selectedRating} из 5`,
-            Комментарий: comment,
-            Автор: author
-          })
-        });
-        if (res.ok) {
-          statusBox.textContent = `Спасибо! Оценка (${selectedRating}/5) отправлена на mevostriakov@chsu.ru.`;
-        } else {
-          throw new Error("FormSubmit error");
-        }
-      } catch {
-        const subject = encodeURIComponent(`Оценка проекта Северсталь: ${selectedRating}/5`);
-        const body = encodeURIComponent(`Оценка: ${selectedRating} из 5\nАвтор: ${author}\nКомментарий: ${comment}`);
-        statusBox.innerHTML = `Отзыв сохранён на устройстве! <a href="mailto:mevostriakov@chsu.ru?subject=${subject}&body=${body}">Нажмите здесь, чтобы открыть почту и отправить письмо</a>.`;
+      if (GOOGLE_SCRIPT_URL) {
+        try {
+          await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(entry)
+          });
+        } catch {}
       }
 
+      statusBox.textContent = `Спасибо! Ваша оценка (${selectedRating} ★) сохранена.`;
       statusBox.hidden = false;
       sendBtn.disabled = false;
-      sendBtn.textContent = "Отправить отзыв на mevostriakov@chsu.ru";
+      sendBtn.textContent = "Отправить отзыв";
       commentInput.value = "";
+    });
+
+    toggleDevBtn.addEventListener("click", () => {
+      devLoginBox.hidden = !devLoginBox.hidden;
+    });
+
+    devLoginBtn.addEventListener("click", async () => {
+      const login = devLoginInput.value.trim();
+      const passHash = await sha256(devPassInput.value);
+      if (login === AUTH_USER && passHash === AUTH_PASS_HASH) {
+        devLoginError.hidden = true;
+        userPane.hidden = true;
+        adminPane.hidden = false;
+        loadAllReviews();
+      } else {
+        devLoginError.hidden = false;
+      }
+    });
+
+    devLogoutBtn.addEventListener("click", () => {
+      adminPane.hidden = true;
+      userPane.hidden = false;
+      devPassInput.value = "";
+    });
+
+    refreshReviewsBtn.addEventListener("click", loadAllReviews);
+
+    exportReviewsCsvBtn.addEventListener("click", () => {
+      if (!cachedReviews.length) return;
+      const rows = [["Дата", "Оценка", "Автор", "Комментарий"], ...cachedReviews.map((r) => [r.date, r.rating, r.author, r.comment])];
+      const csv = "\uFEFF" + rows.map((row) => row.map((v) => `"${String(v || "").replace(/"/g, '""')}"`).join(";")).join("\n");
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+      a.download = "reviews_severstal.csv";
+      a.click();
     });
   })();
 

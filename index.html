@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=9">
+  <link rel="stylesheet" href="css/style.css?v=10">
 </head>
 <body>
   <!-- Верхняя шапка сайта -->
@@ -390,42 +390,85 @@
     </div>
   </dialog>
 
-  <!-- Модальное окно Обратной связи и оценки (1-5 звёзд + отправка на mevostriakov@chsu.ru) -->
-  <dialog id="feedbackDialog" class="dialog">
+  <!-- Модальное окно Обратной связи и Панели разработчика -->
+  <dialog id="feedbackDialog" class="dialog dialog-wide">
     <div class="dialog-header">
-      <h3>&#11088; Оценка и обратная связь</h3>
+      <h3>&#11088; Оценка проекта и обратная связь</h3>
       <button type="button" id="closeFeedbackBtn" class="btn-close" aria-label="Закрыть">&times;</button>
     </div>
     <div class="dialog-body">
-      <p class="muted" style="font-size: 0.88rem;">
-        Помогите улучшить учебный проект для ПАО «Северсталь». Почта команды: <strong>mevostriakov@chsu.ru</strong>
-      </p>
-      <div class="rating-stars" id="ratingStars" role="group" aria-label="Оценка от 1 до 5">
-        <button type="button" class="star-btn" data-val="1">1 &#9733;</button>
-        <button type="button" class="star-btn" data-val="2">2 &#9733;</button>
-        <button type="button" class="star-btn" data-val="3">3 &#9733;</button>
-        <button type="button" class="star-btn" data-val="4">4 &#9733;</button>
-        <button type="button" class="star-btn" data-val="5">5 &#9733;</button>
+      <!-- Пользовательская часть: поставить оценку -->
+      <div id="feedbackUserPane">
+        <p class="muted" style="font-size: 0.88rem;">
+          Помогите улучшить учебный проект для ПАО «Северсталь». Выберите оценку от 1 до 5:
+        </p>
+        <div class="rating-stars" id="ratingStars" role="group" aria-label="Оценка от 1 до 5">
+          <button type="button" class="star-btn" data-val="1">1 &#9733;</button>
+          <button type="button" class="star-btn" data-val="2">2 &#9733;</button>
+          <button type="button" class="star-btn" data-val="3">3 &#9733;</button>
+          <button type="button" class="star-btn" data-val="4">4 &#9733;</button>
+          <button type="button" class="star-btn" data-val="5">5 &#9733;</button>
+        </div>
+
+        <div id="feedbackFormWrap" class="feedback-form-wrap" hidden>
+          <label class="fb-label">
+            <span>Расскажите, почему поставили такую оценку / ваши предложения:</span>
+            <textarea id="feedbackComment" rows="3" placeholder="Например: всё понятно и удобно на телефоне, но хотелось бы добавить..."></textarea>
+          </label>
+          <label class="fb-label">
+            <span>Ваше имя или роль (необязательно):</span>
+            <input type="text" id="feedbackAuthor" placeholder="Студент / преподаватель / сотрудник">
+          </label>
+          <button type="button" id="sendFeedbackBtn" class="btn btn-primary-sm" style="width: 100%;">
+            Отправить отзыв
+          </button>
+          <div id="feedbackStatus" class="feedback-status" hidden></div>
+        </div>
+
+        <div class="dev-login-toggle">
+          <button type="button" id="toggleDevLoginBtn" class="link-btn" style="font-size: 0.8rem; color: var(--muted);">
+            &#128274; Вход для разработчика (просмотр оценок)
+          </button>
+        </div>
+
+        <!-- Форма входа разработчика -->
+        <div id="devLoginBox" class="dev-login-box" hidden>
+          <div class="protocol-form-row">
+            <label class="fb-label">
+              <span>Логин:</span>
+              <input type="text" id="devLoginInput" placeholder="Логин">
+            </label>
+            <label class="fb-label">
+              <span>Пароль:</span>
+              <input type="password" id="devPassInput" placeholder="Пароль">
+            </label>
+          </div>
+          <button type="button" id="devLoginBtn" class="btn btn-primary-sm" style="margin-top: 8px; width: 100%;">
+            Войти в панель оценок
+          </button>
+          <div id="devLoginError" class="muted" style="color: var(--accent); font-size: 0.82rem; margin-top: 6px;" hidden>
+            Неверный логин или пароль.
+          </div>
+        </div>
       </div>
 
-      <div id="feedbackFormWrap" class="feedback-form-wrap" hidden>
-        <label class="fb-label">
-          <span>Расскажите, почему поставили такую оценку / ваши предложения:</span>
-          <textarea id="feedbackComment" rows="4" placeholder="Например: всё понятно и удобно на телефоне, но хотелось бы добавить..."></textarea>
-        </label>
-        <label class="fb-label">
-          <span>Ваше имя или роль (необязательно):</span>
-          <input type="text" id="feedbackAuthor" placeholder="Студент / преподаватель / сотрудник">
-        </label>
-        <button type="button" id="sendFeedbackBtn" class="btn btn-primary-sm" style="width: 100%;">
-          Отправить отзыв на mevostriakov@chsu.ru
-        </button>
-        <div id="feedbackStatus" class="feedback-status" hidden></div>
+      <!-- Закрытая панель разработчика (видна только после входа) -->
+      <div id="feedbackAdminPane" hidden>
+        <div class="admin-top-bar">
+          <strong>Панель разработчика (ot1ze)</strong>
+          <div style="display:flex; gap:6px;">
+            <button type="button" id="refreshReviewsBtn" class="btn btn-secondary btn-sm">&#8635; Обновить</button>
+            <button type="button" id="exportReviewsCsvBtn" class="btn btn-secondary btn-sm">&#128229; CSV</button>
+            <button type="button" id="devLogoutBtn" class="btn btn-secondary btn-sm">Выйти</button>
+          </div>
+        </div>
+        <div id="adminKpiCards" class="admin-kpi-grid"></div>
+        <div id="adminReviewsList" style="overflow-x:auto;"></div>
       </div>
     </div>
   </dialog>
 
-  <script src="js/data.js?v=9"></script>
-  <script src="js/app.js?v=9"></script>
+  <script src="js/data.js?v=10"></script>
+  <script src="js/app.js?v=10"></script>
 </body>
 </html>
