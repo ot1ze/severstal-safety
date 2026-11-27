@@ -2,6 +2,16 @@
 // 6 профессий × 5 видов инструктажей × 6 реальных аварийных сценариев × 15 вопросов теста
 
 window.SAFETY_DATA = {
+  riskFilters: [
+    { id: "all", label: "Все профессии" },
+    { id: "melt", label: "Расплав металла" },
+    { id: "gas", label: "Газ (CO)" },
+    { id: "electric", label: "Электроток" },
+    { id: "height", label: "Высота" },
+    { id: "machinery", label: "Механизмы / ГПМ" },
+    { id: "transport", label: "Спецтехника" }
+  ],
+
   briefingTypes: [
     {
       id: "vvodny",
@@ -90,6 +100,7 @@ window.SAFETY_DATA = {
       department: "ЦВКС СП (Сталеплавильное пр-во)",
       iotNumber: "ИОТ 107-2-02-25",
       iotPages: 182,
+      riskTags: ["melt", "gas", "height"],
       description: "Выплавка стали в конвертере, отбор проб, осадка шлака, установка стопоров отсечки шлака, уборка настылей.",
       docs: [
         { title: "ИОТ 107-2-02-25 Сталевар конвертера 8 р. (PDF)", file: "media/docs/steelmaker_8r.pdf", size: "5.1 МБ" },
@@ -284,6 +295,7 @@ window.SAFETY_DATA = {
       department: "ЦООМ ПСТП (ТЭСА 12-38, 19-60, 32-102, 12-42)",
       iotNumber: "ИОТ 17.4.12-23",
       iotPages: 117,
+      riskTags: ["machinery", "electric"],
       description: "Работа на профилегибочном агрегате (ТЭСА), заправка и резка штрипса, ликвидация «бурежек», пресс.",
       docs: [
         { title: "ИОТ 17-4.12-23 Вальцовщик ПГА 6 разряд (PDF)", file: "media/docs/roller_6r.pdf", size: "2.3 МБ" },
@@ -478,6 +490,7 @@ window.SAFETY_DATA = {
       department: "УТОиР ГПМ ППП (Центр «Промсервис»)",
       iotNumber: "ИОТ-114-48-02-26",
       iotPages: 97,
+      riskTags: ["machinery", "height", "electric"],
       description: "Техническое обслуживание и ремонт механического оборудования грузоподъёмных машин (ПС) в цехах ППП.",
       docs: [
         { title: "ИОТ-114-48-02-26 Слесарь-ремонтник ГПМ 4–6 р. (PDF)", file: "media/docs/mechanic_4_6r.pdf", size: "1.8 МБ" }
@@ -670,6 +683,7 @@ window.SAFETY_DATA = {
       department: "КАДП, ЦПЧ (Доменное производство)",
       iotNumber: "ИОТ 33-01-24",
       iotPages: 87,
+      riskTags: ["melt", "gas", "machinery", "height"],
       description: "Выдача чугуна и шлака из ДП, обслуживание литейного двора, работа с МВЧЛ, МЗЧЛ и фурменным прибором.",
       docs: [
         { title: "ИОТ 33-01-24 Горновой доменной печи (PDF)", file: "media/docs/blast_furnace.pdf", size: "2.3 МБ" }
@@ -862,6 +876,7 @@ window.SAFETY_DATA = {
       department: "Центр «Промсервис» (РЭМ ЭлРЦ в цехах ЧерМК)",
       iotNumber: "ИОТ 123-76-3-4-5-6-25",
       iotPages: 37,
+      riskTags: ["electric", "gas", "machinery"],
       description: "Ремонт и обслуживание электрооборудования участка РЭМ ЭлРЦ в основных производственных цехах ЧерМК.",
       docs: [
         { title: "ИОТ 123-76-3-4-5-6-25 Электромонтер 3–6 р. (PDF)", file: "media/docs/electrician_3_6r.pdf", size: "1.2 МБ" }
@@ -1054,6 +1069,7 @@ window.SAFETY_DATA = {
       department: "АТЦ (Управление транспорта)",
       iotNumber: "ИОТ-141-09-23 (+Изм. 1–5)",
       iotPages: 81,
+      riskTags: ["transport", "height", "electric"],
       description: "Техническая и линейная эксплуатация автосамосвала БелАЗ, перевозка грузов на объектах ОХ и СХ и в цехах.",
       docs: [
         { title: "ИОТ-141-09-23 Водитель автомобиля БелАЗ (PDF)", file: "media/docs/belaz_main.pdf", size: "1.4 МБ" },

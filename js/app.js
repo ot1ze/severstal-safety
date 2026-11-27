@@ -35,11 +35,24 @@ document.addEventListener("DOMContentLoaded", () => {
     return str === "141otz141" ? SHARED_PASS_HASH : "";
   }
 
-  // Элементы экранов и поиска
+  // Элементы экранов, дашборда и поиска
   const homeScreen = document.getElementById("homeScreen");
   const professionScreen = document.getElementById("professionScreen");
   const professionsGrid = document.getElementById("professionsGrid");
   const profSearchInput = document.getElementById("profSearchInput");
+  const riskFilterBar = document.getElementById("riskFilterBar");
+
+  const dashReadyBadge = document.getElementById("dashReadyBadge");
+  const dashProgressFill = document.getElementById("dashProgressFill");
+  const dashTestsCount = document.getElementById("dashTestsCount");
+  const dashChecksCount = document.getElementById("dashChecksCount");
+  const dashJournalCount = document.getElementById("dashJournalCount");
+
+  const heroQuickVideoBtn = document.getElementById("heroQuickVideoBtn");
+  const heroQuickSosBtn = document.getElementById("heroQuickSosBtn");
+  const quickVideoDialog = document.getElementById("quickVideoDialog");
+  const quickVideoPlayer = document.getElementById("quickVideoPlayer");
+  const closeQuickVideoBtn = document.getElementById("closeQuickVideoBtn");
 
   // Элементы экрана профессии
   const backToHomeBtn = document.getElementById("backToHomeBtn");
@@ -139,26 +152,83 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentProfession = null;
   let currentBriefing = data.briefingTypes[0];
   let currentSection = "video";
+  let currentRiskFilter = "all";
 
-  // 1. Отрисовка карточек профессий с живым поиском
+  // Обновление живого дашборда прогресса в Split-Hero
+  function updateHomeDashboard() {
+    const totalProfs = data.professions.length;
+    const passedCount = data.professions.filter((p) => Boolean(progress.passedQuizzes[p.id])).length;
+    const totalChecks = data.professions.reduce((s, p) => s + p.checklist.length, 0);
+    const doneChecks = data.professions.reduce(
+      (s, p) => s + p.checklist.filter((_, idx) => Boolean(progress.checks[`${p.id}_${idx}`])).length,
+      0
+    );
+    const journalCount = getJournalHistory().length;
+    const pct = Math.round(((passedCount + (doneChecks / Math.max(1, totalChecks)) * totalProfs) / (totalProfs * 2)) * 100);
+
+    dashReadyBadge.textContent = `${pct}%`;
+    dashProgressFill.style.width = `${pct}%`;
+    dashTestsCount.textContent = `${passedCount} / ${totalProfs}`;
+    dashChecksCount.textContent = `${doneChecks} / ${totalChecks}`;
+    dashJournalCount.textContent = String(journalCount);
+  }
+
+  // Полоса фильтров TOP-10 рисков
+  function renderRiskFilters() {
+    riskFilterBar.innerHTML = data.riskFilters
+      .map(
+        (f) =>
+          `<button type="button" class="risk-chip${f.id === currentRiskFilter ? " active" : ""}" data-risk="${f.id}">${f.label}</button>`
+      )
+      .join("");
+
+    riskFilterBar.querySelectorAll(".risk-chip").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        currentRiskFilter = btn.dataset.risk;
+        renderRiskFilters();
+        renderProfessions(profSearchInput.value);
+      });
+    });
+  }
+
+  // Быстрый просмотр вводного ролика прямо с главной
+  heroQuickVideoBtn.addEventListener("click", () => {
+    quickVideoDialog.showModal();
+  });
+  closeQuickVideoBtn.addEventListener("click", () => {
+    quickVideoPlayer.pause();
+    quickVideoDialog.close();
+  });
+  quickVideoDialog.addEventListener("click", (e) => {
+    if (e.target === quickVideoDialog) {
+      quickVideoPlayer.pause();
+      quickVideoDialog.close();
+    }
+  });
+  heroQuickSosBtn.addEventListener("click", openSosModal);
+
+  // 1. Отрисовка информативных карточек профессий (поиск + фильтр рисков)
   function renderProfessions(filter = "") {
     const q = filter.trim().toLowerCase();
-    const list = data.professions.filter(
-      (p) =>
+    const list = data.professions.filter((p) => {
+      const matchesText =
         p.title.toLowerCase().includes(q) ||
         p.department.toLowerCase().includes(q) ||
         p.iotNumber.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q)
-    );
+        p.description.toLowerCase().includes(q);
+      const matchesRisk = currentRiskFilter === "all" || (p.riskTags && p.riskTags.includes(currentRiskFilter));
+      return matchesText && matchesRisk;
+    });
 
     professionsGrid.innerHTML = "";
     if (!list.length) {
-      professionsGrid.innerHTML = '<p class="muted">По вашему запросу профессия не найдена.</p>';
+      professionsGrid.innerHTML = '<p class="muted">По выбранному фильтру профессия не найдена.</p>';
       return;
     }
 
     list.forEach((prof) => {
       const isPassed = Boolean(progress.passedQuizzes[prof.id]);
+      const chkDone = prof.checklist.filter((_, idx) => Boolean(progress.checks[`${prof.id}_${idx}`])).length;
       const card = document.createElement("button");
       card.type = "button";
       card.className = "prof-card";
@@ -166,15 +236,20 @@ document.addEventListener("DOMContentLoaded", () => {
         <img class="prof-card-img" src="media/professions/${prof.id}.webp" alt="${prof.title}">
         <div class="prof-card-top">
           <span class="prof-card-dept">${prof.department}</span>
-          ${isPassed ? '<span class="prof-card-done">&#10003; Тест пройден</span>' : ""}
+          ${isPassed ? '<span class="prof-card-done">&#10003; Сдано</span>' : ""}
         </div>
         <span class="prof-card-title">${prof.title}</span>
         <span class="prof-card-desc">${prof.description}</span>
+        <div class="prof-card-meta-row">
+          <span class="prof-card-iot">${prof.iotNumber}</span>
+          <span>${prof.iotPages} стр. • Чек: ${chkDone}/${prof.checklist.length}</span>
+        </div>
         <span class="prof-card-cta">Открыть инструктаж &rarr;</span>
       `;
       card.addEventListener("click", () => openProfession(prof, "video", true));
       professionsGrid.appendChild(card);
     });
+    updateHomeDashboard();
   }
 
   profSearchInput.addEventListener("input", (e) => renderProfessions(e.target.value));
@@ -815,6 +890,7 @@ document.addEventListener("DOMContentLoaded", () => {
   clearJournalBtn.addEventListener("click", () => {
     localStorage.removeItem(JOURNAL_KEY);
     renderAllJournal();
+    updateHomeDashboard();
   });
 
   // Демо-протокол из раздела Тест
@@ -1106,7 +1182,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   })();
 
-  // Старт приложения + инициализация History API и QR-ссылок (?prof=...&sec=...)
+  // Старт приложения + инициализация фильтров, дашборда и QR-ссылок (?prof=...&sec=...)
+  renderRiskFilters();
   renderProfessions();
   const params = new URLSearchParams(window.location.search);
   const startProfId = params.get("prof");

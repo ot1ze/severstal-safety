@@ -7,11 +7,11 @@
   <link rel="icon" type="image/png" href="media/brand/symbol_red.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=14">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=15">
 </head>
 <body>
-  <!-- Полупрозрачная шапка с эффектом матового стекла -->
+  <!-- Шапка с матовым стеклом и чёткими SVG-иконками -->
   <header class="header">
     <div class="container header-inner">
       <button type="button" id="brandHomeBtn" class="brand brand-btn" title="Вернуться на главную">
@@ -20,50 +20,90 @@
         <div class="brand-subtitle">Цифровая медиатека инструктажей по ОТ</div>
       </button>
       <button type="button" id="headerDrawerBtn" class="header-burger-btn" title="Разделы инструктажа" aria-label="Открыть меню разделов" hidden>
-        &#9776;
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
       <div class="header-actions">
         <button type="button" id="openSosBtn" class="btn btn-sos" title="Экстренная помощь и телефоны">
-          &#128680; SOS
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>SOS</span>
         </button>
         <button type="button" id="openJournalAllBtn" class="btn btn-outline">
-          &#128221; Журнал
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Журнал</span>
         </button>
         <button type="button" id="openMasterBtn" class="btn btn-outline">
-          &#128203; Мастеру
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg>
+          <span>Мастеру</span>
         </button>
         <button type="button" id="openGlossaryBtn" class="btn btn-outline">
-          &#128214; Глоссарий
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span>Глоссарий</span>
         </button>
       </div>
     </div>
   </header>
 
   <main class="container main-content">
-    <!-- ЭКРАН 1: Выбор профессии -->
+    <!-- ЭКРАН 1: Split-Hero + Живой дашборд + Фильтр рисков + Каталог -->
     <section id="homeScreen" class="screen active fade-in">
-      <div class="hero-banner">
-        <div class="hero-content">
+      <div class="split-hero">
+        <div class="hero-main">
           <div class="severstal-motto">Политика ПАО «Северсталь»: «Безопасность превыше всего»</div>
           <h1>Визуализированные инструктажи по охране труда</h1>
           <p class="hero-lead">
-            Чёткие инструкции о том, какие действия необходимы для безопасной работы.
-            Выберите профессию, чтобы изучить видео, СИЗ, риски, разбор ЧС, плакат А4 с QR-кодом и пройти тест.
+            Чёткие инструкции о том, какие действия необходимы для безопасной работы. Выберите профессию или начните с общего вводного видеоролика.
           </p>
-          <div class="hero-stats">
-            <span class="stat-chip"><strong>6</strong> профессий</span>
-            <span class="stat-chip"><strong>5</strong> видов инструктажей</span>
-            <span class="stat-chip"><strong>36</strong> аварийных сценариев</span>
-            <span class="stat-chip"><strong>90</strong> вопросов теста</span>
+          <div class="hero-cta-row">
+            <button type="button" id="heroQuickVideoBtn" class="btn btn-hero-primary">
+              <svg class="ico" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>Смотреть вводный ролик</span>
+            </button>
+            <button type="button" id="heroQuickSosBtn" class="btn btn-hero-ghost">
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span>Памятка SOS (60 сек)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Правая часть Hero: живой дашборд прогресса на этом устройстве -->
+        <div class="hero-dashboard" id="heroDashboard">
+          <div class="dash-head">
+            <span>Статус обучения</span>
+            <span class="mono dash-badge" id="dashReadyBadge">0%</span>
+          </div>
+          <div class="dash-progress-track">
+            <div class="dash-progress-fill" id="dashProgressFill" style="width: 0%;"></div>
+          </div>
+          <div class="dash-metrics">
+            <div class="dash-metric">
+              <strong class="mono" id="dashTestsCount">0 / 6</strong>
+              <span>Тестов сдано</span>
+            </div>
+            <div class="dash-metric">
+              <strong class="mono" id="dashChecksCount">0 / 18</strong>
+              <span>Чек-листов</span>
+            </div>
+            <div class="dash-metric">
+              <strong class="mono" id="dashJournalCount">0</strong>
+              <span>Протоколов</span>
+            </div>
+            <div class="dash-metric">
+              <strong class="mono">601 стр.</strong>
+              <span>ИОТ в выжимках</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="section-head">
-        <h2>Основные производственные профессии</h2>
-        <div class="search-wrap">
-          <input type="search" id="profSearchInput" class="prof-search-input" placeholder="&#128269; Поиск профессии, цеха или ИОТ...">
+      <!-- Поиск + Интерактивный фильтр по смертельным рискам TOP-10 -->
+      <div class="catalog-controls">
+        <div class="section-head" style="margin-bottom: 10px;">
+          <h2>Основные производственные профессии</h2>
+          <div class="search-wrap">
+            <input type="search" id="profSearchInput" class="prof-search-input" placeholder="Поиск профессии, цеха или ИОТ...">
+          </div>
         </div>
+        <div id="riskFilterBar" class="risk-filter-bar" role="group" aria-label="Фильтр по смертельным рискам TOP-10"></div>
       </div>
 
       <div id="professionsGrid" class="professions-grid"></div>
@@ -73,11 +113,12 @@
         <div>
           <strong>Оцените удобство и понятность материалов (пилотное тестирование)</strong>
           <div class="muted" style="margin: 2px 0 0; font-size: 0.86rem;">
-            Ваши отзывы помогают улучшить платформу • Почта команды: <a href="mailto:mevostriakov@chsu.ru">mevostriakov@chsu.ru</a>
+            Оценка фокус-группы для KPI проекта • Контакт: <a href="mailto:mevostriakov@chsu.ru">mevostriakov@chsu.ru</a>
           </div>
         </div>
         <button type="button" id="openFeedbackBtn" class="btn btn-primary-sm">
-          &#11088; Оценить проект
+          <svg class="ico" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>Оценить проект</span>
         </button>
       </div>
     </section>
@@ -95,7 +136,7 @@
         <div class="prof-header-top">
           <img id="profHeaderImg" class="prof-header-img" src="" alt="">
           <div class="prof-header-meta">
-            <div id="profIotBadge" class="iot-pill">ИОТ</div>
+            <div id="profIotBadge" class="iot-pill mono">ИОТ</div>
             <h1 id="profTitle" class="prof-title-h1">Название профессии</h1>
           </div>
         </div>
@@ -115,7 +156,7 @@
       </div>
       <div id="briefingFocusBox" class="briefing-focus-box"></div>
 
-      <!-- Кнопка открытия выдвижного меню (видна только на телефоне <= 820px) -->
+      <!-- Кнопка открытия выдвижного меню (на телефоне) -->
       <div class="mobile-drawer-bar">
         <button type="button" id="openDrawerBtn" class="mobile-drawer-btn" aria-expanded="false">
           <span class="hamburger-ico">&#9776;</span>
@@ -127,12 +168,10 @@
         </button>
       </div>
 
-      <!-- Затемнение фона для выдвижной шторки на телефоне -->
       <div id="drawerBackdrop" class="drawer-backdrop" hidden></div>
 
-      <!-- Рабочая область: Слева боковое меню, справа только активный раздел -->
+      <!-- Рабочая область -->
       <div class="workspace-layout">
-        <!-- Левое боковое меню (на телефоне выезжает слева по кнопке ☰) -->
         <aside id="sidebarNav" class="sidebar-nav" aria-label="Разделы профессии">
           <div class="sidebar-head-row">
             <div class="sidebar-title">Разделы инструктажа</div>
@@ -140,46 +179,45 @@
           </div>
           <div id="sidebarMenu" class="sidebar-menu" role="tablist">
             <button type="button" class="side-btn active" role="tab" aria-selected="true" data-section="video">
-              <span class="side-ico">&#9654;</span>
+              <span class="side-ico"><svg class="ico" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg></span>
               <span>Видео-инструктаж</span>
             </button>
             <button type="button" class="side-btn" role="tab" aria-selected="false" data-section="ppe">
-              <span class="side-ico">&#129466;</span>
+              <span class="side-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
               <span>Обязательные СИЗ</span>
             </button>
             <button type="button" class="side-btn" role="tab" aria-selected="false" data-section="risks">
-              <span class="side-ico">&#9888;</span>
+              <span class="side-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
               <span>Риски и запреты ИОТ</span>
             </button>
             <button type="button" class="side-btn" role="tab" aria-selected="false" data-section="mistakes">
-              <span class="side-ico">&#9889;</span>
+              <span class="side-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
               <span>Популярные ошибки</span>
             </button>
             <button type="button" class="side-btn" role="tab" aria-selected="false" data-section="emergency">
-              <span class="side-ico">&#128680;</span>
+              <span class="side-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
               <span>Аварии и ЧС (6)</span>
             </button>
             <button type="button" class="side-btn" role="tab" aria-selected="false" data-section="checklist">
-              <span class="side-ico">&#9745;</span>
+              <span class="side-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
               <span>Чек-лист смены</span>
-              <span id="sidebarCheckBadge" class="side-badge">0/3</span>
+              <span id="sidebarCheckBadge" class="side-badge mono">0/3</span>
             </button>
             <button type="button" class="side-btn" role="tab" aria-selected="false" data-section="poster">
-              <span class="side-ico">&#128202;</span>
+              <span class="side-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></span>
               <span>Плакат А4 (QR)</span>
             </button>
             <button type="button" class="side-btn" role="tab" aria-selected="false" data-section="quiz">
-              <span class="side-ico">&#9989;</span>
+              <span class="side-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
               <span>Тест (15) и журнал</span>
             </button>
             <button type="button" class="side-btn" role="tab" aria-selected="false" data-section="docs">
-              <span class="side-ico">&#128274;</span>
+              <span class="side-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
               <span>Официальные ИОТ</span>
             </button>
           </div>
         </aside>
 
-        <!-- Правая панель контента -->
         <div class="content-stage">
           <!-- РАЗДЕЛ 1: Видео -->
           <div id="secPanelVideo" class="stage-panel active" role="tabpanel">
@@ -209,12 +247,12 @@
             </details>
           </div>
 
-          <!-- РАЗДЕЛ 2: Совмещённые СИЗ (фото + список + последствия без них) -->
+          <!-- РАЗДЕЛ 2: СИЗ -->
           <div id="secPanelPpe" class="stage-panel" role="tabpanel" hidden>
             <div class="stage-head">
               <div>
-                <h3>&#129466; Обязательные СИЗ и последствия без них</h3>
-                <p class="muted" style="margin: 2px 0 0;">Нажмите на картинку, чтобы увеличить её на весь экран.</p>
+                <h3>Обязательные СИЗ и последствия без них</h3>
+                <p class="muted" style="margin: 2px 0 0;">Нажмите на иллюстрацию СИЗ, чтобы увеличить её на весь экран.</p>
               </div>
             </div>
             <div id="ppeTabCards" class="ppe-cards-grid"></div>
@@ -223,7 +261,7 @@
           <!-- РАЗДЕЛ 3: Риски TOP-10 и Запреты ИОТ -->
           <div id="secPanelRisks" class="stage-panel" role="tabpanel" hidden>
             <div class="stage-head">
-              <h3>&#9888; Главные риски (TOP-10) и категорические запреты ИОТ</h3>
+              <h3>Главные риски (TOP-10) и категорические запреты ИОТ</h3>
             </div>
             <div class="info-grid">
               <div class="info-block info-risk">
@@ -241,24 +279,24 @@
           <div id="secPanelMistakes" class="stage-panel" role="tabpanel" hidden>
             <div class="stage-head">
               <div>
-                <h3>&#9889; Популярные ошибки работников (Действие &rarr; Последствие)</h3>
+                <h3>Популярные ошибки работников (Действие &rarr; Последствие)</h3>
                 <p class="muted" style="margin: 2px 0 0;">Реальные нарушения из производственной практики и к чему они приводят.</p>
               </div>
             </div>
             <div id="mistakesList" class="consequence-grid"></div>
           </div>
 
-          <!-- РАЗДЕЛ 5: Совмещённые Аварии / ЧС + базовый порядок действий -->
+          <!-- РАЗДЕЛ 5: Аварии и ЧС -->
           <div id="secPanelEmergency" class="stage-panel" role="tabpanel" hidden>
             <div class="emerg-tab-head">
               <div>
-                <h3 style="margin: 0; color: var(--accent);">&#128680; Аварии и ЧС на рабочем месте</h3>
+                <h3 style="margin: 0; color: var(--accent);">Аварии и ЧС на рабочем месте</h3>
                 <p class="muted" style="margin: 4px 0 0; font-size: 0.86rem;">
                   Базовый порядок действий из ИОТ и 6 наиболее вероятных нештатных ситуаций.
                 </p>
               </div>
               <button type="button" id="openSosFromTabBtn" class="btn btn-sos btn-sm">
-                &#128680; Телефоны и первая помощь
+                Телефоны и первая помощь
               </button>
             </div>
             <div class="info-block info-emergency" style="margin-bottom: 14px;">
@@ -272,10 +310,10 @@
           <div id="secPanelChecklist" class="stage-panel" role="tabpanel" hidden>
             <div class="checklist-header">
               <div>
-                <h3 style="margin: 0; color: var(--primary);">&#9745; Чек-лист перед началом смены</h3>
+                <h3 style="margin: 0; color: var(--primary);">Чек-лист перед началом смены</h3>
                 <p class="muted" style="margin: 4px 0 0; font-size: 0.86rem;">Отметки автоматически сохраняются на вашем устройстве</p>
               </div>
-              <span id="checklistProgress" class="progress-badge">0 / 3</span>
+              <span id="checklistProgress" class="progress-badge mono">0 / 3</span>
             </div>
             <ul id="checklistItems" class="checklist"></ul>
           </div>
@@ -285,7 +323,7 @@
             <div class="infographic-toolbar">
               <span>Готовая памятка-плакат с QR-кодом для цеха (А4)</span>
               <button type="button" id="printPosterBtn" class="btn btn-primary-sm">
-                &#128424; Печать / PDF
+                Печать / PDF
               </button>
             </div>
             <div id="posterContainer" class="poster-sheet"></div>
@@ -294,9 +332,9 @@
           <!-- РАЗДЕЛ 8: Тест (15) и журнал -->
           <div id="secPanelQuiz" class="stage-panel" role="tabpanel" hidden>
             <div class="quiz-head-row">
-              <h3 style="margin: 0; color: var(--primary);">&#9989; Проверка знаний (15 вопросов)</h3>
+              <h3 style="margin: 0; color: var(--primary);">Проверка знаний (15 вопросов)</h3>
               <button type="button" id="resetQuizBtn" class="btn btn-secondary btn-sm">
-                &#8635; Пройти заново
+                Пройти заново
               </button>
             </div>
             <div id="quizContainer"></div>
@@ -306,23 +344,24 @@
                 <div class="muted" style="margin: 2px 0 0; font-size: 0.84rem;">Сформируйте условный протокол прохождения для примера</div>
               </div>
               <button type="button" id="openProtocolBtn" class="btn btn-primary-sm">
-                &#128221; Сформировать протокол
+                Сформировать протокол
               </button>
             </div>
           </div>
 
-          <!-- РАЗДЕЛ 9: Официальные ИОТ (PDF) по паролю с просмотром на сайте -->
+          <!-- РАЗДЕЛ 9: Официальные ИОТ (PDF) -->
           <div id="secPanelDocs" class="stage-panel" role="tabpanel" hidden>
             <div class="stage-head">
               <div>
-                <h3>&#128196; Официальные инструкции ИОТ (PDF)</h3>
+                <h3>Официальные инструкции ИОТ (PDF)</h3>
                 <p class="muted" style="margin: 2px 0 0;">Встроенный просмотр на сайте без скачивания и загрузка оригиналов.</p>
               </div>
             </div>
 
-            <!-- Замок по паролю -->
             <div id="docsLockBox" class="docs-lock-box">
-              <div style="font-size: 1.8rem; margin-bottom: 6px;">&#128274;</div>
+              <div style="margin-bottom: 8px; color: var(--primary);">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </div>
               <h4 style="margin: 0 0 6px; color: var(--primary);">Доступ к официальным ИОТ защищён паролем</h4>
               <p class="muted" style="font-size: 0.86rem; max-width: 420px; margin: 0 auto 12px;">
                 Введите пароль команды/преподавателя, чтобы открывать и скачивать оригинальные PDF-документы ПАО «Северсталь».
@@ -336,10 +375,9 @@
               </div>
             </div>
 
-            <!-- Список документов (показывается после ввода пароля) -->
             <div id="docsUnlockedBox" hidden>
               <div class="docs-unlocked-bar">
-                <span style="color: var(--success); font-weight: 700;">&#128275; Доступ открыт</span>
+                <span style="color: var(--success); font-weight: 700;">Доступ открыт</span>
                 <button type="button" id="docsLockAgainBtn" class="btn btn-secondary btn-sm">Заблокировать обратно</button>
               </div>
               <div id="docsDownloadList" class="docs-grid"></div>
@@ -358,6 +396,19 @@
     </div>
   </footer>
 
+  <!-- Модальное окно быстрого просмотра Вводного видео с главной -->
+  <dialog id="quickVideoDialog" class="dialog dialog-pdf">
+    <div class="dialog-header">
+      <h3>Вводный видеоинструктаж ПАО «Северсталь»</h3>
+      <button type="button" id="closeQuickVideoBtn" class="btn-close" aria-label="Закрыть">&times;</button>
+    </div>
+    <div class="dialog-body">
+      <video id="quickVideoPlayer" class="briefing-video" controls playsinline preload="metadata" style="border-radius: 8px;">
+        <source src="media/videos/vvodny.mp4" type="video/mp4">
+      </video>
+    </div>
+  </dialog>
+
   <!-- Модальное окно встроенного просмотра PDF -->
   <dialog id="pdfViewerDialog" class="dialog dialog-pdf">
     <div class="dialog-header">
@@ -365,10 +416,10 @@
       <button type="button" id="closePdfViewerBtn" class="btn-close" aria-label="Закрыть">&times;</button>
     </div>
     <div class="pdf-viewer-toolbar">
-      <span class="muted" style="margin:0; font-size:0.82rem;">Просмотр PDF внутри сайта (на телефоне при необходимости нажмите «Открыть в новой вкладке»)</span>
+      <span class="muted" style="margin:0; font-size:0.82rem;">Просмотр PDF внутри сайта</span>
       <div style="display:flex; gap:6px; flex-wrap:wrap;">
         <a id="pdfOpenTabLink" href="#" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="text-decoration:none;">Открыть в новой вкладке</a>
-        <a id="pdfDownloadLink" href="#" download class="btn btn-primary-sm" style="text-decoration:none;">&#128229; Скачать PDF</a>
+        <a id="pdfDownloadLink" href="#" download class="btn btn-primary-sm" style="text-decoration:none;">Скачать PDF</a>
       </div>
     </div>
     <iframe id="pdfViewerFrame" class="pdf-iframe" src="" title="Просмотр PDF"></iframe>
@@ -398,7 +449,7 @@
   <!-- Модальное окно SOS -->
   <dialog id="sosDialog" class="dialog dialog-zoom">
     <div class="dialog-header dialog-header-sos">
-      <h3>&#128680; Экстренная помощь (первые 60 секунд)</h3>
+      <h3>Экстренная помощь (первые 60 секунд)</h3>
       <button type="button" id="closeSosBtn" class="btn-close" aria-label="Закрыть">&times;</button>
     </div>
     <div id="sosBody" class="dialog-body"></div>
@@ -418,12 +469,12 @@
   <!-- Модальное окно Сводного электронного журнала -->
   <dialog id="journalAllDialog" class="dialog dialog-wide">
     <div class="dialog-header">
-      <h3>&#128221; Электронный журнал инструктажей (Демо)</h3>
+      <h3>Электронный журнал инструктажей (Демо)</h3>
       <button type="button" id="closeJournalAllBtn" class="btn-close" aria-label="Закрыть">&times;</button>
     </div>
     <div class="dialog-body">
       <p class="muted" style="font-size: 0.86rem;">
-        Здесь отображаются все сформированные на этом устройстве демо-протоколы прохождения инструктажей.
+        Все сформированные на этом устройстве демо-протоколы прохождения инструктажей.
       </p>
       <div id="journalAllBody"></div>
       <div style="margin-top: 12px; display: flex; justify-content: flex-end;">
@@ -461,7 +512,7 @@
       <div id="protocolPreview" class="protocol-sheet"></div>
       <div id="protocolActions" class="protocol-actions" hidden>
         <button type="button" id="printProtocolBtn" class="btn btn-secondary btn-sm">
-          &#128424; Печать / Сохранить протокол в PDF
+          Печать / Сохранить протокол в PDF
         </button>
       </div>
       <div id="journalHistoryWrap" class="journal-history" hidden>
@@ -474,7 +525,7 @@
   <!-- Модальное окно Обратной связи и Панели разработчика -->
   <dialog id="feedbackDialog" class="dialog dialog-wide">
     <div class="dialog-header">
-      <h3>&#11088; Оценка проекта и обратная связь</h3>
+      <h3>Оценка проекта и обратная связь</h3>
       <button type="button" id="closeFeedbackBtn" class="btn-close" aria-label="Закрыть">&times;</button>
     </div>
     <div class="dialog-body">
@@ -507,7 +558,7 @@
 
         <div class="dev-login-toggle">
           <button type="button" id="toggleDevLoginBtn" class="link-btn" style="font-size: 0.8rem; color: var(--muted);">
-            &#128274; Вход для разработчика (просмотр оценок)
+            Вход для разработчика (просмотр оценок)
           </button>
         </div>
 
@@ -535,8 +586,8 @@
         <div class="admin-top-bar">
           <strong>Панель разработчика (ot1ze)</strong>
           <div style="display:flex; gap:6px;">
-            <button type="button" id="refreshReviewsBtn" class="btn btn-secondary btn-sm">&#8635; Обновить</button>
-            <button type="button" id="exportReviewsCsvBtn" class="btn btn-secondary btn-sm">&#128229; CSV</button>
+            <button type="button" id="refreshReviewsBtn" class="btn btn-secondary btn-sm">Обновить</button>
+            <button type="button" id="exportReviewsCsvBtn" class="btn btn-secondary btn-sm">CSV</button>
             <button type="button" id="devLogoutBtn" class="btn btn-secondary btn-sm">Выйти</button>
           </div>
         </div>
@@ -546,7 +597,7 @@
     </div>
   </dialog>
 
-  <script src="js/data.js?v=14"></script>
-  <script src="js/app.js?v=14"></script>
+  <script src="js/data.js?v=15"></script>
+  <script src="js/app.js?v=15"></script>
 </body>
 </html>
