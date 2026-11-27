@@ -1290,14 +1290,28 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.className = "ppe-opt-card";
         btn.innerHTML = `
           <div class="ppe-opt-photo">
-            <img src="${imgPath}" alt="${opt.label}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <img src="${imgPath}" alt="${opt.label}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'; const zb=this.parentElement.querySelector('.ppe-opt-zoom-btn'); if(zb) zb.style.display='none';">
             <div class="ppe-opt-stub" style="display:none;">
               <span>Место для фото СИЗ</span>
               <code style="font-size:0.65rem;">${currentProfession.id}_${tIdx + 1}_${opt.origIdx + 1}.webp</code>
             </div>
+            <span class="ppe-opt-zoom-btn" role="button" tabindex="0" title="Увеличить фото СИЗ" aria-label="Увеличить фото">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </span>
           </div>
           <div class="ppe-opt-label">${opt.label}</div>
         `;
+        const zoomBtn = btn.querySelector(".ppe-opt-zoom-btn");
+        if (zoomBtn) {
+          zoomBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            zoomImage.src = imgPath;
+            zoomImage.alt = opt.label;
+            zoomCaption.textContent = opt.label;
+            imageZoomDialog.showModal();
+          });
+        }
         btn.addEventListener("click", () => {
           const allBtns = grid.querySelectorAll(".ppe-opt-card");
           allBtns.forEach((b) => (b.disabled = true));

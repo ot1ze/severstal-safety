@@ -4447,6 +4447,7 @@ html.workshop-mode .briefing-btn:not(.active),
 }
 
 .ppe-opt-photo {
+  position: relative;
   height: 168px;
   border-radius: 6px;
   background: #ffffff;
@@ -4456,6 +4457,31 @@ html.workshop-mode .briefing-btn:not(.active),
   align-items: center;
   justify-content: center;
   overflow: hidden;
+}
+
+.ppe-opt-zoom-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+  z-index: 2;
+}
+
+.ppe-opt-zoom-btn:hover {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
 }
 
 @media (max-width: 720px) {
