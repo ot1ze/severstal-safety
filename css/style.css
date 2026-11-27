@@ -2,7 +2,8 @@
 :root {
   --primary: #002f6c;
   --primary-light: #0a4694;
-  --accent: #e30613;
+  --accent: #c53b40;
+  --sos-red: #e30613;
   --bg: #f1f5f9;
   --surface: #ffffff;
   --text: #0f172a;
@@ -486,7 +487,7 @@ body:has(dialog[open]) {
   margin-bottom: 12px;
 }
 
-/* Вкладки — ровная адаптивная панель без горизонтальной прокрутки */
+/* Вкладки - ровная адаптивная панель без горизонтальной прокрутки */
 .tabs {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1394,7 +1395,7 @@ body:has(dialog[open]) {
 
 /* Кнопка SOS в шапке */
 .btn-sos {
-  background: var(--accent);
+  background: var(--sos-red);
   color: #ffffff;
   font-weight: 800;
 }
@@ -1404,7 +1405,7 @@ body:has(dialog[open]) {
 }
 
 .dialog-header-sos {
-  background: var(--accent);
+  background: var(--sos-red);
 }
 
 /* Поиск на главной */
@@ -2235,7 +2236,7 @@ body {
 }
 
 .btn-hero-primary:hover {
-  background: #c80510;
+  background: #ad3035;
 }
 
 .btn-hero-ghost {
@@ -3357,7 +3358,7 @@ body {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
   background: #f8fafc;
   border: 1px dashed #cbd5e1;
   border-radius: var(--radius);
@@ -3365,6 +3366,15 @@ body {
   margin-top: 14px;
   font-size: 0.85rem;
   color: var(--muted);
+}
+
+.onboarding-archive-bar > div {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.onboarding-archive-bar .btn {
+  flex-shrink: 0;
 }
 
 .onboarding-archive-bar strong {

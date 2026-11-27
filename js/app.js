@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const ACCOUNTS_KEY = "severstal_worker_accounts_v1";
   const ACTIVE_ACC_KEY = "severstal_active_account_id_v1";
   const ACC_PROGRESS_KEY = "severstal_account_progress_v1";
-  // Пароль администратора ot1ze (141otz141) и пароль к файлам ИОТ (CHSUtest) — SHA-256
+  // Пароль администратора ot1ze (141otz141) и пароль к файлам ИОТ (CHSUtest) - SHA-256
   const ADMIN_PASS_HASH = "ec95e177f99cec044567e838340bae7a4c89371963d7c72bb9b3a48b3bf0ac04";
   const DOCS_PASS_HASH = "25e41fe823700e204bedef5118c42054bf7606d2f3a94df0458042bda8755644";
 
@@ -983,7 +983,7 @@ document.addEventListener("DOMContentLoaded", () => {
     profHeaderEmblem.className = `prof-header-emblem prof-theme-${prof.id}`;
     profHeaderEmblem.innerHTML = getProfVisual(prof.id).svg;
     profHeaderSceneImg.src = `media/professions/${prof.id}.webp`;
-    profHeaderSceneImg.alt = `${prof.title} — схема рабочего места`;
+    profHeaderSceneImg.alt = `${prof.title} - схема рабочего места`;
     profTitle.textContent = prof.title;
     profDesc.textContent = prof.description;
 
@@ -1185,7 +1185,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderPpeTab() {
     const sqPath = `media/professions_square/${currentProfession.id}.webp`;
     ppeShowcaseBox.innerHTML = `
-      <img src="${sqPath}" alt="${currentProfession.title} — экипировка" class="ppe-showcase-img">
+      <img src="${sqPath}" alt="${currentProfession.title} - экипировка" class="ppe-showcase-img">
       <div class="ppe-showcase-text">
         <h4>Экипировка и рабочая зона: ${currentProfession.title}</h4>
         <p>Полный комплект СИЗ по ${currentProfession.iotNumber} (${currentProfession.ppe.length} обязательные позиции). Нажмите на иллюстрацию, чтобы приблизить детали.</p>
@@ -1196,7 +1196,7 @@ document.addEventListener("DOMContentLoaded", () => {
       showcaseImg.addEventListener("click", () => {
         zoomImage.src = showcaseImg.src;
         zoomImage.alt = showcaseImg.alt;
-        zoomCaption.textContent = `${currentProfession.title} — экипировка`;
+        zoomCaption.textContent = `${currentProfession.title} - экипировка`;
         imageZoomDialog.showModal();
       });
     }
@@ -1232,7 +1232,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!currentProfession || !profHeaderSceneImg.getAttribute("src")) return;
     zoomImage.src = profHeaderSceneImg.src;
     zoomImage.alt = profHeaderSceneImg.alt;
-    zoomCaption.textContent = `${currentProfession.title} — схема рабочего места`;
+    zoomCaption.textContent = `${currentProfession.title} - схема рабочего места`;
     imageZoomDialog.showModal();
   });
 
@@ -1598,7 +1598,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <h4 style="margin:0 0 8px; color:var(--accent);">Экстренные телефоны</h4>
       <div class="sos-hint-banner">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-        <span><strong>На телефоне можно позвонить сразу:</strong> просто нажмите на нужный номер ниже — откроется набор вызова.</span>
+        <span><strong>На телефоне можно позвонить сразу:</strong> просто нажмите на нужный номер ниже - откроется набор вызова.</span>
       </div>
       <div class="sos-phones-grid">${phonesHtml}</div>
       <h4 style="margin:10px 0 8px; color:var(--primary);">Первая помощь в первые 60 секунд</h4>
@@ -1698,7 +1698,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       histWrap.hidden = false;
       histList.innerHTML = items
-        .map((it) => `<li><strong>${it.id}</strong> • ${it.date} — ${it.worker} (${it.prof}) — ${it.result}</li>`)
+        .map((it) => `<li><strong>${it.id}</strong> • ${it.date} - ${it.worker} (${it.prof}) - ${it.result}</li>`)
         .join("");
     }
 
@@ -2014,7 +2014,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       if (!tabNum) {
-        adminAccFormError.textContent = "Укажите табельный номер — он должен быть уникальным для каждого работника.";
+        adminAccFormError.textContent = "Укажите табельный номер - он должен быть уникальным для каждого работника.";
         adminAccFormError.hidden = false;
         return;
       }
@@ -2116,7 +2116,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderAdminReviews(list) {
       const total = list.length;
-      const avg = total ? (list.reduce((s, r) => s + Number(r.rating || 0), 0) / total).toFixed(1) : "—";
+      const avg = total ? (list.reduce((s, r) => s + Number(r.rating || 0), 0) / total).toFixed(1) : "-";
       const positive = total ? Math.round((list.filter((r) => Number(r.rating) >= 4).length / total) * 100) : 0;
 
       adminKpiCards.innerHTML = `
@@ -2129,7 +2129,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="admin-kpi-lbl">Средняя оценка</div>
         </div>
         <div class="admin-kpi-card">
-          <div class="admin-kpi-val">${total ? positive + "%" : "—"}</div>
+          <div class="admin-kpi-val">${total ? positive + "%" : "-"}</div>
           <div class="admin-kpi-lbl">Положительных (KPI &ge; 80%)</div>
         </div>
       `;
@@ -2395,7 +2395,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       if (!tabNum) {
-        regError.textContent = "Укажите табельный номер — он нужен для входа и должен быть уникальным.";
+        regError.textContent = "Укажите табельный номер - он нужен для входа и должен быть уникальным.";
         regError.hidden = false;
         return;
       }
@@ -2423,7 +2423,7 @@ document.addEventListener("DOMContentLoaded", () => {
           (a) => a.tabNum && a.tabNum.trim().toLowerCase() === tabNum.toLowerCase()
         );
         if (duplicate) {
-          regError.textContent = `Аккаунт с табельным № «${tabNum}» уже зарегистрирован! Повторная регистрация запрещена — перейдите во вкладку «Войти в аккаунт».`;
+          regError.textContent = `Аккаунт с табельным № «${tabNum}» уже зарегистрирован! Повторная регистрация запрещена - перейдите во вкладку «Войти в аккаунт».`;
           regError.hidden = false;
           return;
         }
