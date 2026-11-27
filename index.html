@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=15">
+  <link rel="stylesheet" href="css/style.css?v=16">
 </head>
 <body>
   <!-- Шапка с матовым стеклом и чёткими SVG-иконками -->
@@ -39,12 +39,16 @@
           <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
           <span>Глоссарий</span>
         </button>
+        <button type="button" id="openAccountBtn" class="btn btn-account" title="Личный кабинет работника">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span id="headerAccountLabel">Аккаунт</span>
+        </button>
       </div>
     </div>
   </header>
 
   <main class="container main-content">
-    <!-- ЭКРАН 1: Split-Hero + Живой дашборд + Фильтр рисков + Каталог -->
+    <!-- ЭКРАН 1: Split-Hero + Кабинет/Персональный статус + Фильтр рисков + Каталог -->
     <section id="homeScreen" class="screen active fade-in">
       <div class="split-hero">
         <div class="hero-main">
@@ -65,10 +69,29 @@
           </div>
         </div>
 
-        <!-- Правая часть Hero: живой дашборд прогресса на этом устройстве -->
-        <div class="hero-dashboard" id="heroDashboard">
+        <!-- Правая часть Hero для гостя (без статуса обучения): приглашение создать профиль -->
+        <div class="hero-dashboard hero-guest-card" id="heroGuestBox">
           <div class="dash-head">
-            <span>Статус обучения</span>
+            <span>Личный профиль работника</span>
+            <span class="dash-badge">По специальности</span>
+          </div>
+          <p class="hero-guest-text">
+            Создайте аккаунт и выберите свою специальность — после входа здесь появится персональный статус обучения, чек-лист смены и результаты тестов именно по вашей профессии.
+          </p>
+          <div class="hero-guest-actions">
+            <button type="button" id="heroCreateAccBtn" class="btn btn-hero-accent-sm">Создать аккаунт</button>
+            <button type="button" id="heroLoginAccBtn" class="btn btn-hero-ghost-sm">Войти</button>
+          </div>
+        </div>
+
+        <!-- Правая часть Hero (видна ТОЛЬКО после входа в аккаунт): статус по выбранной специальности -->
+        <div class="hero-dashboard" id="heroDashboard" hidden>
+          <div class="dash-head">
+            <div>
+              <div class="dash-title-line">Статус обучения</div>
+              <div class="dash-prof-sub" id="dashProfTitle">Специальность не выбрана</div>
+              <div class="dash-worker-sub" id="dashWorkerMeta">Работник</div>
+            </div>
             <span class="mono dash-badge" id="dashReadyBadge">0%</span>
           </div>
           <div class="dash-progress-track">
@@ -76,21 +99,25 @@
           </div>
           <div class="dash-metrics">
             <div class="dash-metric">
-              <strong class="mono" id="dashTestsCount">0 / 6</strong>
-              <span>Тестов сдано</span>
+              <strong id="dashTestStatus">Не сдан</strong>
+              <span>Тест по профессии</span>
             </div>
             <div class="dash-metric">
-              <strong class="mono" id="dashChecksCount">0 / 18</strong>
-              <span>Чек-листов</span>
+              <strong class="mono" id="dashChecksCount">0 / 3</strong>
+              <span>Чек-лист смены</span>
             </div>
             <div class="dash-metric">
               <strong class="mono" id="dashJournalCount">0</strong>
-              <span>Протоколов</span>
+              <span>Мои протоколы</span>
             </div>
             <div class="dash-metric">
-              <strong class="mono">601 стр.</strong>
-              <span>ИОТ в выжимках</span>
+              <strong class="mono" id="dashIotCode">ИОТ</strong>
+              <span id="dashIotPages">0 стр.</span>
             </div>
+          </div>
+          <div class="dash-footer-actions">
+            <button type="button" id="dashOpenMyProfBtn" class="btn btn-hero-accent-sm">Открыть мою профессию &rarr;</button>
+            <button type="button" id="dashManageAccBtn" class="btn btn-hero-ghost-sm">Профиль / Выход</button>
           </div>
         </div>
       </div>
@@ -311,9 +338,13 @@
             <div class="checklist-header">
               <div>
                 <h3 style="margin: 0; color: var(--primary);">Чек-лист перед началом смены</h3>
-                <p class="muted" style="margin: 4px 0 0; font-size: 0.86rem;">Отметки автоматически сохраняются на вашем устройстве</p>
+                <p class="muted" style="margin: 4px 0 0; font-size: 0.86rem;" id="checklistSubtitle">Отметки сохраняются в вашем личном профиле</p>
               </div>
               <span id="checklistProgress" class="progress-badge mono">0 / 3</span>
+            </div>
+            <div id="checklistGuestHint" class="guest-account-hint" hidden>
+              <span>Чтобы сохранять статус обучения по вашей специальности, создайте личный аккаунт.</span>
+              <button type="button" class="btn btn-primary-sm guest-open-acc-btn">Создать аккаунт</button>
             </div>
             <ul id="checklistItems" class="checklist"></ul>
           </div>
@@ -336,6 +367,10 @@
               <button type="button" id="resetQuizBtn" class="btn btn-secondary btn-sm">
                 Пройти заново
               </button>
+            </div>
+            <div id="quizGuestHint" class="guest-account-hint" hidden>
+              <span>Вы в режиме гостя. Результат зачтётся в статус обучения только после входа в аккаунт.</span>
+              <button type="button" class="btn btn-primary-sm guest-open-acc-btn">Войти / Создать</button>
             </div>
             <div id="quizContainer"></div>
             <div class="protocol-cta-bar">
@@ -597,7 +632,103 @@
     </div>
   </dialog>
 
-  <script src="js/data.js?v=15"></script>
-  <script src="js/app.js?v=15"></script>
+  <!-- Модальное окно Личного кабинета работника -->
+  <dialog id="accountDialog" class="dialog dialog-zoom">
+    <div class="dialog-header">
+      <h3 id="accountDialogTitle">Личный кабинет работника</h3>
+      <button type="button" id="closeAccountBtn" class="btn-close" aria-label="Закрыть">&times;</button>
+    </div>
+    <div class="dialog-body">
+      <!-- Состояние 1: Гость (Регистрация или Вход) -->
+      <div id="accountAuthPane">
+        <div class="acc-tabs" role="tablist">
+          <button type="button" id="accTabCreateBtn" class="acc-tab-btn active" role="tab" aria-selected="true">Создать аккаунт</button>
+          <button type="button" id="accTabLoginBtn" class="acc-tab-btn" role="tab" aria-selected="false">Войти в аккаунт</button>
+        </div>
+
+        <form id="accCreateForm" class="acc-form">
+          <label class="fb-label">
+            <span>ФИО работника *</span>
+            <input type="text" id="accRegName" required placeholder="Например: Смирнов Алексей Петрович">
+          </label>
+          <label class="fb-label">
+            <span>Табельный номер</span>
+            <input type="text" id="accRegTabNum" placeholder="Например: 48291">
+          </label>
+          <label class="fb-label">
+            <span>Ваша специальность (профессия) *</span>
+            <select id="accRegProf" required></select>
+          </label>
+          <label class="fb-label">
+            <span>Пароль или PIN для входа (от 4 символов) *</span>
+            <input type="password" id="accRegPass" required minlength="4" placeholder="Минимум 4 символа">
+          </label>
+          <div id="accRegError" class="acc-error" hidden></div>
+          <button type="submit" class="btn btn-primary-sm" style="width: 100%; margin-top: 4px;">
+            Создать аккаунт и открыть статус
+          </button>
+          <p class="muted" style="font-size: 0.78rem; margin: 6px 0 0;">
+            Аккаунт и личный статус обучения сохраняются локально на этом устройстве.
+          </p>
+        </form>
+
+        <form id="accLoginForm" class="acc-form" hidden>
+          <div id="accSavedListWrap" hidden>
+            <div style="font-size: 0.82rem; font-weight: 600; color: var(--muted); margin-bottom: 6px;">Сохранённые на устройстве профили:</div>
+            <div id="accSavedList" class="acc-saved-list"></div>
+          </div>
+          <label class="fb-label">
+            <span>ФИО или табельный номер *</span>
+            <input type="text" id="accLoginId" required placeholder="Введите ФИО или таб. №">
+          </label>
+          <label class="fb-label">
+            <span>Пароль / PIN *</span>
+            <input type="password" id="accLoginPass" required placeholder="Введите пароль">
+          </label>
+          <div id="accLoginError" class="acc-error" hidden></div>
+          <button type="submit" class="btn btn-primary-sm" style="width: 100%; margin-top: 4px;">
+            Войти в личный кабинет
+          </button>
+        </form>
+      </div>
+
+      <!-- Состояние 2: Пользователь вошёл -->
+      <div id="accountProfilePane" hidden>
+        <div class="acc-profile-card">
+          <div class="acc-profile-top">
+            <div>
+              <div id="accProfFullName" class="acc-profile-name">ФИО работника</div>
+              <div id="accProfTabMeta" class="muted mono" style="font-size: 0.8rem;">Таб. №</div>
+            </div>
+            <span id="accProfStatusBadge" class="acc-status-pill mono">0%</span>
+          </div>
+          <div id="accProfSpecName" class="acc-profile-spec">Специальность</div>
+          <div id="accProfSummaryStats" class="acc-profile-stats"></div>
+        </div>
+
+        <div class="acc-form" style="margin-top: 12px;">
+          <label class="fb-label">
+            <span>Сменить специальность:</span>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <select id="accChangeProfSelect" style="flex: 1; min-width: 200px;"></select>
+              <button type="button" id="accSaveProfBtn" class="btn btn-primary-sm">Обновить</button>
+            </div>
+          </label>
+          <div id="accSaveProfMsg" class="muted" style="color: var(--success); font-size: 0.82rem;" hidden>
+            Специальность обновлена — статус обучения пересчитан!
+          </div>
+        </div>
+
+        <div class="acc-profile-actions">
+          <button type="button" id="accGoMyProfBtn" class="btn btn-primary-sm">Открыть мою профессию</button>
+          <button type="button" id="accLogoutBtn" class="btn btn-secondary btn-sm">Выйти из аккаунта</button>
+          <button type="button" id="accDeleteBtn" class="btn btn-secondary btn-sm" style="color: var(--accent);">Удалить профиль</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="js/data.js?v=16"></script>
+  <script src="js/app.js?v=16"></script>
 </body>
 </html>

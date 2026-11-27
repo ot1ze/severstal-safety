@@ -1,27 +1,77 @@
-// Основная логика веб-приложения ПАО «Северсталь» (v12)
+// Основная логика веб-приложения ПАО «Северсталь» (v16)
 
 document.addEventListener("DOMContentLoaded", () => {
   const data = window.SAFETY_DATA;
-  const STORAGE_KEY = "severstal_safety_progress_v1";
   const JOURNAL_KEY = "severstal_demo_journal_v1";
   const FEEDBACK_KEY = "severstal_demo_feedback_v1";
   const DOCS_UNLOCK_KEY = "severstal_docs_unlocked_v1";
+  const ACCOUNTS_KEY = "severstal_worker_accounts_v1";
+  const ACTIVE_ACC_KEY = "severstal_active_account_id_v1";
+  const ACC_PROGRESS_KEY = "severstal_account_progress_v1";
   // Пароль для просмотра/скачивания PDF (141otz141) — проверяется по SHA-256
   const SHARED_PASS_HASH = "ec95e177f99cec044567e838340bae7a4c89371963d7c72bb9b3a48b3bf0ac04";
 
-  let progress = loadProgress();
+  const guestProgress = { checks: {}, passedQuizzes: {} };
 
-  function loadProgress() {
+  function loadAccounts() {
     try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { checks: {}, passedQuizzes: {} };
+      const parsed = JSON.parse(localStorage.getItem(ACCOUNTS_KEY));
+      return Array.isArray(parsed) ? parsed : [];
     } catch {
-      return { checks: {}, passedQuizzes: {} };
+      return [];
     }
   }
 
-  function saveProgress() {
+  function saveAccounts(list) {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+      localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(list));
+    } catch {}
+  }
+
+  function getActiveAccount() {
+    try {
+      const id = localStorage.getItem(ACTIVE_ACC_KEY);
+      if (!id) return null;
+      return loadAccounts().find((a) => a.id === id) || null;
+    } catch {
+      return null;
+    }
+  }
+
+  function setActiveAccountId(id) {
+    try {
+      if (id) localStorage.setItem(ACTIVE_ACC_KEY, id);
+      else localStorage.removeItem(ACTIVE_ACC_KEY);
+    } catch {}
+  }
+
+  function loadAllAccProgress() {
+    try {
+      return JSON.parse(localStorage.getItem(ACC_PROGRESS_KEY)) || {};
+    } catch {
+      return {};
+    }
+  }
+
+  function getAccountProgress(accId) {
+    const map = loadAllAccProgress();
+    return map[accId] || { checks: {}, passedQuizzes: {} };
+  }
+
+  function loadProgress() {
+    const acc = getActiveAccount();
+    return acc ? getAccountProgress(acc.id) : guestProgress;
+  }
+
+  let progress = loadProgress();
+
+  function saveProgress() {
+    const acc = getActiveAccount();
+    if (!acc) return;
+    try {
+      const map = loadAllAccProgress();
+      map[acc.id] = progress;
+      localStorage.setItem(ACC_PROGRESS_KEY, JSON.stringify(map));
     } catch {}
   }
 
@@ -35,6 +85,18 @@ document.addEventListener("DOMContentLoaded", () => {
     return str === "141otz141" ? SHARED_PASS_HASH : "";
   }
 
+  async function hashWorkerPass(str) {
+    if (window.crypto && window.crypto.subtle) {
+      return "s:" + (await sha256(str));
+    }
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return "f:" + (h >>> 0).toString(16);
+  }
+
   // Элементы экранов, дашборда и поиска
   const homeScreen = document.getElementById("homeScreen");
   const professionScreen = document.getElementById("professionScreen");
@@ -42,11 +104,28 @@ document.addEventListener("DOMContentLoaded", () => {
   const profSearchInput = document.getElementById("profSearchInput");
   const riskFilterBar = document.getElementById("riskFilterBar");
 
+  const openAccountBtn = document.getElementById("openAccountBtn");
+  const headerAccountLabel = document.getElementById("headerAccountLabel");
+  const heroGuestBox = document.getElementById("heroGuestBox");
+  const heroDashboard = document.getElementById("heroDashboard");
+  const heroCreateAccBtn = document.getElementById("heroCreateAccBtn");
+  const heroLoginAccBtn = document.getElementById("heroLoginAccBtn");
+
+  const dashProfTitle = document.getElementById("dashProfTitle");
+  const dashWorkerMeta = document.getElementById("dashWorkerMeta");
   const dashReadyBadge = document.getElementById("dashReadyBadge");
   const dashProgressFill = document.getElementById("dashProgressFill");
-  const dashTestsCount = document.getElementById("dashTestsCount");
+  const dashTestStatus = document.getElementById("dashTestStatus");
   const dashChecksCount = document.getElementById("dashChecksCount");
   const dashJournalCount = document.getElementById("dashJournalCount");
+  const dashIotCode = document.getElementById("dashIotCode");
+  const dashIotPages = document.getElementById("dashIotPages");
+  const dashOpenMyProfBtn = document.getElementById("dashOpenMyProfBtn");
+  const dashManageAccBtn = document.getElementById("dashManageAccBtn");
+
+  const checklistSubtitle = document.getElementById("checklistSubtitle");
+  const checklistGuestHint = document.getElementById("checklistGuestHint");
+  const quizGuestHint = document.getElementById("quizGuestHint");
 
   const heroQuickVideoBtn = document.getElementById("heroQuickVideoBtn");
   const heroQuickSosBtn = document.getElementById("heroQuickSosBtn");
@@ -154,23 +233,68 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentSection = "video";
   let currentRiskFilter = "all";
 
-  // Обновление живого дашборда прогресса в Split-Hero
-  function updateHomeDashboard() {
-    const totalProfs = data.professions.length;
-    const passedCount = data.professions.filter((p) => Boolean(progress.passedQuizzes[p.id])).length;
-    const totalChecks = data.professions.reduce((s, p) => s + p.checklist.length, 0);
-    const doneChecks = data.professions.reduce(
-      (s, p) => s + p.checklist.filter((_, idx) => Boolean(progress.checks[`${p.id}_${idx}`])).length,
-      0
-    );
-    const journalCount = getJournalHistory().length;
-    const pct = Math.round(((passedCount + (doneChecks / Math.max(1, totalChecks)) * totalProfs) / (totalProfs * 2)) * 100);
+  // Расчёт персонального статуса обучения для конкретной специальности работника
+  function computeAccountStatus(acc) {
+    const prof = data.professions.find((p) => p.id === acc.profId) || data.professions[0];
+    const accProg = getAccountProgress(acc.id);
+    const totalChecks = prof.checklist.length;
+    const doneChecks = prof.checklist.filter((_, idx) => Boolean(accProg.checks[`${prof.id}_${idx}`])).length;
+    const testPassed = Boolean(accProg.passedQuizzes[prof.id]);
+    const pct = Math.round((doneChecks / Math.max(1, totalChecks)) * 50 + (testPassed ? 50 : 0));
+    const myProtocols = getJournalHistory().filter((it) =>
+      it.accountId ? it.accountId === acc.id && it.profId === prof.id : it.prof === prof.title
+    ).length;
+    return { prof, totalChecks, doneChecks, testPassed, pct, myProtocols };
+  }
 
-    dashReadyBadge.textContent = `${pct}%`;
-    dashProgressFill.style.width = `${pct}%`;
-    dashTestsCount.textContent = `${passedCount} / ${totalProfs}`;
-    dashChecksCount.textContent = `${doneChecks} / ${totalChecks}`;
-    dashJournalCount.textContent = String(journalCount);
+  function formatShortWorkerName(fullName) {
+    const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return "Профиль";
+    if (parts.length === 1) return parts[0];
+    return `${parts[0]} ${parts[1][0]}.`;
+  }
+
+  function updateAccountUI() {
+    const acc = getActiveAccount();
+    progress = loadProgress();
+    if (acc) {
+      headerAccountLabel.textContent = formatShortWorkerName(acc.fullName);
+      openAccountBtn.classList.add("signed-in");
+      checklistGuestHint.hidden = true;
+      quizGuestHint.hidden = true;
+      checklistSubtitle.textContent = "Отметки сохраняются в вашем личном профиле";
+    } else {
+      headerAccountLabel.textContent = "Аккаунт";
+      openAccountBtn.classList.remove("signed-in");
+      checklistGuestHint.hidden = false;
+      quizGuestHint.hidden = false;
+      checklistSubtitle.textContent = "Гостевой режим (для сохранения статуса войдите в аккаунт)";
+    }
+    updateHomeDashboard();
+  }
+
+  // Живой дашборд статуса обучения: скрыт для гостя, персонализирован под специальность после входа
+  function updateHomeDashboard() {
+    const acc = getActiveAccount();
+    if (!acc) {
+      heroGuestBox.hidden = false;
+      heroDashboard.hidden = true;
+      return;
+    }
+
+    heroGuestBox.hidden = true;
+    heroDashboard.hidden = false;
+
+    const status = computeAccountStatus(acc);
+    dashProfTitle.textContent = status.prof.title;
+    dashWorkerMeta.textContent = acc.tabNum ? `${acc.fullName} • Таб. №${acc.tabNum}` : acc.fullName;
+    dashReadyBadge.textContent = `${status.pct}%`;
+    dashProgressFill.style.width = `${status.pct}%`;
+    dashTestStatus.textContent = status.testPassed ? "Сдан" : "Не сдан";
+    dashChecksCount.textContent = `${status.doneChecks} / ${status.totalChecks}`;
+    dashJournalCount.textContent = String(status.myProtocols);
+    dashIotCode.textContent = status.prof.iotNumber;
+    dashIotPages.textContent = `${status.prof.iotPages} стр. ИОТ`;
   }
 
   // Полоса фильтров TOP-10 рисков
@@ -226,23 +350,35 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    const acc = getActiveAccount();
+
     list.forEach((prof) => {
-      const isPassed = Boolean(progress.passedQuizzes[prof.id]);
-      const chkDone = prof.checklist.filter((_, idx) => Boolean(progress.checks[`${prof.id}_${idx}`])).length;
+      const isMine = Boolean(acc && acc.profId === prof.id);
+      const isPassed = Boolean(acc && progress.passedQuizzes[prof.id]);
+      const chkDone = acc ? prof.checklist.filter((_, idx) => Boolean(progress.checks[`${prof.id}_${idx}`])).length : 0;
+      const statusBadges = acc
+        ? `${isMine ? '<span class="prof-card-my-badge">Моя специальность</span>' : ""}${
+            isPassed ? '<span class="prof-card-done">&#10003; Сдано</span>' : ""
+          }`
+        : "";
+      const rightMeta = isMine
+        ? `Чек: ${chkDone}/${prof.checklist.length}`
+        : `${prof.iotPages} стр. оригинала`;
+
       const card = document.createElement("button");
       card.type = "button";
-      card.className = "prof-card";
+      card.className = `prof-card${isMine ? " prof-card-mine" : ""}`;
       card.innerHTML = `
         <img class="prof-card-img" src="media/professions/${prof.id}.webp" alt="${prof.title}">
         <div class="prof-card-top">
           <span class="prof-card-dept">${prof.department}</span>
-          ${isPassed ? '<span class="prof-card-done">&#10003; Сдано</span>' : ""}
+          ${statusBadges ? `<div style="display:flex;gap:4px;flex-wrap:wrap;">${statusBadges}</div>` : ""}
         </div>
         <span class="prof-card-title">${prof.title}</span>
         <span class="prof-card-desc">${prof.description}</span>
         <div class="prof-card-meta-row">
           <span class="prof-card-iot">${prof.iotNumber}</span>
-          <span>${prof.iotPages} стр. • Чек: ${chkDone}/${prof.checklist.length}</span>
+          <span>${rightMeta}</span>
         </div>
         <span class="prof-card-cta">Открыть инструктаж &rarr;</span>
       `;
@@ -525,6 +661,7 @@ document.addEventListener("DOMContentLoaded", () => {
         progress.checks[key] = checkbox.checked;
         saveProgress();
         updateChecklistCounter();
+        updateHomeDashboard();
       });
       checklistItems.appendChild(li);
     });
@@ -724,6 +861,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (passed) {
               progress.passedQuizzes[currentProfession.id] = true;
               saveProgress();
+              updateHomeDashboard();
             }
           }
         });
@@ -960,16 +1098,32 @@ document.addEventListener("DOMContentLoaded", () => {
       actions.hidden = false;
 
       if (saveToJournal) {
+        const acc = getActiveAccount();
         const history = getJournalHistory();
-        history.unshift({ id: recordId, date: dateStr, worker, prof: profTitleText, briefing, result: resultLabel });
+        history.unshift({
+          id: recordId,
+          date: dateStr,
+          worker,
+          prof: profTitleText,
+          profId: currentProfession ? currentProfession.id : null,
+          accountId: acc ? acc.id : null,
+          briefing,
+          result: resultLabel
+        });
         try {
           localStorage.setItem(JOURNAL_KEY, JSON.stringify(history.slice(0, 20)));
         } catch {}
         renderHistory();
+        updateHomeDashboard();
       }
     }
 
     openBtn.addEventListener("click", () => {
+      const acc = getActiveAccount();
+      if (acc) {
+        document.getElementById("protoWorkerName").value = acc.fullName;
+        if (acc.tabNum) document.getElementById("protoTabNum").value = acc.tabNum;
+      }
       buildProtocol(false);
       renderHistory();
       dialog.showModal();
@@ -1182,7 +1336,270 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   })();
 
-  // Старт приложения + инициализация фильтров, дашборда и QR-ссылок (?prof=...&sec=...)
+  // Личный кабинет работника (регистрация со специальностью, вход, смена профессии)
+  (function initAccountSystem() {
+    const dialog = document.getElementById("accountDialog");
+    const dialogTitle = document.getElementById("accountDialogTitle");
+    const closeBtn = document.getElementById("closeAccountBtn");
+    const authPane = document.getElementById("accountAuthPane");
+    const profilePane = document.getElementById("accountProfilePane");
+
+    const tabCreateBtn = document.getElementById("accTabCreateBtn");
+    const tabLoginBtn = document.getElementById("accTabLoginBtn");
+    const createForm = document.getElementById("accCreateForm");
+    const loginForm = document.getElementById("accLoginForm");
+
+    const regName = document.getElementById("accRegName");
+    const regTabNum = document.getElementById("accRegTabNum");
+    const regProf = document.getElementById("accRegProf");
+    const regPass = document.getElementById("accRegPass");
+    const regError = document.getElementById("accRegError");
+
+    const savedListWrap = document.getElementById("accSavedListWrap");
+    const savedList = document.getElementById("accSavedList");
+    const loginId = document.getElementById("accLoginId");
+    const loginPass = document.getElementById("accLoginPass");
+    const loginError = document.getElementById("accLoginError");
+
+    const profFullName = document.getElementById("accProfFullName");
+    const profTabMeta = document.getElementById("accProfTabMeta");
+    const profStatusBadge = document.getElementById("accProfStatusBadge");
+    const profSpecName = document.getElementById("accProfSpecName");
+    const profSummaryStats = document.getElementById("accProfSummaryStats");
+    const changeProfSelect = document.getElementById("accChangeProfSelect");
+    const saveProfBtn = document.getElementById("accSaveProfBtn");
+    const saveProfMsg = document.getElementById("accSaveProfMsg");
+    const goMyProfBtn = document.getElementById("accGoMyProfBtn");
+    const logoutBtn = document.getElementById("accLogoutBtn");
+    const deleteBtn = document.getElementById("accDeleteBtn");
+
+    function fillProfessionSelects() {
+      const optionsHtml = data.professions
+        .map((p) => `<option value="${p.id}">${p.title} (${p.department})</option>`)
+        .join("");
+      regProf.innerHTML = optionsHtml;
+      changeProfSelect.innerHTML = optionsHtml;
+    }
+    fillProfessionSelects();
+
+    function switchAuthTab(mode) {
+      const isCreate = mode === "create";
+      tabCreateBtn.classList.toggle("active", isCreate);
+      tabCreateBtn.setAttribute("aria-selected", String(isCreate));
+      tabLoginBtn.classList.toggle("active", !isCreate);
+      tabLoginBtn.setAttribute("aria-selected", String(!isCreate));
+      createForm.hidden = !isCreate;
+      loginForm.hidden = isCreate;
+      regError.hidden = true;
+      loginError.hidden = true;
+      if (!isCreate) renderSavedAccountChips();
+    }
+
+    function renderSavedAccountChips() {
+      const list = loadAccounts();
+      if (!list.length) {
+        savedListWrap.hidden = true;
+        savedList.innerHTML = "";
+        return;
+      }
+      savedListWrap.hidden = false;
+      savedList.innerHTML = "";
+      list.forEach((acc) => {
+        const p = data.professions.find((x) => x.id === acc.profId);
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "acc-saved-chip";
+        btn.textContent = `${formatShortWorkerName(acc.fullName)} • ${p ? p.title.split("(")[0].trim() : ""}`;
+        btn.addEventListener("click", () => {
+          loginId.value = acc.tabNum || acc.fullName;
+          loginPass.focus();
+        });
+        savedList.appendChild(btn);
+      });
+    }
+
+    function renderProfileView(acc) {
+      const status = computeAccountStatus(acc);
+      profFullName.textContent = acc.fullName;
+      profTabMeta.textContent = acc.tabNum ? `Табельный № ${acc.tabNum}` : "Табельный № не указан";
+      profStatusBadge.textContent = `${status.pct}%`;
+      profSpecName.textContent = `Специальность: ${status.prof.title} (${status.prof.department})`;
+      profSummaryStats.innerHTML = `
+        Тест по специальности: <strong>${status.testPassed ? "Сдан" : "Не сдан"}</strong><br>
+        Чек-лист смены: <strong>${status.doneChecks} из ${status.totalChecks}</strong> • Протоколов: <strong>${status.myProtocols}</strong>
+      `;
+      changeProfSelect.value = status.prof.id;
+      saveProfMsg.hidden = true;
+    }
+
+    function refreshAllAfterAccountChange() {
+      updateAccountUI();
+      renderProfessions(profSearchInput.value);
+      if (currentProfession) {
+        renderChecklist();
+        renderQuiz(currentProfession.quiz);
+      }
+    }
+
+    function openAccountModal(preferredMode = "create") {
+      const acc = getActiveAccount();
+      if (acc) {
+        dialogTitle.textContent = "Профиль работника";
+        authPane.hidden = true;
+        profilePane.hidden = false;
+        renderProfileView(acc);
+      } else {
+        dialogTitle.textContent = "Личный кабинет работника";
+        authPane.hidden = false;
+        profilePane.hidden = true;
+        switchAuthTab(preferredMode);
+      }
+      dialog.showModal();
+    }
+
+    tabCreateBtn.addEventListener("click", () => switchAuthTab("create"));
+    tabLoginBtn.addEventListener("click", () => switchAuthTab("login"));
+
+    openAccountBtn.addEventListener("click", () => openAccountModal(loadAccounts().length ? "login" : "create"));
+    heroCreateAccBtn.addEventListener("click", () => openAccountModal("create"));
+    heroLoginAccBtn.addEventListener("click", () => openAccountModal("login"));
+    dashManageAccBtn.addEventListener("click", () => openAccountModal("profile"));
+    document.querySelectorAll(".guest-open-acc-btn").forEach((btn) => {
+      btn.addEventListener("click", () => openAccountModal("create"));
+    });
+
+    dashOpenMyProfBtn.addEventListener("click", () => {
+      const acc = getActiveAccount();
+      if (!acc) return;
+      const myProf = data.professions.find((p) => p.id === acc.profId);
+      if (myProf) openProfession(myProf, "video", true);
+    });
+
+    goMyProfBtn.addEventListener("click", () => {
+      const acc = getActiveAccount();
+      if (!acc) return;
+      const myProf = data.professions.find((p) => p.id === acc.profId);
+      dialog.close();
+      if (myProf) openProfession(myProf, "video", true);
+    });
+
+    createForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fullName = regName.value.trim();
+      const tabNum = regTabNum.value.trim();
+      const profId = regProf.value;
+      const pass = regPass.value;
+
+      if (fullName.length < 2) {
+        regError.textContent = "Укажите ФИО работника.";
+        regError.hidden = false;
+        return;
+      }
+      if (pass.length < 4) {
+        regError.textContent = "Пароль должен содержать минимум 4 символа.";
+        regError.hidden = false;
+        return;
+      }
+
+      const accounts = loadAccounts();
+      const duplicate = accounts.find(
+        (a) =>
+          (tabNum && a.tabNum && a.tabNum.toLowerCase() === tabNum.toLowerCase()) ||
+          a.fullName.toLowerCase() === fullName.toLowerCase()
+      );
+      if (duplicate) {
+        regError.textContent = "Профиль с таким ФИО или табельным номером уже создан. Перейдите во вкладку «Войти».";
+        regError.hidden = false;
+        return;
+      }
+
+      const newAcc = {
+        id: "acc_" + Date.now() + "_" + Math.floor(100 + Math.random() * 900),
+        fullName,
+        tabNum,
+        profId,
+        passHash: await hashWorkerPass(pass),
+        createdAt: new Date().toISOString()
+      };
+      accounts.push(newAcc);
+      saveAccounts(accounts);
+      setActiveAccountId(newAcc.id);
+
+      createForm.reset();
+      regError.hidden = true;
+      refreshAllAfterAccountChange();
+      dialog.close();
+    });
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const query = loginId.value.trim().toLowerCase();
+      const pass = loginPass.value;
+      const accounts = loadAccounts();
+      const found = accounts.find(
+        (a) => (a.tabNum && a.tabNum.toLowerCase() === query) || a.fullName.toLowerCase() === query
+      );
+      if (!found) {
+        loginError.textContent = "Аккаунт не найден. Проверьте ФИО / табельный № или создайте новый.";
+        loginError.hidden = false;
+        return;
+      }
+      const hash = await hashWorkerPass(pass);
+      if (hash !== found.passHash) {
+        loginError.textContent = "Неверный пароль или PIN.";
+        loginError.hidden = false;
+        return;
+      }
+      setActiveAccountId(found.id);
+      loginForm.reset();
+      loginError.hidden = true;
+      refreshAllAfterAccountChange();
+      dialog.close();
+    });
+
+    saveProfBtn.addEventListener("click", () => {
+      const acc = getActiveAccount();
+      if (!acc) return;
+      const accounts = loadAccounts();
+      const target = accounts.find((a) => a.id === acc.id);
+      if (!target) return;
+      target.profId = changeProfSelect.value;
+      saveAccounts(accounts);
+      renderProfileView(target);
+      saveProfMsg.hidden = false;
+      refreshAllAfterAccountChange();
+    });
+
+    logoutBtn.addEventListener("click", () => {
+      setActiveAccountId(null);
+      refreshAllAfterAccountChange();
+      dialog.close();
+    });
+
+    deleteBtn.addEventListener("click", () => {
+      const acc = getActiveAccount();
+      if (!acc) return;
+      if (!confirm(`Удалить аккаунт «${acc.fullName}» и его статус обучения с этого устройства?`)) return;
+      const remaining = loadAccounts().filter((a) => a.id !== acc.id);
+      saveAccounts(remaining);
+      try {
+        const map = loadAllAccProgress();
+        delete map[acc.id];
+        localStorage.setItem(ACC_PROGRESS_KEY, JSON.stringify(map));
+      } catch {}
+      setActiveAccountId(null);
+      refreshAllAfterAccountChange();
+      dialog.close();
+    });
+
+    closeBtn.addEventListener("click", () => dialog.close());
+    dialog.addEventListener("click", (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+  })();
+
+  // Старт приложения + инициализация аккаунта, фильтров, дашборда и QR-ссылок (?prof=...&sec=...)
+  updateAccountUI();
   renderRiskFilters();
   renderProfessions();
   const params = new URLSearchParams(window.location.search);
