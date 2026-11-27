@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=41">
+  <link rel="stylesheet" href="css/style.css?v=42">
 </head>
 <body>
   <!-- Шапка с матовым стеклом и чёткими SVG-иконками -->
@@ -452,8 +452,15 @@
                 <p class="muted" style="margin: 2px 0 0;">Нажмите на иллюстрацию СИЗ или рабочего, чтобы увеличить её на весь экран.</p>
               </div>
             </div>
-            <div id="ppeShowcaseBox" class="ppe-showcase-box"></div>
-            <div id="ppeTabCards" class="ppe-cards-grid"></div>
+            <div class="ppe-mode-switch" role="tablist" aria-label="Режим вкладки СИЗ">
+              <button type="button" id="ppeModeRefBtn" class="ppe-mode-btn active">Справочник СИЗ</button>
+              <button type="button" id="ppeModeTrainerBtn" class="ppe-mode-btn">Тренажёр: подбери комплект</button>
+            </div>
+            <div id="ppeRefWrap">
+              <div id="ppeShowcaseBox" class="ppe-showcase-box"></div>
+              <div id="ppeTabCards" class="ppe-cards-grid"></div>
+            </div>
+            <div id="ppeTrainerBox" class="ppe-trainer-wrap" hidden></div>
           </div>
 
           <!-- РАЗДЕЛ 3: Риски TOP-10 и Запреты ИОТ -->
@@ -676,7 +683,19 @@
       <h3>Методичка для руководителя цеха</h3>
       <button type="button" id="closeMasterBtn" class="btn-close" aria-label="Закрыть">&times;</button>
     </div>
-    <div id="masterGuideList" class="dialog-body"></div>
+    <div class="dialog-body">
+      <div id="masterGuideList"></div>
+      <div class="five-min-box">
+        <strong>&#9889; Пятиминутка безопасности перед сменой</strong>
+        <p class="muted" style="margin: 4px 0 0; font-size: 0.82rem;">Соберите готовый планёрный сценарий для бригады по нужной профессии.</p>
+        <div class="five-min-controls">
+          <select id="fiveMinProfSelect" aria-label="Профессия для пятиминутки"></select>
+          <button type="button" id="fiveMinGenerateBtn" class="btn btn-primary-sm">Другой вариант</button>
+          <button type="button" id="fiveMinCopyBtn" class="btn btn-secondary btn-sm">Копировать</button>
+        </div>
+        <div id="fiveMinCard" class="five-min-card"></div>
+      </div>
+    </div>
   </dialog>
 
   <!-- Модальное окно SOS -->
@@ -989,7 +1008,7 @@
     </div>
   </dialog>
 
-  <script src="js/data.js?v=41"></script>
-  <script src="js/app.js?v=41"></script>
+  <script src="js/data.js?v=42"></script>
+  <script src="js/app.js?v=42"></script>
 </body>
 </html>

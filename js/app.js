@@ -435,27 +435,36 @@ document.addEventListener("DOMContentLoaded", () => {
     aboutAccountCtaBox.hidden = Boolean(acc);
   }
 
-  if (aboutTopOpenBtn) {
-    aboutTopOpenBtn.addEventListener("click", () => {
-      aboutExpandedByUser = true;
-      renderAboutScreenState();
+  function openAboutPanelAnimated() {
+    aboutExpandedByUser = true;
+    aboutFullScreen.classList.add("about-anim-hidden");
+    renderAboutScreenState();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        aboutFullScreen.classList.remove("about-anim-hidden");
+      });
     });
   }
 
+  function closeAboutPanelAnimated() {
+    aboutExpandedByUser = false;
+    aboutFullScreen.classList.add("about-anim-hidden");
+    setTimeout(() => {
+      aboutFullScreen.classList.remove("about-anim-hidden");
+      renderAboutScreenState();
+    }, 280);
+  }
+
+  if (aboutTopOpenBtn) {
+    aboutTopOpenBtn.addEventListener("click", openAboutPanelAnimated);
+  }
+
   aboutShowBtn.addEventListener("click", () => {
-    aboutExpandedByUser = true;
-    renderAboutScreenState();
+    openAboutPanelAnimated();
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
-  aboutHideBtn.addEventListener("click", () => {
-    aboutExpandedByUser = false;
-    aboutFullScreen.classList.add("is-closing");
-    setTimeout(() => {
-      aboutFullScreen.classList.remove("is-closing");
-      renderAboutScreenState();
-    }, 270);
-  });
+  aboutHideBtn.addEventListener("click", closeAboutPanelAnimated);
 
   aboutScrollProfsBtn.addEventListener("click", () => {
     const target = document.getElementById("riskFilterBar") || professionsGrid;
@@ -513,8 +522,18 @@ document.addEventListener("DOMContentLoaded", () => {
     profOnboardingSlot.style.top = `${topPx}px`;
   }
 
+  let pointerRafPending = false;
+
+  function schedulePointerUpdate() {
+    if (pointerRafPending) return;
+    pointerRafPending = true;
+    requestAnimationFrame(() => {
+      pointerRafPending = false;
+      positionOnboardingPointer();
+    });
+  }
+
   function positionOnboardingPointer() {
-    syncStickyOnboardingOffset();
     const homeActive = !onboardingTopSlot.hidden && !homeScreen.hidden;
     const profActive = !profOnboardingSlot.hidden && !professionScreen.hidden;
     if (!onbHighlightedEl || (!homeActive && !profActive)) {
@@ -775,8 +794,11 @@ document.addEventListener("DOMContentLoaded", () => {
     renderProfOnboardingState(true);
   });
 
-  window.addEventListener("scroll", positionOnboardingPointer, { passive: true });
-  window.addEventListener("resize", positionOnboardingPointer);
+  window.addEventListener("scroll", schedulePointerUpdate, { passive: true });
+  window.addEventListener("resize", () => {
+    syncStickyOnboardingOffset();
+    schedulePointerUpdate();
+  });
 
   function refreshAllAfterAccountChange() {
     updateAccountUI();
@@ -1198,8 +1220,115 @@ document.addEventListener("DOMContentLoaded", () => {
     renderQuiz(currentProfession.quiz);
   }
 
+  const ppeModeRefBtn = document.getElementById("ppeModeRefBtn");
+  const ppeModeTrainerBtn = document.getElementById("ppeModeTrainerBtn");
+  const ppeRefWrap = document.getElementById("ppeRefWrap");
+  const ppeTrainerBox = document.getElementById("ppeTrainerBox");
+
+  function setPpeMode(mode) {
+    const isTrainer = mode === "trainer";
+    if (ppeModeRefBtn) ppeModeRefBtn.classList.toggle("active", !isTrainer);
+    if (ppeModeTrainerBtn) ppeModeTrainerBtn.classList.toggle("active", isTrainer);
+    if (ppeRefWrap) ppeRefWrap.hidden = isTrainer;
+    if (ppeTrainerBox) ppeTrainerBox.hidden = !isTrainer;
+  }
+
+  if (ppeModeRefBtn && ppeModeTrainerBtn) {
+    ppeModeRefBtn.addEventListener("click", () => setPpeMode("ref"));
+    ppeModeTrainerBtn.addEventListener("click", () => {
+      setPpeMode("trainer");
+      renderPpeTrainer();
+    });
+  }
+
+  function renderPpeTrainer() {
+    if (!ppeTrainerBox || !currentProfession) return;
+    const tasks = currentProfession.ppeTrainer || [];
+    if (!tasks.length) {
+      ppeTrainerBox.innerHTML = '<p class="muted">Задания тренажёра для этой специальности скоро появятся.</p>';
+      return;
+    }
+
+    let solvedCount = 0;
+    ppeTrainerBox.innerHTML = `
+      <div class="ppe-trainer-head">
+        <div>
+          <strong>Тренажёр: подберите правильный комплект СИЗ (${currentProfession.title})</strong>
+          <div class="muted" style="font-size:0.8rem;">Нажмите на подходящий вариант в каждой из ${tasks.length} ситуаций.</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span id="ppeTrainerScore" class="progress-badge mono">0 / ${tasks.length}</span>
+          <button type="button" id="ppeTrainerResetBtn" class="btn btn-secondary btn-sm">Перемешать</button>
+        </div>
+      </div>
+    `;
+
+    const scoreEl = ppeTrainerBox.querySelector("#ppeTrainerScore");
+    const resetBtn = ppeTrainerBox.querySelector("#ppeTrainerResetBtn");
+    if (resetBtn) resetBtn.addEventListener("click", renderPpeTrainer);
+
+    tasks.forEach((task, tIdx) => {
+      const card = document.createElement("div");
+      card.className = "ppe-task-card";
+      card.innerHTML = `<h4 class="ppe-task-title">${task.title}</h4>`;
+
+      const grid = document.createElement("div");
+      grid.className = "ppe-opt-grid";
+
+      const fb = document.createElement("div");
+      fb.className = "ppe-task-feedback";
+      fb.hidden = true;
+
+      // Перемешиваем варианты, сохраняя индекс картинки для заглушки
+      const indexedOpts = task.options.map((o, i) => ({ ...o, origIdx: i }));
+      indexedOpts.sort(() => Math.random() - 0.5);
+
+      indexedOpts.forEach((opt) => {
+        const imgPath = `media/ppe_trainer/${currentProfession.id}_${tIdx + 1}_${opt.origIdx + 1}.webp`;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "ppe-opt-card";
+        btn.innerHTML = `
+          <div class="ppe-opt-photo">
+            <img src="${imgPath}" alt="${opt.label}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="ppe-opt-stub" style="display:none;">
+              <span>Место для фото СИЗ</span>
+              <code style="font-size:0.65rem;">${currentProfession.id}_${tIdx + 1}_${opt.origIdx + 1}.webp</code>
+            </div>
+          </div>
+          <div class="ppe-opt-label">${opt.label}</div>
+        `;
+        btn.addEventListener("click", () => {
+          const allBtns = grid.querySelectorAll(".ppe-opt-card");
+          allBtns.forEach((b) => (b.disabled = true));
+          if (opt.correct) {
+            btn.classList.add("correct");
+            solvedCount++;
+            if (scoreEl) scoreEl.textContent = `${solvedCount} / ${tasks.length}`;
+            fb.className = "ppe-task-feedback ok";
+            fb.innerHTML = `<strong>&#10003; Правильно:</strong> ${opt.note}`;
+          } else {
+            btn.classList.add("wrong");
+            allBtns.forEach((b, bIdx) => {
+              if (indexedOpts[bIdx].correct) b.classList.add("correct");
+            });
+            fb.className = "ppe-task-feedback err";
+            fb.innerHTML = `<strong>&#10060; Ошибка:</strong> ${opt.note}`;
+          }
+          fb.hidden = false;
+        });
+        grid.appendChild(btn);
+      });
+
+      card.appendChild(grid);
+      card.appendChild(fb);
+      ppeTrainerBox.appendChild(card);
+    });
+  }
+
   // Вкладка СИЗ с зумом (включая обзорную иллюстрацию рабочего в экипировке)
   function renderPpeTab() {
+    setPpeMode("ref");
     const sqPath = `media/professions_square/${currentProfession.id}.webp`;
     ppeShowcaseBox.innerHTML = `
       <img src="${sqPath}" alt="${currentProfession.title} - экипировка" class="ppe-showcase-img">
@@ -1861,7 +1990,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === glossaryDialog) glossaryDialog.close();
   });
 
-  // Памятка мастеру
+  // Памятка мастеру + генератор «Пятиминутки безопасности»
   masterGuideList.innerHTML = data.masterGuide
     .map(
       (m) => `
@@ -1873,7 +2002,96 @@ document.addEventListener("DOMContentLoaded", () => {
     )
     .join("");
 
-  openMasterBtn.addEventListener("click", () => masterDialog.showModal());
+  const fiveMinProfSelect = document.getElementById("fiveMinProfSelect");
+  const fiveMinGenerateBtn = document.getElementById("fiveMinGenerateBtn");
+  const fiveMinCopyBtn = document.getElementById("fiveMinCopyBtn");
+  const fiveMinCard = document.getElementById("fiveMinCard");
+  let fiveMinVariantOffset = 0;
+
+  if (fiveMinProfSelect) {
+    fiveMinProfSelect.innerHTML = data.professions
+      .map((p) => `<option value="${p.id}">${p.title}</option>`)
+      .join("");
+  }
+
+  function buildFiveMinuteText(prof, risk, mistake, ppeA, ppeB, q1, q2) {
+    return [
+      `ПЯТИМИНУТКА БЕЗОПАСНОСТИ (${prof.title}, ${prof.iotNumber})`,
+      `1. Тема дня (ключевой риск): ${risk}`,
+      `2. Разбор ошибки: ${mistake.action} -> Последствие: ${mistake.consequence}`,
+      `3. Проверить СИЗ перед сменой: ${ppeA}; ${ppeB}`,
+      `4. Вопрос 1: ${q1.question} (Ответ: ${q1.options[q1.correctIndex]})`,
+      `5. Вопрос 2: ${q2.question} (Ответ: ${q2.options[q2.correctIndex]})`
+    ].join("\n");
+  }
+
+  let currentFiveMinPlainText = "";
+
+  function renderFiveMinBriefing() {
+    if (!fiveMinProfSelect || !fiveMinCard) return;
+    const prof = data.professions.find((p) => p.id === fiveMinProfSelect.value) || data.professions[0];
+    if (!prof) return;
+    const rIdx = fiveMinVariantOffset % prof.risks.length;
+    const mIdx = fiveMinVariantOffset % prof.mistakes.length;
+    const qIdx1 = (fiveMinVariantOffset * 2) % prof.quiz.length;
+    const qIdx2 = (fiveMinVariantOffset * 2 + 1) % prof.quiz.length;
+
+    const risk = prof.risks[rIdx];
+    const mistake = prof.mistakes[mIdx];
+    const ppeA = prof.ppe[0] || "";
+    const ppeB = prof.ppe[1] || prof.ppe[0] || "";
+    const q1 = prof.quiz[qIdx1];
+    const q2 = prof.quiz[qIdx2];
+
+    currentFiveMinPlainText = buildFiveMinuteText(prof, risk, mistake, ppeA, ppeB, q1, q2);
+
+    fiveMinCard.innerHTML = `
+      <div><strong>Профессия:</strong> ${prof.title} (${prof.iotNumber})</div>
+      <div><strong>1. Тема дня (риск):</strong> ${risk}</div>
+      <div><strong>2. Частая ошибка:</strong> ${mistake.action} &rarr; <em>${mistake.consequence}</em></div>
+      <div><strong>3. Проверить СИЗ сегодня:</strong> ${ppeA}; ${ppeB}</div>
+      <div class="five-min-q">
+        <strong>4. Блиц-вопрос 1:</strong> ${q1.question}
+        <details style="margin-top:4px;"><summary class="link-btn">Показать ответ</summary><div style="margin-top:3px; color:var(--success); font-weight:700;">${q1.options[q1.correctIndex]}</div></details>
+      </div>
+      <div class="five-min-q">
+        <strong>5. Блиц-вопрос 2:</strong> ${q2.question}
+        <details style="margin-top:4px;"><summary class="link-btn">Показать ответ</summary><div style="margin-top:3px; color:var(--success); font-weight:700;">${q2.options[q2.correctIndex]}</div></details>
+      </div>
+    `;
+  }
+
+  if (fiveMinProfSelect) {
+    fiveMinProfSelect.addEventListener("change", () => {
+      fiveMinVariantOffset = 0;
+      renderFiveMinBriefing();
+    });
+  }
+  if (fiveMinGenerateBtn) {
+    fiveMinGenerateBtn.addEventListener("click", () => {
+      fiveMinVariantOffset++;
+      renderFiveMinBriefing();
+    });
+  }
+  if (fiveMinCopyBtn) {
+    fiveMinCopyBtn.addEventListener("click", async () => {
+      if (!currentFiveMinPlainText) return;
+      try {
+        await navigator.clipboard.writeText(currentFiveMinPlainText);
+      } catch {}
+      const prev = fiveMinCopyBtn.textContent;
+      fiveMinCopyBtn.textContent = "✓ Скопировано";
+      setTimeout(() => {
+        fiveMinCopyBtn.textContent = prev;
+      }, 1600);
+    });
+  }
+
+  openMasterBtn.addEventListener("click", () => {
+    if (currentProfession && fiveMinProfSelect) fiveMinProfSelect.value = currentProfession.id;
+    renderFiveMinBriefing();
+    masterDialog.showModal();
+  });
   closeMasterBtn.addEventListener("click", () => masterDialog.close());
   masterDialog.addEventListener("click", (e) => {
     if (e.target === masterDialog) masterDialog.close();
