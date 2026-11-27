@@ -466,7 +466,7 @@ document.addEventListener("DOMContentLoaded", () => {
       targetSelector: ".header-actions",
       pointerText: "↑ Главное меню и SOS",
       title: "Верхнее меню: экстренная помощь, журнал и профиль",
-      desc: "Здесь всегда под рукой кнопка SOS (быстрый звонок с телефона), электронный журнал протоколов, методичка мастеру, глоссарий и ваш личный кабинет.",
+      desc: "Здесь всегда под рукой кнопка SOS (быстрый звонок с телефона), электронный журнал протоколов, методичка мастеру и ваш личный кабинет.",
       hint: "Подсвечено верхнее меню ↑"
     },
     {
@@ -1144,7 +1144,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (currentBriefing.id === "vvodny") {
       briefingStatusPill.textContent = "Видеоролик доступен";
-      const videoSrc = "media/videos/vvodny.mp4";
+      const videoSrc = "media/videos/vvodny.mp4?v=30";
       if (briefingVideo.getAttribute("src") !== videoSrc) {
         briefingVideo.setAttribute("src", videoSrc);
         briefingVideo.load();
@@ -1297,14 +1297,42 @@ document.addEventListener("DOMContentLoaded", () => {
     sidebarCheckBadge.textContent = `${checkedCount}/${total}`;
   }
 
-  // Плакат А4 с QR-кодом
+  // Плакат с QR-кодом и выбором формата (A3 / A4 / A5)
+  let posterFormat = "A4";
+  let posterPageStyleEl = document.getElementById("posterPrintPageStyle");
+  if (!posterPageStyleEl) {
+    posterPageStyleEl = document.createElement("style");
+    posterPageStyleEl.id = "posterPrintPageStyle";
+    document.head.appendChild(posterPageStyleEl);
+  }
+
+  function syncPosterPageRule(fmt) {
+    // margin: 0 убирает системные колонтитулы браузера (дату, время и URL-ссылку) при печати
+    posterPageStyleEl.textContent = `@media print { @page { size: ${fmt} portrait; margin: 0; } }`;
+  }
+
   function renderPoster() {
+    if (!currentProfession) return;
+    const fmtLower = posterFormat.toLowerCase();
+    posterContainer.className = `poster-sheet poster-format-${fmtLower}`;
+    syncPosterPageRule(posterFormat);
+
+    // В зависимости от формата подбираем объём текста (A5 - краткая выжимка, A3/A4 - полный состав)
+    const maxItems = posterFormat === "A5" ? 3 : 10;
+    const risks = currentProfession.risks.slice(0, maxItems);
+    const ppe = currentProfession.ppe.slice(0, maxItems);
+    const forbidden = currentProfession.forbidden.slice(0, maxItems);
+    const emergency = currentProfession.emergency.slice(0, maxItems);
+    const checklist = posterFormat === "A5"
+      ? currentProfession.checklist.slice(0, 2)
+      : currentProfession.checklist;
+
     posterContainer.innerHTML = `
       <div class="poster-head poster-head-light">
         <div class="poster-head-left">
           <img src="media/brand/logo_color.png" alt="Северсталь" class="poster-logo">
           <div>
-            <div class="poster-iot-label">ПАМЯТКА ПО ОХРАНЕ ТРУДА • ${currentProfession.iotNumber}</div>
+            <div class="poster-iot-label">ПАМЯТКА ПО ОХРАНЕ ТРУДА (${posterFormat}) • ${currentProfession.iotNumber}</div>
             <h4 class="poster-title">${currentProfession.title}</h4>
           </div>
         </div>
@@ -1316,24 +1344,24 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="poster-grid">
         <div class="poster-box poster-box-risk">
           <h5>&#9888; Главные опасности</h5>
-          <ul>${currentProfession.risks.map((r) => `<li>${r}</li>`).join("")}</ul>
+          <ul>${risks.map((r) => `<li>${r}</li>`).join("")}</ul>
         </div>
         <div class="poster-box poster-box-ppe">
           <h5>&#129466; Обязательные СИЗ</h5>
-          <ul>${currentProfession.ppe.map((p) => `<li>${p}</li>`).join("")}</ul>
+          <ul>${ppe.map((p) => `<li>${p}</li>`).join("")}</ul>
         </div>
         <div class="poster-box poster-box-forbidden">
           <h5>&#128683; Запрещено (ИОТ)</h5>
-          <ul>${currentProfession.forbidden.map((f) => `<li>${f}</li>`).join("")}</ul>
+          <ul>${forbidden.map((f) => `<li>${f}</li>`).join("")}</ul>
         </div>
         <div class="poster-box poster-box-emergency">
           <h5>&#128680; Действия при ЧС</h5>
-          <ol>${currentProfession.emergency.map((e) => `<li>${e}</li>`).join("")}</ol>
+          <ol>${emergency.map((e) => `<li>${e}</li>`).join("")}</ol>
         </div>
       </div>
       <div class="poster-footer-qr">
         <div>
-          <strong>Чек-лист перед сменой:</strong> ${currentProfession.checklist.join(" • ")}
+          <strong>Чек-лист перед сменой:</strong> ${checklist.join(" • ")}
         </div>
         <div class="poster-qr-box">
           <img src="media/qr/${currentProfession.id}.png" alt="QR-код инструктажа" class="poster-qr-img">
@@ -1345,7 +1373,22 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   }
 
-  printPosterBtn.addEventListener("click", () => window.print());
+  document.querySelectorAll(".poster-fmt-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const fmt = btn.getAttribute("data-format");
+      if (!fmt) return;
+      posterFormat = fmt;
+      document.querySelectorAll(".poster-fmt-btn").forEach((b) => {
+        b.classList.toggle("active", b === btn);
+      });
+      renderPoster();
+    });
+  });
+
+  printPosterBtn.addEventListener("click", () => {
+    syncPosterPageRule(posterFormat);
+    window.print();
+  });
 
   // Раздел PDF с защитой паролем (CHSUtest) и правами от администратора
   function getDocsAccessReason() {
@@ -1534,12 +1577,16 @@ document.addEventListener("DOMContentLoaded", () => {
       : '<p class="muted">Ничего не найдено.</p>';
   }
 
-  glossarySearch.addEventListener("input", (e) => renderGlossary(e.target.value));
-  openGlossaryBtn.addEventListener("click", () => {
+  function openGlossaryModal() {
     glossarySearch.value = "";
     renderGlossary();
     glossaryDialog.showModal();
-  });
+  }
+
+  glossarySearch.addEventListener("input", (e) => renderGlossary(e.target.value));
+  if (openGlossaryBtn) openGlossaryBtn.addEventListener("click", openGlossaryModal);
+  const footerGlossaryBtn = document.getElementById("footerGlossaryBtn");
+  if (footerGlossaryBtn) footerGlossaryBtn.addEventListener("click", openGlossaryModal);
   closeGlossaryBtn.addEventListener("click", () => glossaryDialog.close());
   glossaryDialog.addEventListener("click", (e) => {
     if (e.target === glossaryDialog) glossaryDialog.close();
