@@ -1842,8 +1842,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const regPass = document.getElementById("accRegPass");
     const regError = document.getElementById("accRegError");
 
-    const savedListWrap = document.getElementById("accSavedListWrap");
-    const savedList = document.getElementById("accSavedList");
     const loginId = document.getElementById("accLoginId");
     const loginPass = document.getElementById("accLoginPass");
     const loginError = document.getElementById("accLoginError");
@@ -1879,30 +1877,6 @@ document.addEventListener("DOMContentLoaded", () => {
       loginForm.hidden = isCreate;
       regError.hidden = true;
       loginError.hidden = true;
-      if (!isCreate) renderSavedAccountChips();
-    }
-
-    function renderSavedAccountChips() {
-      const list = loadAccounts();
-      if (!list.length) {
-        savedListWrap.hidden = true;
-        savedList.innerHTML = "";
-        return;
-      }
-      savedListWrap.hidden = false;
-      savedList.innerHTML = "";
-      list.forEach((acc) => {
-        const p = data.professions.find((x) => x.id === acc.profId);
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "acc-saved-chip";
-        btn.textContent = `${formatShortWorkerName(acc.fullName)} • ${p ? p.title.split("(")[0].trim() : ""}`;
-        btn.addEventListener("click", () => {
-          loginId.value = acc.tabNum || acc.fullName;
-          loginPass.focus();
-        });
-        savedList.appendChild(btn);
-      });
     }
 
     function renderProfileView(acc) {
@@ -1932,9 +1906,6 @@ document.addEventListener("DOMContentLoaded", () => {
         authPane.hidden = false;
         profilePane.hidden = true;
         switchAuthTab(preferredMode);
-        syncAccountsFromCloud().then((ok) => {
-          if (ok && !loginForm.hidden) renderSavedAccountChips();
-        });
       }
       dialog.showModal();
     }
