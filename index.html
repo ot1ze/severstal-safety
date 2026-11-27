@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=24">
+  <link rel="stylesheet" href="css/style.css?v=25">
 </head>
 <body>
   <!-- Шапка с матовым стеклом и чёткими SVG-иконками -->
@@ -48,8 +48,25 @@
   </header>
 
   <main class="container main-content">
-    <!-- ЭКРАН 1: Split-Hero + Кабинет/Персональный статус + Фильтр рисков + Каталог -->
+    <!-- ЭКРАН 1: Интерактивный гид (для новых профилей) + Split-Hero + О портале + Фильтр рисков + Каталог -->
     <section id="homeScreen" class="screen active fade-in">
+      <!-- Верхняя плашка краткого обучения после создания/входа в аккаунт -->
+      <div id="onboardingTopSlot" class="onboarding-card" hidden>
+        <div class="onboarding-top-row">
+          <span class="onboarding-step-pill" id="onbStepPill">Шаг 1 из 4</span>
+          <button type="button" id="onbSkipBtn" class="link-btn" style="font-size:0.8rem; color:#78350f;">Пропустить</button>
+        </div>
+        <h3 class="onboarding-title" id="onbTitle">Знакомство с порталом</h3>
+        <p class="onboarding-desc" id="onbDesc"></p>
+        <div class="onboarding-actions">
+          <span class="muted" style="font-size:0.78rem; color:#78350f;" id="onbHintLine">Смотрите на подсвеченную область</span>
+          <div class="onboarding-nav-btns">
+            <button type="button" id="onbPrevBtn" class="btn btn-secondary btn-sm">&larr; Назад</button>
+            <button type="button" id="onbNextBtn" class="btn btn-primary-sm">Далее &rarr;</button>
+          </div>
+        </div>
+      </div>
+
       <div class="split-hero">
         <div class="hero-main">
           <div class="severstal-motto">Политика ПАО «Северсталь»: «Безопасность превыше всего»</div>
@@ -125,6 +142,28 @@
         </div>
       </div>
 
+      <!-- Краткая информация о назначении сайта -->
+      <div id="siteAboutStrip" class="site-about-strip">
+        <div class="site-about-head">
+          <strong>Зачем нужен этот портал?</strong>
+          <span class="site-about-pill">ЧерМК ПАО «Северсталь» • Цифровая ОТ</span>
+        </div>
+        <div class="site-about-grid">
+          <div class="site-about-item">
+            <strong>1. Выжимки из 601 стр. ИОТ</strong>
+            Вместо толстых папок бумаги — главные риски, обязательные СИЗ, частые ошибки и порядок действий при авариях по вашей профессии.
+          </div>
+          <div class="site-about-item">
+            <strong>2. Подготовка к смене и тест</strong>
+            Видеоролик, чек-лист перед сменой, печатный плакат А4 с QR-кодом и проверка знаний из 15 вопросов.
+          </div>
+          <div class="site-about-item">
+            <strong>3. Связь и личный учёт</strong>
+            Мгновенный звонок в экстренные службы (SOS), а после входа в аккаунт — личный статус обучения и электронный журнал.
+          </div>
+        </div>
+      </div>
+
       <!-- Поиск + Интерактивный фильтр по смертельным рискам TOP-10 -->
       <div class="catalog-controls">
         <div class="section-head" style="margin-bottom: 10px;">
@@ -137,6 +176,15 @@
       </div>
 
       <div id="professionsGrid" class="professions-grid"></div>
+
+      <!-- Архивная плашка гида после прохождения обучения (переезжает вниз под инструкции) -->
+      <div id="onboardingArchiveSlot" class="onboarding-archive-bar" hidden>
+        <div>
+          <strong>Как пользоваться сайтом:</strong>
+          Вы уже прошли краткое обучение. Если нужно освежить подсказки по кнопкам — откройте гид снова.
+        </div>
+        <button type="button" id="restartOnboardingBtn" class="btn btn-secondary btn-sm">Повторить гид по сайту</button>
+      </div>
 
       <!-- Блок обратной связи -->
       <div class="feedback-banner">
@@ -803,7 +851,7 @@
     </div>
   </dialog>
 
-  <script src="js/data.js?v=24"></script>
-  <script src="js/app.js?v=24"></script>
+  <script src="js/data.js?v=25"></script>
+  <script src="js/app.js?v=25"></script>
 </body>
 </html>

@@ -238,6 +238,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const checklistGuestHint = document.getElementById("checklistGuestHint");
   const quizGuestHint = document.getElementById("quizGuestHint");
 
+  // Элементы интерактивного обучения (онбординга)
+  const onboardingTopSlot = document.getElementById("onboardingTopSlot");
+  const onboardingArchiveSlot = document.getElementById("onboardingArchiveSlot");
+  const onbStepPill = document.getElementById("onbStepPill");
+  const onbTitle = document.getElementById("onbTitle");
+  const onbDesc = document.getElementById("onbDesc");
+  const onbHintLine = document.getElementById("onbHintLine");
+  const onbPrevBtn = document.getElementById("onbPrevBtn");
+  const onbNextBtn = document.getElementById("onbNextBtn");
+  const onbSkipBtn = document.getElementById("onbSkipBtn");
+  const restartOnboardingBtn = document.getElementById("restartOnboardingBtn");
+
   const heroQuickVideoBtn = document.getElementById("heroQuickVideoBtn");
   const heroQuickSosBtn = document.getElementById("heroQuickSosBtn");
   const quickVideoDialog = document.getElementById("quickVideoDialog");
@@ -386,7 +398,156 @@ document.addEventListener("DOMContentLoaded", () => {
       checklistSubtitle.textContent = "Гостевой режим (для сохранения статуса войдите в аккаунт)";
     }
     updateHomeDashboard();
+    renderOnboardingState();
   }
+
+  // Интерактивное краткое обучение по сайту (с подсветкой и стрелками)
+  const ONBOARDING_STEPS = [
+    {
+      targetSelector: ".header-actions",
+      pointerText: "↑ Главное меню и SOS",
+      title: "Верхнее меню: экстренная помощь, журнал и профиль",
+      desc: "Здесь всегда под рукой кнопка SOS (быстрый звонок с телефона), электронный журнал протоколов, методичка мастеру, глоссарий и ваш личный кабинет.",
+      hint: "Подсвечено верхнее меню ↑"
+    },
+    {
+      targetSelector: "#heroDashboard",
+      pointerText: "↓ Ваш статус обучения",
+      title: "Личный статус по вашей профессии",
+      desc: "Здесь видно готовность по вашей специальности (чек-лист + тест). Кнопка «Открыть мою профессию» сразу откроет ваши инструкции.",
+      hint: "Подсвечен блок вашего статуса ↓"
+    },
+    {
+      targetSelector: "#riskFilterBar",
+      pointerText: "↓ Фильтры рисков",
+      title: "Быстрый отбор по смертельным рискам TOP-10",
+      desc: "Нажимайте на нужный риск (расплав, газ CO, электроток, высота) или вводите название цеха/ИОТ в поиск справа.",
+      hint: "Подсвечена панель фильтров ↓"
+    },
+    {
+      targetSelector: "#professionsGrid",
+      pointerText: "↓ Откройте профессию",
+      title: "Карточки профессий и разделы внутри",
+      desc: "Внутри специальности слева открывается меню: видеоролик, обязательные СИЗ, риски, ошибки, ЧС, чек-лист смены, плакат А4, тест (15 вопросов) и официальные PDF.",
+      hint: "Подсвечен каталог профессий ↓"
+    }
+  ];
+
+  let onbStepIndex = 0;
+  let onbHighlightedEl = null;
+  const onbPointerEl = document.createElement("div");
+  onbPointerEl.className = "onb-pointer";
+  onbPointerEl.hidden = true;
+  document.body.appendChild(onbPointerEl);
+
+  function positionOnboardingPointer() {
+    if (!onbHighlightedEl || onboardingTopSlot.hidden || homeScreen.hidden) {
+      onbPointerEl.hidden = true;
+      return;
+    }
+    const rect = onbHighlightedEl.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
+      onbPointerEl.hidden = true;
+      return;
+    }
+    onbPointerEl.hidden = false;
+    const step = ONBOARDING_STEPS[onbStepIndex];
+    onbPointerEl.textContent = step.pointerText;
+    const pointerWidth = onbPointerEl.offsetWidth || 160;
+    const left = Math.min(Math.max(10, rect.left + rect.width / 2 - pointerWidth / 2), window.innerWidth - pointerWidth - 10);
+    const placeBelow = rect.top < 75;
+    const top = placeBelow ? Math.min(rect.bottom + 8, window.innerHeight - 40) : Math.max(8, rect.top - 34);
+    onbPointerEl.style.left = `${left}px`;
+    onbPointerEl.style.top = `${top}px`;
+  }
+
+  function clearOnboardingHighlight() {
+    if (onbHighlightedEl) {
+      onbHighlightedEl.classList.remove("onb-highlight");
+      onbHighlightedEl = null;
+    }
+    onbPointerEl.hidden = true;
+  }
+
+  function renderOnboardingState() {
+    const acc = getActiveAccount();
+    clearOnboardingHighlight();
+
+    if (!acc || homeScreen.hidden) {
+      onboardingTopSlot.hidden = true;
+      onboardingArchiveSlot.hidden = true;
+      return;
+    }
+
+    if (progress.onboardingDone) {
+      onboardingTopSlot.hidden = true;
+      onboardingArchiveSlot.hidden = false;
+      return;
+    }
+
+    onboardingArchiveSlot.hidden = true;
+    onboardingTopSlot.hidden = false;
+
+    const total = ONBOARDING_STEPS.length;
+    if (onbStepIndex < 0) onbStepIndex = 0;
+    if (onbStepIndex >= total) onbStepIndex = total - 1;
+    const step = ONBOARDING_STEPS[onbStepIndex];
+
+    onbStepPill.textContent = `Шаг ${onbStepIndex + 1} из ${total}`;
+    onbTitle.textContent = step.title;
+    onbDesc.textContent = step.desc;
+    onbHintLine.textContent = step.hint;
+    onbPrevBtn.hidden = onbStepIndex === 0;
+    onbNextBtn.textContent = onbStepIndex === total - 1 ? "Всё понятно, завершить ✓" : "Далее →";
+
+    const targetEl = document.querySelector(step.targetSelector);
+    if (targetEl && !targetEl.hidden) {
+      onbHighlightedEl = targetEl;
+      targetEl.classList.add("onb-highlight");
+      positionOnboardingPointer();
+    }
+  }
+
+  function finishOnboarding() {
+    const acc = getActiveAccount();
+    if (acc) {
+      progress.onboardingDone = true;
+      saveProgress();
+    }
+    clearOnboardingHighlight();
+    renderOnboardingState();
+  }
+
+  onbPrevBtn.addEventListener("click", () => {
+    if (onbStepIndex > 0) {
+      onbStepIndex--;
+      renderOnboardingState();
+    }
+  });
+
+  onbNextBtn.addEventListener("click", () => {
+    if (onbStepIndex < ONBOARDING_STEPS.length - 1) {
+      onbStepIndex++;
+      renderOnboardingState();
+    } else {
+      finishOnboarding();
+    }
+  });
+
+  onbSkipBtn.addEventListener("click", finishOnboarding);
+
+  restartOnboardingBtn.addEventListener("click", () => {
+    const acc = getActiveAccount();
+    if (!acc) return;
+    progress.onboardingDone = false;
+    saveProgress();
+    onbStepIndex = 0;
+    renderOnboardingState();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  window.addEventListener("scroll", positionOnboardingPointer, { passive: true });
+  window.addEventListener("resize", positionOnboardingPointer);
 
   function refreshAllAfterAccountChange() {
     updateAccountUI();
@@ -608,6 +769,7 @@ document.addEventListener("DOMContentLoaded", () => {
     homeScreen.hidden = true;
     professionScreen.hidden = false;
     headerDrawerBtn.hidden = false;
+    clearOnboardingHighlight();
 
     switchSection(section, false);
     renderBriefingButtons();
@@ -635,6 +797,7 @@ document.addEventListener("DOMContentLoaded", () => {
     closeDrawer();
     currentProfession = null;
     renderProfessions(profSearchInput.value);
+    renderOnboardingState();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 

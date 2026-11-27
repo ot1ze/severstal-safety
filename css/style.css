@@ -3189,3 +3189,173 @@ body {
   flex-shrink: 0;
   color: var(--accent);
 }
+
+/* =========================================================
+   v25: Краткое описание портала и интерактивный гид-обучение (со стрелками)
+   ========================================================= */
+.site-about-strip {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.site-about-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.site-about-head strong {
+  font-size: 0.96rem;
+  color: var(--primary);
+}
+
+.site-about-pill {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: #eef4ff;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.site-about-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.site-about-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.site-about-item strong {
+  display: block;
+  color: var(--primary);
+  margin-bottom: 2px;
+}
+
+@media (max-width: 780px) {
+  .site-about-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Верхняя плашка интерактивного обучения после создания/входа в аккаунт */
+.onboarding-card {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 2px solid #f59e0b;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 22px rgba(245, 158, 11, 0.16);
+}
+
+.onboarding-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.onboarding-step-pill {
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: #92400e;
+  color: #ffffff;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.onboarding-title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #78350f;
+}
+
+.onboarding-desc {
+  margin: 0 0 10px;
+  font-size: 0.86rem;
+  color: #451a03;
+  line-height: 1.48;
+}
+
+.onboarding-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.onboarding-nav-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Подсветка нужного блока и стрелочка-указатель */
+.onb-highlight {
+  position: relative !important;
+  outline: 3px solid #f59e0b !important;
+  outline-offset: 4px;
+  border-radius: 10px;
+  box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.22) !important;
+  z-index: 15;
+}
+
+.onb-pointer {
+  position: fixed;
+  z-index: 95;
+  background: #92400e;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 5px 11px;
+  border-radius: 999px;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.25);
+  pointer-events: none;
+  white-space: nowrap;
+  animation: onbBounce 1.1s ease-in-out infinite;
+}
+
+@keyframes onbBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* Архивная плашка гида внизу после прохождения */
+.onboarding-archive-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-top: 14px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.onboarding-archive-bar strong {
+  color: var(--primary);
+}
