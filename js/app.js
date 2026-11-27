@@ -454,7 +454,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
       aboutFullScreen.classList.remove("is-closing");
       renderAboutScreenState();
-    }, 220);
+    }, 270);
   });
 
   aboutScrollProfsBtn.addEventListener("click", () => {
@@ -540,16 +540,26 @@ document.addEventListener("DOMContentLoaded", () => {
     let top;
 
     if (onbHighlightedEl.closest(".header")) {
-      // Для шапки ставим метку в правом верхнем углу (не перекрывая жёлтую плашку под ней)
-      top = Math.max(6, rect.top - 14);
-      left = Math.max(10, window.innerWidth - pointerWidth - 12);
-    } else if (rect.top - pointerHeight - 8 >= cardRect.bottom + 4) {
-      top = rect.top - pointerHeight - 6;
-    } else if (rect.bottom + 8 + pointerHeight <= window.innerHeight - 10 && rect.bottom + 8 >= cardRect.bottom + 4) {
+      // Для шапки ставим метку сразу под подсвеченными кнопками шапки
       top = rect.bottom + 8;
+      left = Math.min(Math.max(10, rect.left + rect.width / 2 - pointerWidth / 2), window.innerWidth - pointerWidth - 10);
+    } else if (rect.top - pointerHeight - 10 >= cardRect.bottom + 4) {
+      top = rect.top - pointerHeight - 10;
+    } else if (rect.bottom + 10 + pointerHeight <= window.innerHeight - 10 && rect.bottom + 10 >= cardRect.bottom + 4) {
+      top = rect.bottom + 10;
     } else {
       top = Math.min(window.innerHeight - pointerHeight - 10, Math.max(cardRect.bottom + 6, rect.top + 8));
     }
+
+    // Синхронизируем направление стрелки, чтобы она всегда указывала на элемент
+    const isBelowElement = top >= rect.bottom - 2;
+    let displayLabel = activePointerLabel;
+    if (isBelowElement) {
+      displayLabel = displayLabel.replace(/^↓/, "↑");
+    } else {
+      displayLabel = displayLabel.replace(/^↑/, "↓");
+    }
+    onbPointerEl.textContent = displayLabel;
 
     onbPointerEl.style.left = `${left}px`;
     onbPointerEl.style.top = `${top}px`;
@@ -605,6 +615,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
       positionOnboardingPointer();
+      if (shouldScroll) setTimeout(positionOnboardingPointer, 340);
     }
   }
 
@@ -725,6 +736,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
       positionOnboardingPointer();
+      if (shouldScroll) setTimeout(positionOnboardingPointer, 340);
     }
   }
 
@@ -1624,11 +1636,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Тест (15 вопросов)
-  function renderQuiz(questions) {
+  function guessQuizSection(questionText) {
+    const t = (questionText || "").toLowerCase();
+    if (/сиз|костюм|каск|очк|краг|перчат|респиратор|щиток|жилет|сапог|боты/i.test(t)) {
+      return { sec: "ppe", label: "Открыть раздел «Обязательные СИЗ»" };
+    }
+    if (/авар|чс|газоанализ|пожар|возгоран|пла|отключен|пострадавш|первая помощь|разнос|утечк/i.test(t)) {
+      return { sec: "emergency", label: "Открыть раздел «Аварии и ЧС»" };
+    }
+    if (/ошиб|последств/i.test(t)) {
+      return { sec: "mistakes", label: "Открыть раздел «Популярные ошибки»" };
+    }
+    if (/иот|допуск|категор|sap|торо|кбб/i.test(t)) {
+      return { sec: "docs", label: "Открыть «Официальные ИОТ»" };
+    }
+    return { sec: "risks", label: "Открыть раздел «Риски и запреты ИОТ»" };
+  }
+
+  // Тест (18 заданий: 15 вопросов + 3 кейса) + работа над ошибками
+  function renderQuiz(questions, isRetryWrong = false) {
     quizContainer.innerHTML = "";
     let answered = 0;
     let score = 0;
+    const wrongQuestions = [];
 
     const scoreBox = document.createElement("div");
     scoreBox.className = "quiz-score";
@@ -1653,28 +1683,61 @@ document.addEventListener("DOMContentLoaded", () => {
           const allBtns = box.querySelectorAll(".quiz-option");
           allBtns.forEach((b) => (b.disabled = true));
           answered++;
-          if (idx === q.correctIndex) {
+          const isCorrect = idx === q.correctIndex;
+          if (isCorrect) {
             btn.classList.add("correct");
             score++;
           } else {
             btn.classList.add("wrong");
             allBtns[q.correctIndex].classList.add("correct");
+            wrongQuestions.push(q);
           }
-          if (q.explanation) {
+
+          if (q.explanation || !isCorrect) {
+            const refInfo = guessQuizSection(q.question);
             explainBox.innerHTML = `
-              <div><strong>Разбор решения:</strong> ${q.explanation}</div>
+              ${q.explanation ? `<div><strong>Разбор решения:</strong> ${q.explanation}</div>` : `<div><strong>Правильный ответ:</strong> ${q.options[q.correctIndex]}</div>`}
               ${q.iotRef ? `<div class="quiz-case-ref">Источник: ${q.iotRef}</div>` : ""}
+              ${!isCorrect ? `<button type="button" class="quiz-ref-btn" data-sec="${refInfo.sec}">&rarr; ${refInfo.label}</button>` : ""}
             `;
+            const refBtn = explainBox.querySelector(".quiz-ref-btn");
+            if (refBtn) {
+              refBtn.addEventListener("click", () => switchSection(refBtn.dataset.sec, true));
+            }
             explainBox.hidden = false;
           }
+
           if (answered === questions.length) {
             scoreBox.hidden = false;
             const passThreshold = Math.ceil(questions.length * 0.8);
             const passed = score >= passThreshold;
-            scoreBox.textContent = `Результат: ${score} из ${questions.length} (${Math.round((score / questions.length) * 100)}%). ${
-              passed ? "Отлично! Инструктаж усвоен." : `Для зачёта нужно минимум ${passThreshold} правильных ответа. Попробуйте ещё раз.`
-            }`;
-            if (passed) {
+            const modeLabel = isRetryWrong ? "Работа над ошибками: " : "Результат: ";
+            scoreBox.innerHTML = `
+              <div>${modeLabel}<strong>${score} из ${questions.length}</strong> (${Math.round((score / questions.length) * 100)}%). ${
+                passed ? "Отлично! Инструктаж усвоен." : `Для зачёта нужно минимум ${passThreshold} правильных ответа.`
+              }</div>
+              <div class="quiz-score-actions">
+                ${
+                  wrongQuestions.length > 0
+                    ? `<button type="button" class="btn btn-primary-sm quiz-retry-wrong-btn">Пересдать только ошибки (${wrongQuestions.length})</button>`
+                    : ""
+                }
+                ${
+                  isRetryWrong
+                    ? `<button type="button" class="btn btn-secondary btn-sm quiz-full-reset-btn">Пройти весь тест заново</button>`
+                    : ""
+                }
+              </div>
+            `;
+            const retryBtn = scoreBox.querySelector(".quiz-retry-wrong-btn");
+            if (retryBtn) {
+              retryBtn.addEventListener("click", () => renderQuiz([...wrongQuestions], true));
+            }
+            const fullBtn = scoreBox.querySelector(".quiz-full-reset-btn");
+            if (fullBtn && currentProfession) {
+              fullBtn.addEventListener("click", () => renderQuiz(currentProfession.quiz, false));
+            }
+            if (passed && !isRetryWrong) {
               progress.passedQuizzes[currentProfession.id] = true;
               saveProgress();
               updateHomeDashboard();
@@ -3086,6 +3149,32 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         alert("Чтобы установить приложение на телефон: откройте меню браузера (⋮) и выберите «Добавить на главный экран» или «Установить приложение».");
       }
+    });
+  }
+
+  // Режим «В цеху»: высокий контраст и крупный шрифт
+  const WORKSHOP_MODE_KEY = "severstal_workshop_mode";
+  const toggleWorkshopModeBtn = document.getElementById("toggleWorkshopModeBtn");
+
+  function applyWorkshopMode(enabled) {
+    document.documentElement.classList.toggle("workshop-mode", enabled);
+    if (toggleWorkshopModeBtn) {
+      toggleWorkshopModeBtn.classList.toggle("btn-workshop-active", enabled);
+      toggleWorkshopModeBtn.setAttribute("aria-pressed", String(enabled));
+    }
+  }
+
+  try {
+    applyWorkshopMode(localStorage.getItem(WORKSHOP_MODE_KEY) === "1");
+  } catch {}
+
+  if (toggleWorkshopModeBtn) {
+    toggleWorkshopModeBtn.addEventListener("click", () => {
+      const next = !document.documentElement.classList.contains("workshop-mode");
+      applyWorkshopMode(next);
+      try {
+        localStorage.setItem(WORKSHOP_MODE_KEY, next ? "1" : "0");
+      } catch {}
     });
   }
 });

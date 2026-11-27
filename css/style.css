@@ -4150,7 +4150,7 @@ body {
 }
 
 .about-full-card:not([hidden]) {
-  animation: aboutExpandIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: aboutExpandIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   transform-origin: top center;
 }
 
@@ -4166,7 +4166,7 @@ body {
 }
 
 .about-full-card.is-closing {
-  animation: aboutCollapseOut 0.22s ease forwards !important;
+  animation: aboutCollapseOut 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
   pointer-events: none;
 }
 
@@ -4237,6 +4237,79 @@ body {
   color: #0f172a;
   padding: 0 2px;
   border-radius: 3px;
+}
+
+/* =========================================================
+   v41: «Работа над ошибками» в тесте + режим «В цеху» (контраст и крупный шрифт)
+   ========================================================= */
+.quiz-score-actions {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quiz-ref-btn {
+  display: inline-block;
+  margin-top: 6px;
+  background: #ffffff;
+  color: var(--primary);
+  border: 1px solid #bfdbfe;
+  border-radius: 5px;
+  padding: 4px 10px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.quiz-ref-btn:hover {
+  background: #dbeafe;
+}
+
+.btn-workshop-active {
+  background: #0f172a !important;
+  color: #facc15 !important;
+  border-color: #0f172a !important;
+}
+
+html.workshop-mode {
+  font-size: 18px;
+}
+
+html.workshop-mode body {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+html.workshop-mode .prof-card,
+html.workshop-mode .content-stage,
+html.workshop-mode .sidebar-nav,
+html.workshop-mode .prof-header-card,
+html.workshop-mode .info-block,
+html.workshop-mode .consequence-card,
+html.workshop-mode .checklist li,
+html.workshop-mode .quiz-question-box,
+html.workshop-mode .about-top-strip,
+html.workshop-mode .briefing-meta-bar,
+html.workshop-mode .briefing-focus-box,
+html.workshop-mode .doc-card-row {
+  background: #ffffff !important;
+  border: 2px solid #0f172a !important;
+  box-shadow: none !important;
+}
+
+html.workshop-mode .muted {
+  color: #1e293b !important;
+}
+
+html.workshop-mode .btn-outline,
+html.workshop-mode .btn-secondary,
+html.workshop-mode .briefing-btn:not(.active),
+html.workshop-mode .quiz-option:not(.correct):not(.wrong) {
+  border: 2px solid #0f172a !important;
+  color: #000000 !important;
+  font-weight: 700;
 }
 
 .sidebar-group-label {
