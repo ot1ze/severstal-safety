@@ -437,7 +437,7 @@ document.addEventListener("DOMContentLoaded", () => {
       aboutAccountCtaBox.hidden = true;
       aboutHideBtn.hidden = false;
       aboutFullScreen.hidden = !aboutExpandedByUser;
-      aboutCompactSlot.hidden = aboutExpandedByUser;
+      aboutCompactSlot.hidden = true;
     }
   }
 
@@ -570,7 +570,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (progress.onboardingDone) {
       onboardingTopSlot.hidden = true;
-      onboardingArchiveSlot.hidden = false;
+      onboardingArchiveSlot.hidden = true;
       return;
     }
 
