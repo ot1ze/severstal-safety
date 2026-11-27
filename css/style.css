@@ -18,6 +18,11 @@
   box-sizing: border-box;
 }
 
+/* Гарантируем, что атрибут [hidden] всегда скрывает блок, даже если у класса задан display: flex или grid */
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
