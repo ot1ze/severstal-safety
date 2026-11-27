@@ -13,6 +13,78 @@ document.addEventListener("DOMContentLoaded", () => {
   const ADMIN_PASS_HASH = "ec95e177f99cec044567e838340bae7a4c89371963d7c72bb9b3a48b3bf0ac04";
   const DOCS_PASS_HASH = "25e41fe823700e204bedef5118c42054bf7606d2f3a94df0458042bda8755644";
 
+  // Облачная БД Supabase (общая синхронизация аккаунтов, прогресса, прав на PDF и отзывов)
+  const SUPABASE_URL = "https://tciamdbjtowgszhtpmxv.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_9OXj_DBXXLC39lzJeG5C5A_dYPITKHG";
+
+  async function sbFetch(path, options = {}) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+      ...options,
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+        ...(options.headers || {})
+      }
+    });
+    if (!res.ok) throw new Error(`Supabase ${res.status}`);
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
+  }
+
+  function mapRowToAccount(row) {
+    return {
+      id: row.id,
+      fullName: row.full_name,
+      tabNum: row.tab_num || "",
+      profId: row.prof_id,
+      passHash: row.pass_hash,
+      canAccessDocs: Boolean(row.can_access_docs),
+      createdAt: row.created_at
+    };
+  }
+
+  async function syncAccountsFromCloud() {
+    try {
+      const rows = await sbFetch("worker_accounts?select=*&order=created_at.asc");
+      if (!Array.isArray(rows)) return false;
+      const accounts = rows.map(mapRowToAccount);
+      const progMap = {};
+      rows.forEach((r) => {
+        progMap[r.id] = r.progress && typeof r.progress === "object" ? r.progress : { checks: {}, passedQuizzes: {} };
+      });
+      saveAccounts(accounts);
+      localStorage.setItem(ACC_PROGRESS_KEY, JSON.stringify(progMap));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function cloudUpsertAccount(acc, accProg) {
+    try {
+      await sbFetch("worker_accounts?on_conflict=id", {
+        method: "POST",
+        headers: { Prefer: "resolution=merge-duplicates" },
+        body: JSON.stringify({
+          id: acc.id,
+          full_name: acc.fullName,
+          tab_num: acc.tabNum || "",
+          prof_id: acc.profId,
+          pass_hash: acc.passHash,
+          can_access_docs: Boolean(acc.canAccessDocs),
+          progress: accProg || { checks: {}, passedQuizzes: {} }
+        })
+      });
+    } catch {}
+  }
+
+  async function cloudDeleteAccount(accId) {
+    try {
+      await sbFetch(`worker_accounts?id=eq.${encodeURIComponent(accId)}`, { method: "DELETE" });
+    } catch {}
+  }
+
   const guestProgress = { checks: {}, passedQuizzes: {} };
 
   function loadAccounts() {
@@ -75,6 +147,10 @@ document.addEventListener("DOMContentLoaded", () => {
       map[acc.id] = progress;
       localStorage.setItem(ACC_PROGRESS_KEY, JSON.stringify(map));
     } catch {}
+    sbFetch(`worker_accounts?id=eq.${encodeURIComponent(acc.id)}`, {
+      method: "PATCH",
+      body: JSON.stringify({ progress })
+    }).catch(() => {});
   }
 
   async function sha256(str) {
@@ -1354,8 +1430,17 @@ document.addEventListener("DOMContentLoaded", () => {
       adminTabReviewsBtn.setAttribute("aria-selected", String(!isAcc));
       adminAccountsSection.hidden = !isAcc;
       adminReviewsSection.hidden = isAcc;
-      if (isAcc) renderAdminAccounts();
-      else loadAllReviews();
+      if (isAcc) {
+        renderAdminAccounts();
+        syncAccountsFromCloud().then((ok) => {
+          if (ok) {
+            renderAdminAccounts();
+            refreshAllAfterAccountChange();
+          }
+        });
+      } else {
+        loadAllReviews();
+      }
     }
 
     function openAdminAccForm(acc = null) {
@@ -1436,6 +1521,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!target) return;
           target.canAccessDocs = !target.canAccessDocs;
           saveAccounts(accounts);
+          cloudUpsertAccount(target, getAccountProgress(target.id));
           renderAdminAccounts();
           refreshAllAfterAccountChange();
         });
@@ -1454,6 +1540,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!confirm(`Удалить аккаунт «${acc.fullName}»?`)) return;
           const remaining = loadAccounts().filter((x) => x.id !== acc.id);
           saveAccounts(remaining);
+          cloudDeleteAccount(acc.id);
           try {
             const map = loadAllAccProgress();
             delete map[acc.id];
@@ -1516,6 +1603,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const accounts = loadAccounts();
+      let savedAcc = null;
       if (editingAccountId) {
         const target = accounts.find((x) => x.id === editingAccountId);
         if (target) {
@@ -1524,9 +1612,10 @@ document.addEventListener("DOMContentLoaded", () => {
           target.profId = profId;
           target.canAccessDocs = canAccessDocs;
           if (pass) target.passHash = await hashWorkerPass(pass);
+          savedAcc = target;
         }
       } else {
-        accounts.push({
+        savedAcc = {
           id: "acc_" + Date.now() + "_" + Math.floor(100 + Math.random() * 900),
           fullName,
           tabNum,
@@ -1534,10 +1623,14 @@ document.addEventListener("DOMContentLoaded", () => {
           canAccessDocs,
           passHash: await hashWorkerPass(pass),
           createdAt: new Date().toISOString()
-        });
+        };
+        accounts.push(savedAcc);
       }
 
       saveAccounts(accounts);
+      if (savedAcc) {
+        await cloudUpsertAccount(savedAcc, getAccountProgress(savedAcc.id));
+      }
       adminAccForm.hidden = true;
       editingAccountId = null;
       renderAdminAccounts();
@@ -1565,13 +1658,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function loadAllReviews() {
       let list = getLocalReviews();
-      if (GOOGLE_SCRIPT_URL) {
-        try {
-          const res = await fetch(GOOGLE_SCRIPT_URL);
-          const remote = await res.json();
-          if (Array.isArray(remote)) list = remote;
-        } catch {}
-      }
+      try {
+        const remote = await sbFetch("safety_reviews?select=*&order=id.desc");
+        if (Array.isArray(remote)) list = remote;
+      } catch {}
       cachedReviews = list;
       renderAdminReviews(list);
     }
@@ -1667,16 +1757,12 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem(FEEDBACK_KEY, JSON.stringify(list));
       } catch {}
 
-      if (GOOGLE_SCRIPT_URL) {
-        try {
-          await fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(entry)
-          });
-        } catch {}
-      }
+      try {
+        await sbFetch("safety_reviews", {
+          method: "POST",
+          body: JSON.stringify(entry)
+        });
+      } catch {}
 
       statusBox.textContent = `Спасибо! Ваша оценка (${selectedRating} ★) сохранена.`;
       statusBox.hidden = false;
@@ -1831,6 +1917,9 @@ document.addEventListener("DOMContentLoaded", () => {
         authPane.hidden = false;
         profilePane.hidden = true;
         switchAuthTab(preferredMode);
+        syncAccountsFromCloud().then((ok) => {
+          if (ok && !loginForm.hidden) renderSavedAccountChips();
+        });
       }
       dialog.showModal();
     }
@@ -1879,6 +1968,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      await syncAccountsFromCloud();
       const accounts = loadAccounts();
       const duplicate = accounts.find(
         (a) =>
@@ -1896,11 +1986,13 @@ document.addEventListener("DOMContentLoaded", () => {
         fullName,
         tabNum,
         profId,
+        canAccessDocs: false,
         passHash: await hashWorkerPass(pass),
         createdAt: new Date().toISOString()
       };
       accounts.push(newAcc);
       saveAccounts(accounts);
+      await cloudUpsertAccount(newAcc, { checks: {}, passedQuizzes: {} });
       setActiveAccountId(newAcc.id);
 
       createForm.reset();
@@ -1911,6 +2003,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
+      await syncAccountsFromCloud();
       const query = loginId.value.trim().toLowerCase();
       const pass = loginPass.value;
       const accounts = loadAccounts();
@@ -1943,6 +2036,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!target) return;
       target.profId = changeProfSelect.value;
       saveAccounts(accounts);
+      cloudUpsertAccount(target, getAccountProgress(target.id));
       renderProfileView(target);
       saveProfMsg.hidden = false;
       refreshAllAfterAccountChange();
@@ -1960,6 +2054,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!confirm(`Удалить аккаунт «${acc.fullName}» и его статус обучения с этого устройства?`)) return;
       const remaining = loadAccounts().filter((a) => a.id !== acc.id);
       saveAccounts(remaining);
+      cloudDeleteAccount(acc.id);
       try {
         const map = loadAllAccProgress();
         delete map[acc.id];
@@ -1980,6 +2075,9 @@ document.addEventListener("DOMContentLoaded", () => {
   updateAccountUI();
   renderRiskFilters();
   renderProfessions();
+  syncAccountsFromCloud().then((ok) => {
+    if (ok) refreshAllAfterAccountChange();
+  });
   const params = new URLSearchParams(window.location.search);
   const startProfId = params.get("prof");
   const startSec = params.get("sec") || "video";
