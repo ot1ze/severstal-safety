@@ -3063,6 +3063,67 @@ body {
   color: var(--muted);
 }
 
+/* =========================================================
+   v22: Исправление горизонтальной прокрутки и адаптация модалок под телефон
+   ========================================================= */
+html,
+body {
+  overflow-x: clip;
+  max-width: 100%;
+}
+
+.split-hero,
+.hero-main,
+.hero-dashboard,
+.acc-form,
+.fb-label,
+.admin-acc-form {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dialog {
+  width: calc(100vw - 20px);
+  max-width: min(540px, calc(100vw - 20px));
+  margin: auto;
+  overflow: hidden;
+}
+
+.dialog-zoom {
+  max-width: min(640px, calc(100vw - 20px));
+}
+
+.dialog-wide {
+  max-width: min(720px, calc(100vw - 20px));
+}
+
+.dialog-pdf {
+  max-width: min(920px, calc(100vw - 20px));
+}
+
+.dialog-body {
+  max-height: 76dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.acc-form input,
+.acc-form select,
+.acc-form button,
+.admin-acc-form input,
+.admin-acc-form select {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  text-overflow: ellipsis;
+}
+
+.link-btn {
+  white-space: normal;
+  max-width: 100%;
+  line-height: 1.35;
+}
+
 @media (max-width: 720px) {
   .prof-header-layout {
     flex-direction: column;
@@ -3079,5 +3140,27 @@ body {
   .ppe-showcase-img {
     width: 124px;
     height: 124px;
+  }
+  .header-inner {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: space-between;
+  }
+  .header-actions .btn {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 7px 8px;
+    font-size: 0.78rem;
+  }
+  .dialog-body {
+    padding: 12px;
+  }
+  .dialog-header h3 {
+    font-size: 0.94rem;
   }
 }

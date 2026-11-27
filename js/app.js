@@ -27,8 +27,15 @@ document.addEventListener("DOMContentLoaded", () => {
         ...(options.headers || {})
       }
     });
-    if (!res.ok) throw new Error(`Supabase ${res.status}`);
     const text = await res.text();
+    if (!res.ok) {
+      let msg = `HTTP ${res.status}`;
+      try {
+        const parsed = JSON.parse(text);
+        if (parsed && parsed.message) msg = parsed.message;
+      } catch {}
+      throw new Error(msg);
+    }
     return text ? JSON.parse(text) : null;
   }
 
@@ -76,7 +83,10 @@ document.addEventListener("DOMContentLoaded", () => {
           progress: accProg || { checks: {}, passedQuizzes: {} }
         })
       });
-    } catch {}
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err && err.message ? err.message : "Ошибка сети" };
+    }
   }
 
   async function cloudDeleteAccount(accId) {
@@ -1627,10 +1637,15 @@ document.addEventListener("DOMContentLoaded", () => {
         accounts.push(savedAcc);
       }
 
-      saveAccounts(accounts);
       if (savedAcc) {
-        await cloudUpsertAccount(savedAcc, getAccountProgress(savedAcc.id));
+        const cloudRes = await cloudUpsertAccount(savedAcc, getAccountProgress(savedAcc.id));
+        if (!cloudRes.ok) {
+          adminAccFormError.textContent = `Ошибка базы данных: ${cloudRes.error}`;
+          adminAccFormError.hidden = false;
+          return;
+        }
       }
+      saveAccounts(accounts);
       adminAccForm.hidden = true;
       editingAccountId = null;
       renderAdminAccounts();
@@ -1968,37 +1983,55 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      await syncAccountsFromCloud();
-      const accounts = loadAccounts();
-      const duplicate = accounts.find(
-        (a) =>
-          (tabNum && a.tabNum && a.tabNum.toLowerCase() === tabNum.toLowerCase()) ||
-          a.fullName.toLowerCase() === fullName.toLowerCase()
-      );
-      if (duplicate) {
-        regError.textContent = "Профиль с таким ФИО или табельным номером уже создан. Перейдите во вкладку «Войти».";
-        regError.hidden = false;
-        return;
+      const submitBtn = createForm.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Создание профиля...";
       }
 
-      const newAcc = {
-        id: "acc_" + Date.now() + "_" + Math.floor(100 + Math.random() * 900),
-        fullName,
-        tabNum,
-        profId,
-        canAccessDocs: false,
-        passHash: await hashWorkerPass(pass),
-        createdAt: new Date().toISOString()
-      };
-      accounts.push(newAcc);
-      saveAccounts(accounts);
-      await cloudUpsertAccount(newAcc, { checks: {}, passedQuizzes: {} });
-      setActiveAccountId(newAcc.id);
+      try {
+        await syncAccountsFromCloud();
+        const accounts = loadAccounts();
+        const duplicate = accounts.find(
+          (a) =>
+            (tabNum && a.tabNum && a.tabNum.toLowerCase() === tabNum.toLowerCase()) ||
+            a.fullName.toLowerCase() === fullName.toLowerCase()
+        );
+        if (duplicate) {
+          regError.textContent = "Профиль с таким ФИО или табельным номером уже создан. Перейдите во вкладку «Войти».";
+          regError.hidden = false;
+          return;
+        }
 
-      createForm.reset();
-      regError.hidden = true;
-      refreshAllAfterAccountChange();
-      dialog.close();
+        const newAcc = {
+          id: "acc_" + Date.now() + "_" + Math.floor(100 + Math.random() * 900),
+          fullName,
+          tabNum,
+          profId,
+          canAccessDocs: false,
+          passHash: await hashWorkerPass(pass),
+          createdAt: new Date().toISOString()
+        };
+        const cloudRes = await cloudUpsertAccount(newAcc, { checks: {}, passedQuizzes: {} });
+        if (!cloudRes.ok) {
+          regError.textContent = `Не удалось создать аккаунт в базе: ${cloudRes.error}`;
+          regError.hidden = false;
+          return;
+        }
+        accounts.push(newAcc);
+        saveAccounts(accounts);
+        setActiveAccountId(newAcc.id);
+
+        createForm.reset();
+        regError.hidden = true;
+        refreshAllAfterAccountChange();
+        dialog.close();
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Создать аккаунт и открыть статус";
+        }
+      }
     });
 
     loginForm.addEventListener("submit", async (e) => {
