@@ -429,7 +429,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderAboutScreenState() {
     const acc = getActiveAccount();
     aboutFullScreen.hidden = !aboutExpandedByUser;
-    if (aboutTopStrip) aboutTopStrip.hidden = aboutExpandedByUser;
+    if (aboutTopStrip) aboutTopStrip.hidden = false;
+    if (aboutTopOpenBtn) {
+      aboutTopOpenBtn.innerHTML = aboutExpandedByUser ? "Свернуть описание &#9652;" : "Зачем нужен сайт? &#9662;";
+    }
     aboutCompactSlot.hidden = true;
     aboutHideBtn.hidden = false;
     aboutAccountCtaBox.hidden = Boolean(acc);
@@ -437,26 +440,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function openAboutPanelAnimated() {
     aboutExpandedByUser = true;
+    aboutFullScreen.style.maxHeight = "";
     aboutFullScreen.classList.add("about-anim-hidden");
     renderAboutScreenState();
+    const targetH = aboutFullScreen.scrollHeight;
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        aboutFullScreen.classList.remove("about-anim-hidden");
-      });
+      aboutFullScreen.style.maxHeight = `${targetH}px`;
+      aboutFullScreen.classList.remove("about-anim-hidden");
+      setTimeout(() => {
+        if (aboutExpandedByUser) aboutFullScreen.style.maxHeight = "none";
+      }, 290);
     });
   }
 
   function closeAboutPanelAnimated() {
     aboutExpandedByUser = false;
-    aboutFullScreen.classList.add("about-anim-hidden");
-    setTimeout(() => {
-      aboutFullScreen.classList.remove("about-anim-hidden");
-      renderAboutScreenState();
-    }, 280);
+    if (aboutTopOpenBtn) aboutTopOpenBtn.innerHTML = "Зачем нужен сайт? &#9662;";
+    aboutFullScreen.style.maxHeight = `${aboutFullScreen.scrollHeight}px`;
+    requestAnimationFrame(() => {
+      aboutFullScreen.style.maxHeight = "";
+      aboutFullScreen.classList.add("about-anim-hidden");
+      setTimeout(() => {
+        if (!aboutExpandedByUser) {
+          aboutFullScreen.classList.remove("about-anim-hidden");
+          aboutFullScreen.style.maxHeight = "";
+          renderAboutScreenState();
+        }
+      }, 280);
+    });
   }
 
   if (aboutTopOpenBtn) {
-    aboutTopOpenBtn.addEventListener("click", openAboutPanelAnimated);
+    aboutTopOpenBtn.addEventListener("click", () => {
+      if (aboutExpandedByUser) closeAboutPanelAnimated();
+      else openAboutPanelAnimated();
+    });
   }
 
   aboutShowBtn.addEventListener("click", () => {
