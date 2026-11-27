@@ -1107,14 +1107,23 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", () => switchSection(btn.dataset.section, true));
   });
 
-  // 4. 5 кнопок видов инструктажей
+  // 4. 5 кнопок видов инструктажей (с явной маркировкой: есть видео / только текст)
   function renderBriefingButtons() {
     briefingButtons.innerHTML = "";
     data.briefingTypes.forEach((bType) => {
+      const hasVideo = bType.id === "vvodny";
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "briefing-btn" + (bType.id === currentBriefing.id ? " active" : "");
-      btn.textContent = bType.name;
+      btn.className =
+        "briefing-btn" +
+        (bType.id === currentBriefing.id ? " active" : "") +
+        (!hasVideo ? " briefing-btn-textonly" : "");
+      btn.innerHTML = `
+        <span>${bType.name}</span>
+        <span class="briefing-badge ${hasVideo ? "has-video" : "text-only"}">
+          ${hasVideo ? "&#9654; Есть видео" : "Только текст"}
+        </span>
+      `;
       btn.addEventListener("click", () => {
         currentBriefing = bType;
         renderBriefingButtons();
@@ -1347,6 +1356,12 @@ document.addEventListener("DOMContentLoaded", () => {
         <label for="${id}">${item}${isCritical ? '<span class="chk-critical-badge">Критично</span>' : ""}</label>
       `;
       const checkbox = li.querySelector("input");
+      li.addEventListener("click", (e) => {
+        if (e.target.tagName !== "INPUT" && e.target.tagName !== "LABEL") {
+          checkbox.checked = !checkbox.checked;
+          checkbox.dispatchEvent(new Event("change"));
+        }
+      });
       checkbox.addEventListener("change", () => {
         if (checkbox.checked) {
           if (!progress.shiftSessions) progress.shiftSessions = {};
