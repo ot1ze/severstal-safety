@@ -1996,3 +1996,143 @@ body {
     padding: 0 !important;
   }
 }
+
+/* Выдвижное боковое меню (Drawer) на мобильных экранах (<= 820px) */
+.mobile-drawer-bar {
+  display: none;
+}
+
+.sidebar-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-close-btn {
+  display: none;
+  background: #f1f5f9;
+  border: none;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--primary);
+  cursor: pointer;
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(3px);
+  z-index: 90;
+}
+
+@media (max-width: 820px) {
+  .mobile-drawer-bar {
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .mobile-drawer-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-left: 4px solid var(--primary);
+    border-radius: 10px;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+  }
+
+  .hamburger-ico {
+    font-size: 1.35rem;
+    color: var(--primary);
+    line-height: 1;
+  }
+
+  .mobile-drawer-text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mobile-drawer-text small {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  .mobile-drawer-text strong {
+    font-size: 0.94rem;
+    color: var(--primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mobile-drawer-arrow {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: #e8effa;
+    padding: 4px 9px;
+    border-radius: 999px;
+  }
+
+  /* Превращаем левую панель в выездной Drawer слева */
+  .sidebar-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 285px;
+    max-width: 82vw;
+    z-index: 100;
+    border-radius: 0 14px 14px 0;
+    padding: 14px 12px;
+    overflow-y: auto;
+    transform: translateX(-105%);
+    transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 8px 0 30px rgba(0, 0, 0, 0.22);
+  }
+
+  .sidebar-nav.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-close-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .side-btn {
+    padding: 11px 12px;
+    font-size: 0.9rem;
+    border: 1px solid transparent;
+    background: transparent;
+  }
+
+  .side-btn.active {
+    background: var(--primary);
+    color: #ffffff;
+  }
+
+  body.drawer-open {
+    overflow: hidden;
+  }
+}

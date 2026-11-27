@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=12">
+  <link rel="stylesheet" href="css/style.css?v=13">
 </head>
 <body>
   <!-- Полупрозрачная шапка с эффектом матового стекла -->
@@ -112,11 +112,29 @@
       </div>
       <div id="briefingFocusBox" class="briefing-focus-box"></div>
 
+      <!-- Кнопка открытия выдвижного меню (видна только на телефоне <= 820px) -->
+      <div class="mobile-drawer-bar">
+        <button type="button" id="openDrawerBtn" class="mobile-drawer-btn" aria-expanded="false">
+          <span class="hamburger-ico">&#9776;</span>
+          <span class="mobile-drawer-text">
+            <small>Раздел:</small>
+            <strong id="mobileCurrentSectionLabel">Видео-инструктаж</strong>
+          </span>
+          <span class="mobile-drawer-arrow">Меню &rsaquo;</span>
+        </button>
+      </div>
+
+      <!-- Затемнение фона для выдвижной шторки на телефоне -->
+      <div id="drawerBackdrop" class="drawer-backdrop" hidden></div>
+
       <!-- Рабочая область: Слева боковое меню, справа только активный раздел -->
       <div class="workspace-layout">
-        <!-- Левое боковое меню (на телефоне превращается в компактную сетку/меню) -->
-        <aside class="sidebar-nav" aria-label="Разделы профессии">
-          <div class="sidebar-title">Разделы инструктажа</div>
+        <!-- Левое боковое меню (на телефоне выезжает слева по кнопке ☰) -->
+        <aside id="sidebarNav" class="sidebar-nav" aria-label="Разделы профессии">
+          <div class="sidebar-head-row">
+            <div class="sidebar-title">Разделы инструктажа</div>
+            <button type="button" id="closeDrawerBtn" class="sidebar-close-btn" aria-label="Закрыть меню">&times;</button>
+          </div>
           <div id="sidebarMenu" class="sidebar-menu" role="tablist">
             <button type="button" class="side-btn active" role="tab" aria-selected="true" data-section="video">
               <span class="side-ico">&#9654;</span>
@@ -525,7 +543,7 @@
     </div>
   </dialog>
 
-  <script src="js/data.js?v=12"></script>
-  <script src="js/app.js?v=12"></script>
+  <script src="js/data.js?v=13"></script>
+  <script src="js/app.js?v=13"></script>
 </body>
 </html>

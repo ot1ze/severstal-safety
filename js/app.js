@@ -56,8 +56,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const briefingSummary = document.getElementById("briefingSummary");
   const briefingFocusBox = document.getElementById("briefingFocusBox");
 
-  // Левое боковое меню и панели разделов
+  // Левое боковое меню, мобильный Drawer (☰) и панели разделов
   const sideButtons = document.querySelectorAll(".side-btn");
+  const sidebarNav = document.getElementById("sidebarNav");
+  const openDrawerBtn = document.getElementById("openDrawerBtn");
+  const closeDrawerBtn = document.getElementById("closeDrawerBtn");
+  const drawerBackdrop = document.getElementById("drawerBackdrop");
+  const mobileCurrentSectionLabel = document.getElementById("mobileCurrentSectionLabel");
   const sectionPanels = {
     video: document.getElementById("secPanelVideo"),
     ppe: document.getElementById("secPanelPpe"),
@@ -248,7 +253,25 @@ document.addEventListener("DOMContentLoaded", () => {
     showHomeScreen();
   });
 
-  // 3. Переключение разделов левого бокового меню
+  // 3. Переключение разделов левого бокового меню + мобильный Drawer (☰)
+  function openDrawer() {
+    sidebarNav.classList.add("open");
+    drawerBackdrop.hidden = false;
+    document.body.classList.add("drawer-open");
+    openDrawerBtn.setAttribute("aria-expanded", "true");
+  }
+
+  function closeDrawer() {
+    sidebarNav.classList.remove("open");
+    drawerBackdrop.hidden = true;
+    document.body.classList.remove("drawer-open");
+    openDrawerBtn.setAttribute("aria-expanded", "false");
+  }
+
+  openDrawerBtn.addEventListener("click", openDrawer);
+  closeDrawerBtn.addEventListener("click", closeDrawer);
+  drawerBackdrop.addEventListener("click", closeDrawer);
+
   function switchSection(target, pushHistory = true) {
     currentSection = target;
     if (target !== "video") {
@@ -258,12 +281,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const isActive = b.dataset.section === target;
       b.classList.toggle("active", isActive);
       b.setAttribute("aria-selected", String(isActive));
+      if (isActive && mobileCurrentSectionLabel) {
+        const labelSpan = b.querySelector("span:nth-child(2)");
+        if (labelSpan) mobileCurrentSectionLabel.textContent = labelSpan.textContent;
+      }
     });
     Object.keys(sectionPanels).forEach((key) => {
       const active = key === target;
       sectionPanels[key].hidden = !active;
       sectionPanels[key].classList.toggle("active", active);
     });
+    closeDrawer();
 
     if (pushHistory && currentProfession) {
       try {
