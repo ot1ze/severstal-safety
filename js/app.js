@@ -501,7 +501,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let activePointerLabel = "";
 
+  function syncStickyOnboardingOffset() {
+    const headerEl = document.querySelector(".header");
+    const topPx = (headerEl ? headerEl.offsetHeight : 76) + 8;
+    onboardingTopSlot.style.top = `${topPx}px`;
+    profOnboardingSlot.style.top = `${topPx}px`;
+  }
+
   function positionOnboardingPointer() {
+    syncStickyOnboardingOffset();
     const homeActive = !onboardingTopSlot.hidden && !homeScreen.hidden;
     const profActive = !profOnboardingSlot.hidden && !professionScreen.hidden;
     if (!onbHighlightedEl || (!homeActive && !profActive)) {
@@ -516,9 +524,28 @@ document.addEventListener("DOMContentLoaded", () => {
     onbPointerEl.hidden = false;
     onbPointerEl.textContent = activePointerLabel;
     const pointerWidth = onbPointerEl.offsetWidth || 160;
-    const left = Math.min(Math.max(10, rect.left + rect.width / 2 - pointerWidth / 2), window.innerWidth - pointerWidth - 10);
-    const placeBelow = rect.top < 75;
-    const top = placeBelow ? Math.min(rect.bottom + 8, window.innerHeight - 40) : Math.max(8, rect.top - 34);
+    const pointerHeight = onbPointerEl.offsetHeight || 28;
+    const activeCard = homeActive ? onboardingTopSlot : profOnboardingSlot;
+    const cardRect = activeCard.getBoundingClientRect();
+
+    let left = Math.min(
+      Math.max(10, rect.left + rect.width / 2 - pointerWidth / 2),
+      window.innerWidth - pointerWidth - 10
+    );
+    let top;
+
+    if (onbHighlightedEl.closest(".header")) {
+      // Для шапки ставим метку в правом верхнем углу (не перекрывая жёлтую плашку под ней)
+      top = Math.max(6, rect.top - 14);
+      left = Math.max(10, window.innerWidth - pointerWidth - 12);
+    } else if (rect.top - pointerHeight - 8 >= cardRect.bottom + 4) {
+      top = rect.top - pointerHeight - 6;
+    } else if (rect.bottom + 8 + pointerHeight <= window.innerHeight - 10 && rect.bottom + 8 >= cardRect.bottom + 4) {
+      top = rect.bottom + 8;
+    } else {
+      top = Math.min(window.innerHeight - pointerHeight - 10, Math.max(cardRect.bottom + 6, rect.top + 8));
+    }
+
     onbPointerEl.style.left = `${left}px`;
     onbPointerEl.style.top = `${top}px`;
   }
