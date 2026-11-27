@@ -1430,7 +1430,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderDocsList() {
     const docs = currentProfession.docs || [];
-    docsDownloadList.innerHTML = docs
+    // Карточка изменений ИОТ (например, для БелАЗа — Изменения №1–5)
+    const changes = currentProfession.docChanges || [];
+    const changesHtml = changes.length
+      ? `
+      <div class="doc-changes-card">
+        <div class="doc-changes-head">&#128203; ${currentProfession.docChangesNote || "Изменения к инструкции"}</div>
+        <div class="doc-changes-list">
+          ${changes
+            .map(
+              (c) => `
+            <div class="doc-change-item">
+              <div class="doc-change-top">
+                <strong>${c.num}</strong>
+                <span class="doc-change-status">&#10003; ${c.status}</span>
+              </div>
+              <div class="muted">${c.summary}</div>
+            </div>
+          `
+            )
+            .join("")}
+        </div>
+      </div>
+    `
+      : "";
+
+    docsDownloadList.innerHTML = changesHtml + docs
       .map(
         (d, idx) => `
       <div class="doc-card-row">
@@ -1587,6 +1612,75 @@ document.addEventListener("DOMContentLoaded", () => {
   if (openGlossaryBtn) openGlossaryBtn.addEventListener("click", openGlossaryModal);
   const footerGlossaryBtn = document.getElementById("footerGlossaryBtn");
   if (footerGlossaryBtn) footerGlossaryBtn.addEventListener("click", openGlossaryModal);
+
+  // Выпадающее меню «Ещё» в шапке (для компактности на телефоне и быстрого доступа)
+  const openMoreMenuBtn = document.getElementById("openMoreMenuBtn");
+  const headerMoreMenu = document.getElementById("headerMoreMenu");
+  const moreJournalBtn = document.getElementById("moreJournalBtn");
+  const moreMasterBtn = document.getElementById("moreMasterBtn");
+  const moreGlossaryBtn = document.getElementById("moreGlossaryBtn");
+  const moreOnboardingBtn = document.getElementById("moreOnboardingBtn");
+  const moreAboutBtn = document.getElementById("moreAboutBtn");
+
+  function closeMoreMenu() {
+    if (!headerMoreMenu) return;
+    headerMoreMenu.hidden = true;
+    if (openMoreMenuBtn) openMoreMenuBtn.setAttribute("aria-expanded", "false");
+  }
+
+  if (openMoreMenuBtn && headerMoreMenu) {
+    openMoreMenuBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const willOpen = headerMoreMenu.hidden;
+      if (moreOnboardingBtn) moreOnboardingBtn.hidden = !getActiveAccount();
+      headerMoreMenu.hidden = !willOpen;
+      openMoreMenuBtn.setAttribute("aria-expanded", String(willOpen));
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!headerMoreMenu.hidden && !e.target.closest(".more-menu-wrap")) {
+        closeMoreMenu();
+      }
+    });
+  }
+
+  if (moreJournalBtn) {
+    moreJournalBtn.addEventListener("click", () => {
+      closeMoreMenu();
+      openJournalAllBtn.click();
+    });
+  }
+  if (moreMasterBtn) {
+    moreMasterBtn.addEventListener("click", () => {
+      closeMoreMenu();
+      openMasterBtn.click();
+    });
+  }
+  if (moreGlossaryBtn) {
+    moreGlossaryBtn.addEventListener("click", () => {
+      closeMoreMenu();
+      openGlossaryModal();
+    });
+  }
+  if (moreOnboardingBtn) {
+    moreOnboardingBtn.addEventListener("click", () => {
+      closeMoreMenu();
+      if (!homeScreen.hidden) {
+        restartOnboardingBtn.click();
+      } else {
+        backToHomeBtn.click();
+        setTimeout(() => restartOnboardingBtn.click(), 60);
+      }
+    });
+  }
+  if (moreAboutBtn) {
+    moreAboutBtn.addEventListener("click", () => {
+      closeMoreMenu();
+      if (homeScreen.hidden) backToHomeBtn.click();
+      aboutShowBtn.click();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
   closeGlossaryBtn.addEventListener("click", () => glossaryDialog.close());
   glossaryDialog.addEventListener("click", (e) => {
     if (e.target === glossaryDialog) glossaryDialog.close();
