@@ -469,7 +469,7 @@ document.addEventListener("DOMContentLoaded", () => {
     onbPointerEl.hidden = true;
   }
 
-  function renderOnboardingState() {
+  function renderOnboardingState(shouldScroll = false) {
     const acc = getActiveAccount();
     clearOnboardingHighlight();
 
@@ -504,6 +504,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (targetEl && !targetEl.hidden) {
       onbHighlightedEl = targetEl;
       targetEl.classList.add("onb-highlight");
+      if (shouldScroll) {
+        if (onbStepIndex === 0) {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+          const headerEl = document.querySelector(".header");
+          const topOffset = (headerEl ? headerEl.offsetHeight : 76) + onboardingTopSlot.offsetHeight + 48;
+          const targetTop = targetEl.getBoundingClientRect().top + window.scrollY;
+          window.scrollTo({ top: Math.max(0, targetTop - topOffset), behavior: "smooth" });
+        }
+      }
       positionOnboardingPointer();
     }
   }
@@ -515,20 +525,20 @@ document.addEventListener("DOMContentLoaded", () => {
       saveProgress();
     }
     clearOnboardingHighlight();
-    renderOnboardingState();
+    renderOnboardingState(false);
   }
 
   onbPrevBtn.addEventListener("click", () => {
     if (onbStepIndex > 0) {
       onbStepIndex--;
-      renderOnboardingState();
+      renderOnboardingState(true);
     }
   });
 
   onbNextBtn.addEventListener("click", () => {
     if (onbStepIndex < ONBOARDING_STEPS.length - 1) {
       onbStepIndex++;
-      renderOnboardingState();
+      renderOnboardingState(true);
     } else {
       finishOnboarding();
     }
@@ -542,8 +552,7 @@ document.addEventListener("DOMContentLoaded", () => {
     progress.onboardingDone = false;
     saveProgress();
     onbStepIndex = 0;
-    renderOnboardingState();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    renderOnboardingState(true);
   });
 
   window.addEventListener("scroll", positionOnboardingPointer, { passive: true });

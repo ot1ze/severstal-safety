@@ -3255,12 +3255,23 @@ body {
 
 /* Верхняя плашка интерактивного обучения после создания/входа в аккаунт */
 .onboarding-card {
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  position: sticky;
+  top: 84px;
+  z-index: 18;
+  background: linear-gradient(135deg, rgba(255, 251, 235, 0.97) 0%, rgba(254, 243, 199, 0.97) 100%);
+  backdrop-filter: blur(8px);
   border: 2px solid #f59e0b;
   border-radius: var(--radius);
-  padding: 14px 16px;
+  padding: 12px 16px;
   margin-bottom: 16px;
-  box-shadow: 0 8px 22px rgba(245, 158, 11, 0.16);
+  box-shadow: 0 10px 26px rgba(245, 158, 11, 0.22);
+}
+
+@media (max-width: 720px) {
+  .onboarding-card {
+    top: 106px;
+    padding: 10px 12px;
+  }
 }
 
 .onboarding-top-row {
