@@ -349,7 +349,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Модальные окна
   const glossaryDialog = document.getElementById("glossaryDialog");
-  const openGlossaryBtn = document.getElementById("openGlossaryBtn");
   const closeGlossaryBtn = document.getElementById("closeGlossaryBtn");
   const glossarySearch = document.getElementById("glossarySearch");
   const glossaryList = document.getElementById("glossaryList");
@@ -1257,6 +1256,86 @@ document.addEventListener("DOMContentLoaded", () => {
       .join("");
   }
 
+  // Режим «Перед сменой» + чек-лист (выделение критичных пунктов и таймер смены)
+  const shiftModeBar = document.getElementById("shiftModeBar");
+  const shiftModeTitle = document.getElementById("shiftModeTitle");
+  const shiftTimeMeta = document.getElementById("shiftTimeMeta");
+  const shiftActionBtn = document.getElementById("shiftActionBtn");
+
+  function isCriticalChecklistItem(text, idx) {
+    if (idx === 0) return true;
+    return /сиз|газоанализ|огражден|тормоз|заземл|допуск|дистанц|блокировк|костюм|каск/i.test(text);
+  }
+
+  function formatShiftTime(ts) {
+    if (!ts) return "";
+    return new Date(ts).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  function renderShiftBar(checkedCount, total) {
+    if (!shiftModeBar || !currentProfession) return;
+    if (!progress.shiftSessions) progress.shiftSessions = {};
+    const session = progress.shiftSessions[currentProfession.id] || {};
+
+    if (!session.startedAt) {
+      shiftModeBar.classList.remove("shift-done");
+      shiftModeTitle.textContent = "Режим «Перед сменой» (30-60 сек)";
+      shiftTimeMeta.textContent = "Нажмите «Начать проверку», чтобы зафиксировать время начала смены.";
+      shiftActionBtn.textContent = "Начать проверку";
+      shiftActionBtn.className = "btn btn-primary-sm";
+      return;
+    }
+
+    if (checkedCount === total && total > 0) {
+      if (!session.finishedAt) {
+        session.finishedAt = Date.now();
+        progress.shiftSessions[currentProfession.id] = session;
+        saveProgress();
+      }
+      const sec = Math.max(1, Math.round((session.finishedAt - session.startedAt) / 1000));
+      shiftModeBar.classList.add("shift-done");
+      shiftModeTitle.textContent = "Допуск к смене подтверждён";
+      shiftTimeMeta.innerHTML = `
+        <span class="shift-time-badge">Начата: ${formatShiftTime(session.startedAt)}</span>
+        <span class="shift-time-badge done">Завершена: ${formatShiftTime(session.finishedAt)} (${sec} сек)</span>
+      `;
+      shiftActionBtn.textContent = "Начать новую смену";
+      shiftActionBtn.className = "btn btn-secondary btn-sm";
+    } else {
+      if (session.finishedAt) {
+        delete session.finishedAt;
+        progress.shiftSessions[currentProfession.id] = session;
+        saveProgress();
+      }
+      shiftModeBar.classList.remove("shift-done");
+      shiftModeTitle.textContent = `Проверка перед сменой: ${checkedCount} из ${total}`;
+      shiftTimeMeta.innerHTML = `<span class="shift-time-badge">Проверка начата: ${formatShiftTime(session.startedAt)}</span>`;
+      shiftActionBtn.textContent = "Сбросить и начать заново";
+      shiftActionBtn.className = "btn btn-secondary btn-sm";
+    }
+  }
+
+  if (shiftActionBtn) {
+    shiftActionBtn.addEventListener("click", () => {
+      if (!currentProfession) return;
+      if (!progress.shiftSessions) progress.shiftSessions = {};
+      const session = progress.shiftSessions[currentProfession.id];
+
+      if (!session || !session.startedAt) {
+        progress.shiftSessions[currentProfession.id] = { startedAt: Date.now() };
+      } else {
+        // Сброс прошлых отметок для новой смены
+        currentProfession.checklist.forEach((_, idx) => {
+          progress.checks[`${currentProfession.id}_${idx}`] = false;
+        });
+        progress.shiftSessions[currentProfession.id] = { startedAt: Date.now() };
+      }
+      saveProgress();
+      renderChecklist();
+      updateHomeDashboard();
+    });
+  }
+
   function renderChecklist() {
     checklistItems.innerHTML = "";
     const total = currentProfession.checklist.length;
@@ -1266,15 +1345,22 @@ document.addEventListener("DOMContentLoaded", () => {
       const key = `${currentProfession.id}_${idx}`;
       const isChecked = Boolean(progress.checks[key]);
       if (isChecked) checkedCount++;
+      const isCritical = isCriticalChecklistItem(item, idx);
 
       const li = document.createElement("li");
       const id = `chk-${key}`;
       li.innerHTML = `
         <input type="checkbox" id="${id}" ${isChecked ? "checked" : ""}>
-        <label for="${id}">${item}</label>
+        <label for="${id}">${item}${isCritical ? '<span class="chk-critical-badge">Критично</span>' : ""}</label>
       `;
       const checkbox = li.querySelector("input");
       checkbox.addEventListener("change", () => {
+        if (checkbox.checked) {
+          if (!progress.shiftSessions) progress.shiftSessions = {};
+          if (!progress.shiftSessions[currentProfession.id] || !progress.shiftSessions[currentProfession.id].startedAt) {
+            progress.shiftSessions[currentProfession.id] = { startedAt: Date.now() };
+          }
+        }
         progress.checks[key] = checkbox.checked;
         saveProgress();
         updateChecklistCounter();
@@ -1285,6 +1371,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     checklistProgress.textContent = `${checkedCount} / ${total}`;
     sidebarCheckBadge.textContent = `${checkedCount}/${total}`;
+    renderShiftBar(checkedCount, total);
   }
 
   function updateChecklistCounter() {
@@ -1295,6 +1382,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     checklistProgress.textContent = `${checkedCount} / ${total}`;
     sidebarCheckBadge.textContent = `${checkedCount}/${total}`;
+    renderShiftBar(checkedCount, total);
   }
 
   // Плакат с QR-кодом и выбором формата (A3 / A4 / A5)
@@ -1537,7 +1625,12 @@ document.addEventListener("DOMContentLoaded", () => {
     questions.forEach((q, qIdx) => {
       const box = document.createElement("div");
       box.className = "quiz-question-box";
-      box.innerHTML = `<p><strong>${qIdx + 1}. ${q.question}</strong></p>`;
+      const caseBadge = q.isCase ? '<div class="quiz-case-badge">Ситуационный кейс</div>' : "";
+      box.innerHTML = `${caseBadge}<p><strong>${qIdx + 1}. ${q.question}</strong></p>`;
+
+      const explainBox = document.createElement("div");
+      explainBox.className = "quiz-case-explain";
+      explainBox.hidden = true;
 
       q.options.forEach((opt, idx) => {
         const btn = document.createElement("button");
@@ -1554,6 +1647,13 @@ document.addEventListener("DOMContentLoaded", () => {
           } else {
             btn.classList.add("wrong");
             allBtns[q.correctIndex].classList.add("correct");
+          }
+          if (q.explanation) {
+            explainBox.innerHTML = `
+              <div><strong>Разбор решения:</strong> ${q.explanation}</div>
+              ${q.iotRef ? `<div class="quiz-case-ref">Источник: ${q.iotRef}</div>` : ""}
+            `;
+            explainBox.hidden = false;
           }
           if (answered === questions.length) {
             scoreBox.hidden = false;
@@ -1572,6 +1672,7 @@ document.addEventListener("DOMContentLoaded", () => {
         box.appendChild(btn);
       });
 
+      box.appendChild(explainBox);
       quizContainer.appendChild(box);
     });
 
@@ -1609,7 +1710,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   glossarySearch.addEventListener("input", (e) => renderGlossary(e.target.value));
-  if (openGlossaryBtn) openGlossaryBtn.addEventListener("click", openGlossaryModal);
   const footerGlossaryBtn = document.getElementById("footerGlossaryBtn");
   if (footerGlossaryBtn) footerGlossaryBtn.addEventListener("click", openGlossaryModal);
 
