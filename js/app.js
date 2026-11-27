@@ -5,11 +5,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const JOURNAL_KEY = "severstal_demo_journal_v1";
   const FEEDBACK_KEY = "severstal_demo_feedback_v1";
   const DOCS_UNLOCK_KEY = "severstal_docs_unlocked_v1";
+  const DOCS_BYPASS_KEY = "severstal_admin_docs_bypass_v1";
   const ACCOUNTS_KEY = "severstal_worker_accounts_v1";
   const ACTIVE_ACC_KEY = "severstal_active_account_id_v1";
   const ACC_PROGRESS_KEY = "severstal_account_progress_v1";
-  // Пароль для просмотра/скачивания PDF (141otz141) — проверяется по SHA-256
-  const SHARED_PASS_HASH = "ec95e177f99cec044567e838340bae7a4c89371963d7c72bb9b3a48b3bf0ac04";
+  // Пароль администратора ot1ze (141otz141) и пароль к файлам ИОТ (CHSUtest) — SHA-256
+  const ADMIN_PASS_HASH = "ec95e177f99cec044567e838340bae7a4c89371963d7c72bb9b3a48b3bf0ac04";
+  const DOCS_PASS_HASH = "25e41fe823700e204bedef5118c42054bf7606d2f3a94df0458042bda8755644";
 
   const guestProgress = { checks: {}, passedQuizzes: {} };
 
@@ -82,7 +84,9 @@ document.addEventListener("DOMContentLoaded", () => {
         .map((b) => b.toString(16).padStart(2, "0"))
         .join("");
     }
-    return str === "141otz141" ? SHARED_PASS_HASH : "";
+    if (str === "141otz141") return ADMIN_PASS_HASH;
+    if (str === "CHSUtest") return DOCS_PASS_HASH;
+    return "";
   }
 
   async function hashWorkerPass(str) {
@@ -192,6 +196,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const docsUnlockBtn = document.getElementById("docsUnlockBtn");
   const docsPassError = document.getElementById("docsPassError");
   const docsLockAgainBtn = document.getElementById("docsLockAgainBtn");
+  const docsAccessSourceLabel = document.getElementById("docsAccessSourceLabel");
   const pdfViewerDialog = document.getElementById("pdfViewerDialog");
   const pdfViewerTitle = document.getElementById("pdfViewerTitle");
   const pdfViewerFrame = document.getElementById("pdfViewerFrame");
@@ -271,6 +276,16 @@ document.addEventListener("DOMContentLoaded", () => {
       checklistSubtitle.textContent = "Гостевой режим (для сохранения статуса войдите в аккаунт)";
     }
     updateHomeDashboard();
+  }
+
+  function refreshAllAfterAccountChange() {
+    updateAccountUI();
+    renderProfessions(profSearchInput.value);
+    if (currentProfession) {
+      renderChecklist();
+      renderQuiz(currentProfession.quiz);
+      renderDocsState();
+    }
   }
 
   // Живой дашборд статуса обучения: скрыт для гостя, персонализирован под специальность после входа
@@ -730,21 +745,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
   printPosterBtn.addEventListener("click", () => window.print());
 
-  // Раздел PDF с защитой паролем и встроенным просмотром без скачивания
-  function isDocsUnlocked() {
+  // Раздел PDF с защитой паролем (CHSUtest) и правами от администратора
+  function getDocsAccessReason() {
     try {
-      return sessionStorage.getItem(DOCS_UNLOCK_KEY) === "1";
-    } catch {
-      return false;
-    }
+      if (localStorage.getItem(DOCS_BYPASS_KEY) === "1") return "admin_global";
+    } catch {}
+    const acc = getActiveAccount();
+    if (acc && acc.canAccessDocs) return "account";
+    try {
+      if (sessionStorage.getItem(DOCS_UNLOCK_KEY) === "1") return "password";
+    } catch {}
+    return null;
+  }
+
+  function isDocsUnlocked() {
+    return Boolean(getDocsAccessReason());
   }
 
   function renderDocsState() {
-    const unlocked = isDocsUnlocked();
+    const reason = getDocsAccessReason();
+    const unlocked = Boolean(reason);
     docsLockBox.hidden = unlocked;
     docsUnlockedBox.hidden = !unlocked;
     docsPassError.hidden = true;
     if (unlocked) {
+      if (reason === "admin_global") {
+        docsAccessSourceLabel.textContent = "Доступ открыт администратором для всех на устройстве";
+        docsLockAgainBtn.hidden = true;
+      } else if (reason === "account") {
+        docsAccessSourceLabel.textContent = "Доступ без пароля открыт администратором для вашего профиля";
+        docsLockAgainBtn.hidden = true;
+      } else {
+        docsAccessSourceLabel.textContent = "Доступ открыт по паролю";
+        docsLockAgainBtn.hidden = false;
+      }
       renderDocsList();
     }
   }
@@ -787,7 +821,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   docsUnlockBtn.addEventListener("click", async () => {
     const hash = await sha256(docsPassInput.value);
-    if (hash === SHARED_PASS_HASH) {
+    if (hash === DOCS_PASS_HASH) {
       try {
         sessionStorage.setItem(DOCS_UNLOCK_KEY, "1");
       } catch {}
@@ -1160,6 +1194,28 @@ document.addEventListener("DOMContentLoaded", () => {
     const devPassInput = document.getElementById("devPassInput");
     const devLoginBtn = document.getElementById("devLoginBtn");
     const devLoginError = document.getElementById("devLoginError");
+    const accAdminEntryBtn = document.getElementById("accAdminEntryBtn");
+    const accountDialogEl = document.getElementById("accountDialog");
+
+    const adminTabAccountsBtn = document.getElementById("adminTabAccountsBtn");
+    const adminTabReviewsBtn = document.getElementById("adminTabReviewsBtn");
+    const adminAccountsSection = document.getElementById("adminAccountsSection");
+    const adminReviewsSection = document.getElementById("adminReviewsSection");
+
+    const adminGlobalDocsBypass = document.getElementById("adminGlobalDocsBypass");
+    const adminAccountsCount = document.getElementById("adminAccountsCount");
+    const adminOpenCreateAccBtn = document.getElementById("adminOpenCreateAccBtn");
+    const adminAccForm = document.getElementById("adminAccForm");
+    const adminAccFormTitle = document.getElementById("adminAccFormTitle");
+    const adminAccName = document.getElementById("adminAccName");
+    const adminAccTab = document.getElementById("adminAccTab");
+    const adminAccProf = document.getElementById("adminAccProf");
+    const adminAccPassLabel = document.getElementById("adminAccPassLabel");
+    const adminAccPass = document.getElementById("adminAccPass");
+    const adminAccDocsAccess = document.getElementById("adminAccDocsAccess");
+    const adminAccFormError = document.getElementById("adminAccFormError");
+    const adminAccCancelBtn = document.getElementById("adminAccCancelBtn");
+    const adminAccountsList = document.getElementById("adminAccountsList");
 
     const refreshReviewsBtn = document.getElementById("refreshReviewsBtn");
     const exportReviewsCsvBtn = document.getElementById("exportReviewsCsvBtn");
@@ -1169,6 +1225,220 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let selectedRating = 0;
     let cachedReviews = [];
+    let editingAccountId = null;
+
+    adminAccProf.innerHTML = data.professions
+      .map((p) => `<option value="${p.id}">${p.title} (${p.department})</option>`)
+      .join("");
+
+    function switchAdminTab(tab) {
+      const isAcc = tab === "accounts";
+      adminTabAccountsBtn.classList.toggle("active", isAcc);
+      adminTabAccountsBtn.setAttribute("aria-selected", String(isAcc));
+      adminTabReviewsBtn.classList.toggle("active", !isAcc);
+      adminTabReviewsBtn.setAttribute("aria-selected", String(!isAcc));
+      adminAccountsSection.hidden = !isAcc;
+      adminReviewsSection.hidden = isAcc;
+      if (isAcc) renderAdminAccounts();
+      else loadAllReviews();
+    }
+
+    function openAdminAccForm(acc = null) {
+      editingAccountId = acc ? acc.id : null;
+      adminAccForm.hidden = false;
+      adminAccFormError.hidden = true;
+      if (acc) {
+        adminAccFormTitle.textContent = "Изменить аккаунт работника";
+        adminAccName.value = acc.fullName || "";
+        adminAccTab.value = acc.tabNum || "";
+        adminAccProf.value = acc.profId || data.professions[0].id;
+        adminAccPassLabel.textContent = "Новый пароль (оставьте пустым, чтобы не менять)";
+        adminAccPass.value = "";
+        adminAccDocsAccess.checked = Boolean(acc.canAccessDocs);
+      } else {
+        adminAccFormTitle.textContent = "Создать аккаунт работника";
+        adminAccName.value = "";
+        adminAccTab.value = "";
+        adminAccProf.value = data.professions[0].id;
+        adminAccPassLabel.textContent = "Пароль / PIN (от 4 симв.) *";
+        adminAccPass.value = "";
+        adminAccDocsAccess.checked = false;
+      }
+      adminAccName.focus();
+    }
+
+    function renderAdminAccounts() {
+      const list = loadAccounts();
+      const activeAcc = getActiveAccount();
+      adminAccountsCount.textContent = String(list.length);
+      try {
+        adminGlobalDocsBypass.checked = localStorage.getItem(DOCS_BYPASS_KEY) === "1";
+      } catch {
+        adminGlobalDocsBypass.checked = false;
+      }
+
+      if (!list.length) {
+        adminAccountsList.innerHTML =
+          '<p class="muted" style="font-size:0.86rem;">Созданных аккаунтов пока нет. Нажмите «+ Создать аккаунт».</p>';
+        return;
+      }
+
+      adminAccountsList.innerHTML = "";
+      list.forEach((acc) => {
+        const status = computeAccountStatus(acc);
+        const isActive = Boolean(activeAcc && activeAcc.id === acc.id);
+        const card = document.createElement("div");
+        card.className = `admin-acc-card${isActive ? " active-session" : ""}`;
+        card.innerHTML = `
+          <div class="admin-acc-head">
+            <div>
+              <strong>${acc.fullName}</strong>
+              ${acc.tabNum ? `<span class="muted mono" style="font-size:0.78rem;"> • Таб. №${acc.tabNum}</span>` : ""}
+              <div class="muted" style="font-size:0.8rem; margin-top:2px;">
+                ${status.prof.title} (${status.prof.department}) • Статус: <strong>${status.pct}%</strong> (тест: ${status.testPassed ? "сдан" : "нет"}, чек: ${status.doneChecks}/${status.totalChecks})
+              </div>
+            </div>
+            <div class="admin-acc-badges">
+              ${isActive ? '<span class="admin-badge" style="background:#dbeafe; color:#002f6c;">Активен сейчас</span>' : ""}
+              <span class="admin-badge ${acc.canAccessDocs ? "pdf-ok" : "pdf-lock"}">
+                ${acc.canAccessDocs ? "PDF: без пароля" : "PDF: по паролю"}
+              </span>
+            </div>
+          </div>
+          <div class="admin-acc-actions">
+            <button type="button" class="btn btn-secondary btn-sm adm-toggle-pdf">${
+              acc.canAccessDocs ? "Закрыть PDF без пароля" : "Выдать право на PDF"
+            }</button>
+            <button type="button" class="btn btn-secondary btn-sm adm-edit">Изменить</button>
+            <button type="button" class="btn btn-secondary btn-sm adm-switch">Войти</button>
+            <button type="button" class="btn btn-secondary btn-sm adm-del" style="color:var(--accent);">Удалить</button>
+          </div>
+        `;
+
+        card.querySelector(".adm-toggle-pdf").addEventListener("click", () => {
+          const accounts = loadAccounts();
+          const target = accounts.find((x) => x.id === acc.id);
+          if (!target) return;
+          target.canAccessDocs = !target.canAccessDocs;
+          saveAccounts(accounts);
+          renderAdminAccounts();
+          refreshAllAfterAccountChange();
+        });
+
+        card.querySelector(".adm-edit").addEventListener("click", () => {
+          openAdminAccForm(acc);
+        });
+
+        card.querySelector(".adm-switch").addEventListener("click", () => {
+          setActiveAccountId(acc.id);
+          renderAdminAccounts();
+          refreshAllAfterAccountChange();
+        });
+
+        card.querySelector(".adm-del").addEventListener("click", () => {
+          if (!confirm(`Удалить аккаунт «${acc.fullName}»?`)) return;
+          const remaining = loadAccounts().filter((x) => x.id !== acc.id);
+          saveAccounts(remaining);
+          try {
+            const map = loadAllAccProgress();
+            delete map[acc.id];
+            localStorage.setItem(ACC_PROGRESS_KEY, JSON.stringify(map));
+          } catch {}
+          if (activeAcc && activeAcc.id === acc.id) {
+            setActiveAccountId(null);
+          }
+          if (editingAccountId === acc.id) {
+            adminAccForm.hidden = true;
+            editingAccountId = null;
+          }
+          renderAdminAccounts();
+          refreshAllAfterAccountChange();
+        });
+
+        adminAccountsList.appendChild(card);
+      });
+    }
+
+    adminTabAccountsBtn.addEventListener("click", () => switchAdminTab("accounts"));
+    adminTabReviewsBtn.addEventListener("click", () => switchAdminTab("reviews"));
+
+    adminGlobalDocsBypass.addEventListener("change", () => {
+      try {
+        if (adminGlobalDocsBypass.checked) localStorage.setItem(DOCS_BYPASS_KEY, "1");
+        else localStorage.removeItem(DOCS_BYPASS_KEY);
+      } catch {}
+      if (currentProfession) renderDocsState();
+    });
+
+    adminOpenCreateAccBtn.addEventListener("click", () => openAdminAccForm(null));
+    adminAccCancelBtn.addEventListener("click", () => {
+      adminAccForm.hidden = true;
+      editingAccountId = null;
+    });
+
+    adminAccForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fullName = adminAccName.value.trim();
+      const tabNum = adminAccTab.value.trim();
+      const profId = adminAccProf.value;
+      const pass = adminAccPass.value;
+      const canAccessDocs = adminAccDocsAccess.checked;
+
+      if (fullName.length < 2) {
+        adminAccFormError.textContent = "Введите ФИО работника.";
+        adminAccFormError.hidden = false;
+        return;
+      }
+      if (!editingAccountId && pass.length < 4) {
+        adminAccFormError.textContent = "Для нового аккаунта задайте пароль от 4 символов.";
+        adminAccFormError.hidden = false;
+        return;
+      }
+      if (editingAccountId && pass && pass.length < 4) {
+        adminAccFormError.textContent = "Новый пароль должен быть не короче 4 символов.";
+        adminAccFormError.hidden = false;
+        return;
+      }
+
+      const accounts = loadAccounts();
+      if (editingAccountId) {
+        const target = accounts.find((x) => x.id === editingAccountId);
+        if (target) {
+          target.fullName = fullName;
+          target.tabNum = tabNum;
+          target.profId = profId;
+          target.canAccessDocs = canAccessDocs;
+          if (pass) target.passHash = await hashWorkerPass(pass);
+        }
+      } else {
+        accounts.push({
+          id: "acc_" + Date.now() + "_" + Math.floor(100 + Math.random() * 900),
+          fullName,
+          tabNum,
+          profId,
+          canAccessDocs,
+          passHash: await hashWorkerPass(pass),
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      saveAccounts(accounts);
+      adminAccForm.hidden = true;
+      editingAccountId = null;
+      renderAdminAccounts();
+      refreshAllAfterAccountChange();
+    });
+
+    if (accAdminEntryBtn) {
+      accAdminEntryBtn.addEventListener("click", () => {
+        if (accountDialogEl && accountDialogEl.open) accountDialogEl.close();
+        statusBox.hidden = true;
+        devLoginError.hidden = true;
+        devLoginBox.hidden = false;
+        dialog.showModal();
+        devLoginInput.focus();
+      });
+    }
 
     function getLocalReviews() {
       try {
@@ -1307,10 +1577,11 @@ document.addEventListener("DOMContentLoaded", () => {
     devLoginBtn.addEventListener("click", async () => {
       const login = devLoginInput.value.trim();
       const passHash = await sha256(devPassInput.value);
-      if (login === AUTH_USER && passHash === SHARED_PASS_HASH) {
+      if (login === AUTH_USER && passHash === ADMIN_PASS_HASH) {
         devLoginError.hidden = true;
         userPane.hidden = true;
         adminPane.hidden = false;
+        switchAdminTab("accounts");
         loadAllReviews();
       } else {
         devLoginError.hidden = false;
@@ -1426,19 +1697,11 @@ document.addEventListener("DOMContentLoaded", () => {
       profSpecName.textContent = `Специальность: ${status.prof.title} (${status.prof.department})`;
       profSummaryStats.innerHTML = `
         Тест по специальности: <strong>${status.testPassed ? "Сдан" : "Не сдан"}</strong><br>
-        Чек-лист смены: <strong>${status.doneChecks} из ${status.totalChecks}</strong> • Протоколов: <strong>${status.myProtocols}</strong>
+        Чек-лист смены: <strong>${status.doneChecks} из ${status.totalChecks}</strong> • Протоколов: <strong>${status.myProtocols}</strong><br>
+        Доступ к PDF (ИОТ): <strong>${acc.canAccessDocs ? "Без пароля (выдан администратором)" : "По паролю"}</strong>
       `;
       changeProfSelect.value = status.prof.id;
       saveProfMsg.hidden = true;
-    }
-
-    function refreshAllAfterAccountChange() {
-      updateAccountUI();
-      renderProfessions(profSearchInput.value);
-      if (currentProfession) {
-        renderChecklist();
-        renderQuiz(currentProfession.quiz);
-      }
     }
 
     function openAccountModal(preferredMode = "create") {

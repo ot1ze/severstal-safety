@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=16">
+  <link rel="stylesheet" href="css/style.css?v=17">
 </head>
 <body>
   <!-- Шапка с матовым стеклом и чёткими SVG-иконками -->
@@ -412,7 +412,7 @@
 
             <div id="docsUnlockedBox" hidden>
               <div class="docs-unlocked-bar">
-                <span style="color: var(--success); font-weight: 700;">Доступ открыт</span>
+                <span id="docsAccessSourceLabel" style="color: var(--success); font-weight: 700;">Доступ открыт</span>
                 <button type="button" id="docsLockAgainBtn" class="btn btn-secondary btn-sm">Заблокировать обратно</button>
               </div>
               <div id="docsDownloadList" class="docs-grid"></div>
@@ -619,15 +619,76 @@
 
       <div id="feedbackAdminPane" hidden>
         <div class="admin-top-bar">
-          <strong>Панель разработчика (ot1ze)</strong>
+          <strong>Панель администратора (ot1ze)</strong>
           <div style="display:flex; gap:6px;">
-            <button type="button" id="refreshReviewsBtn" class="btn btn-secondary btn-sm">Обновить</button>
-            <button type="button" id="exportReviewsCsvBtn" class="btn btn-secondary btn-sm">CSV</button>
             <button type="button" id="devLogoutBtn" class="btn btn-secondary btn-sm">Выйти</button>
           </div>
         </div>
-        <div id="adminKpiCards" class="admin-kpi-grid"></div>
-        <div id="adminReviewsList" style="overflow-x:auto;"></div>
+
+        <div class="acc-tabs" role="tablist" style="margin-bottom: 12px;">
+          <button type="button" id="adminTabAccountsBtn" class="acc-tab-btn active" role="tab" aria-selected="true">Аккаунты и доступ к PDF</button>
+          <button type="button" id="adminTabReviewsBtn" class="acc-tab-btn" role="tab" aria-selected="false">Отзывы и KPI</button>
+        </div>
+
+        <!-- Вкладка админки 1: Управление аккаунтами и правами на PDF -->
+        <div id="adminAccountsSection">
+          <div class="admin-global-pdf-box">
+            <label class="admin-check-row">
+              <input type="checkbox" id="adminGlobalDocsBypass">
+              <span><strong>Открыть PDF-файлы всем на этом устройстве без пароля</strong> (для проверки или общего доступа)</span>
+            </label>
+          </div>
+
+          <div class="admin-section-bar">
+            <strong>Созданные аккаунты (<span id="adminAccountsCount">0</span>)</strong>
+            <button type="button" id="adminOpenCreateAccBtn" class="btn btn-primary-sm">+ Создать аккаунт</button>
+          </div>
+
+          <form id="adminAccForm" class="admin-acc-form" hidden>
+            <h4 id="adminAccFormTitle" style="margin: 0 0 8px; color: var(--primary);">Новый аккаунт работника</h4>
+            <div class="protocol-form-row">
+              <label class="fb-label">
+                <span>ФИО работника *</span>
+                <input type="text" id="adminAccName" required placeholder="ФИО">
+              </label>
+              <label class="fb-label">
+                <span>Табельный №</span>
+                <input type="text" id="adminAccTab" placeholder="№">
+              </label>
+            </div>
+            <div class="protocol-form-row">
+              <label class="fb-label">
+                <span>Специальность *</span>
+                <select id="adminAccProf" required></select>
+              </label>
+              <label class="fb-label">
+                <span id="adminAccPassLabel">Пароль / PIN (от 4 симв.) *</span>
+                <input type="password" id="adminAccPass" placeholder="Минимум 4 символа">
+              </label>
+            </div>
+            <label class="admin-check-row" style="margin-top: 2px;">
+              <input type="checkbox" id="adminAccDocsAccess">
+              <span>Разрешить просмотр и скачивание PDF-файлов без ввода пароля</span>
+            </label>
+            <div id="adminAccFormError" class="acc-error" hidden></div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+              <button type="submit" id="adminAccSubmitBtn" class="btn btn-primary-sm">Сохранить аккаунт</button>
+              <button type="button" id="adminAccCancelBtn" class="btn btn-secondary btn-sm">Отмена</button>
+            </div>
+          </form>
+
+          <div id="adminAccountsList" class="admin-accounts-list"></div>
+        </div>
+
+        <!-- Вкладка админки 2: Отзывы и KPI -->
+        <div id="adminReviewsSection" hidden>
+          <div style="display:flex; justify-content:flex-end; gap:6px; margin-bottom: 10px;">
+            <button type="button" id="refreshReviewsBtn" class="btn btn-secondary btn-sm">Обновить</button>
+            <button type="button" id="exportReviewsCsvBtn" class="btn btn-secondary btn-sm">CSV</button>
+          </div>
+          <div id="adminKpiCards" class="admin-kpi-grid"></div>
+          <div id="adminReviewsList" style="overflow-x:auto;"></div>
+        </div>
       </div>
     </div>
   </dialog>
@@ -690,6 +751,12 @@
             Войти в личный кабинет
           </button>
         </form>
+
+        <div class="dev-login-toggle" style="margin-top: 12px;">
+          <button type="button" id="accAdminEntryBtn" class="link-btn" style="font-size: 0.8rem; color: var(--muted);">
+            Вход для администратора (управление аккаунтами)
+          </button>
+        </div>
       </div>
 
       <!-- Состояние 2: Пользователь вошёл -->
@@ -728,7 +795,7 @@
     </div>
   </dialog>
 
-  <script src="js/data.js?v=16"></script>
-  <script src="js/app.js?v=16"></script>
+  <script src="js/data.js?v=17"></script>
+  <script src="js/app.js?v=17"></script>
 </body>
 </html>
