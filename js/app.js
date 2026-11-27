@@ -68,6 +68,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  async function cloudInsertAccount(acc, accProg) {
+    try {
+      await sbFetch("worker_accounts", {
+        method: "POST",
+        body: JSON.stringify({
+          id: acc.id,
+          full_name: acc.fullName,
+          tab_num: acc.tabNum || "",
+          prof_id: acc.profId,
+          pass_hash: acc.passHash,
+          can_access_docs: Boolean(acc.canAccessDocs),
+          progress: accProg || { checks: {}, passedQuizzes: {} }
+        })
+      });
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err && err.message ? err.message : "Ошибка сети" };
+    }
+  }
+
   async function cloudUpsertAccount(acc, accProg) {
     try {
       await sbFetch("worker_accounts?on_conflict=id", {
@@ -1188,6 +1208,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     sosBody.innerHTML = `
       <h4 style="margin:0 0 8px; color:var(--accent);">Экстренные телефоны</h4>
+      <div class="sos-hint-banner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <span><strong>На телефоне можно позвонить сразу:</strong> просто нажмите на нужный номер ниже — откроется набор вызова.</span>
+      </div>
       <div class="sos-phones-grid">${phonesHtml}</div>
       <h4 style="margin:10px 0 8px; color:var(--primary);">Первая помощь в первые 60 секунд</h4>
       ${cardsHtml}
@@ -1601,6 +1625,11 @@ document.addEventListener("DOMContentLoaded", () => {
         adminAccFormError.hidden = false;
         return;
       }
+      if (!tabNum) {
+        adminAccFormError.textContent = "Укажите табельный номер — он должен быть уникальным для каждого работника.";
+        adminAccFormError.hidden = false;
+        return;
+      }
       if (!editingAccountId && pass.length < 4) {
         adminAccFormError.textContent = "Для нового аккаунта задайте пароль от 4 символов.";
         adminAccFormError.hidden = false;
@@ -1612,8 +1641,25 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      const synced = await syncAccountsFromCloud();
+      if (!synced) {
+        adminAccFormError.textContent = "Не удалось проверить базу данных. Проверьте интернет и попробуйте снова.";
+        adminAccFormError.hidden = false;
+        return;
+      }
+
       const accounts = loadAccounts();
+      const tabTaken = accounts.find(
+        (x) => x.id !== editingAccountId && x.tabNum && x.tabNum.trim().toLowerCase() === tabNum.toLowerCase()
+      );
+      if (tabTaken) {
+        adminAccFormError.textContent = `Аккаунт с табельным № «${tabNum}» уже существует (${tabTaken.fullName}). Измените табельный номер.`;
+        adminAccFormError.hidden = false;
+        return;
+      }
+
       let savedAcc = null;
+      let cloudRes = { ok: true };
       if (editingAccountId) {
         const target = accounts.find((x) => x.id === editingAccountId);
         if (target) {
@@ -1623,6 +1669,7 @@ document.addEventListener("DOMContentLoaded", () => {
           target.canAccessDocs = canAccessDocs;
           if (pass) target.passHash = await hashWorkerPass(pass);
           savedAcc = target;
+          cloudRes = await cloudUpsertAccount(savedAcc, getAccountProgress(savedAcc.id));
         }
       } else {
         savedAcc = {
@@ -1634,16 +1681,14 @@ document.addEventListener("DOMContentLoaded", () => {
           passHash: await hashWorkerPass(pass),
           createdAt: new Date().toISOString()
         };
-        accounts.push(savedAcc);
+        cloudRes = await cloudInsertAccount(savedAcc, { checks: {}, passedQuizzes: {} });
+        if (cloudRes.ok) accounts.push(savedAcc);
       }
 
-      if (savedAcc) {
-        const cloudRes = await cloudUpsertAccount(savedAcc, getAccountProgress(savedAcc.id));
-        if (!cloudRes.ok) {
-          adminAccFormError.textContent = `Ошибка базы данных: ${cloudRes.error}`;
-          adminAccFormError.hidden = false;
-          return;
-        }
+      if (!cloudRes.ok) {
+        adminAccFormError.textContent = `Ошибка базы данных: ${cloudRes.error}`;
+        adminAccFormError.hidden = false;
+        return;
       }
       saveAccounts(accounts);
       adminAccForm.hidden = true;
@@ -1936,6 +1981,17 @@ document.addEventListener("DOMContentLoaded", () => {
       if (myProf) openProfession(myProf, "video", true);
     });
 
+    [regName, regTabNum, regPass].forEach((inp) => {
+      inp.addEventListener("input", () => {
+        regError.hidden = true;
+      });
+    });
+    [loginId, loginPass].forEach((inp) => {
+      inp.addEventListener("input", () => {
+        loginError.hidden = true;
+      });
+    });
+
     createForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const fullName = regName.value.trim();
@@ -1944,7 +2000,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const pass = regPass.value;
 
       if (fullName.length < 2) {
-        regError.textContent = "Укажите ФИО работника.";
+        regError.textContent = "Укажите ФИО работника (минимум 2 символа).";
+        regError.hidden = false;
+        return;
+      }
+      if (!tabNum) {
+        regError.textContent = "Укажите табельный номер — он нужен для входа и должен быть уникальным.";
         regError.hidden = false;
         return;
       }
@@ -1957,19 +2018,22 @@ document.addEventListener("DOMContentLoaded", () => {
       const submitBtn = createForm.querySelector('button[type="submit"]');
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = "Создание профиля...";
+        submitBtn.textContent = "Проверка и создание...";
       }
 
       try {
-        await syncAccountsFromCloud();
+        const synced = await syncAccountsFromCloud();
+        if (!synced) {
+          regError.textContent = "Не удалось проверить базу данных. Проверьте интернет и попробуйте ещё раз.";
+          regError.hidden = false;
+          return;
+        }
         const accounts = loadAccounts();
         const duplicate = accounts.find(
-          (a) =>
-            (tabNum && a.tabNum && a.tabNum.toLowerCase() === tabNum.toLowerCase()) ||
-            a.fullName.toLowerCase() === fullName.toLowerCase()
+          (a) => a.tabNum && a.tabNum.trim().toLowerCase() === tabNum.toLowerCase()
         );
         if (duplicate) {
-          regError.textContent = "Профиль с таким ФИО или табельным номером уже создан. Перейдите во вкладку «Войти».";
+          regError.textContent = `Аккаунт с табельным № «${tabNum}» уже зарегистрирован! Повторная регистрация запрещена — перейдите во вкладку «Войти в аккаунт».`;
           regError.hidden = false;
           return;
         }
@@ -1983,9 +2047,12 @@ document.addEventListener("DOMContentLoaded", () => {
           passHash: await hashWorkerPass(pass),
           createdAt: new Date().toISOString()
         };
-        const cloudRes = await cloudUpsertAccount(newAcc, { checks: {}, passedQuizzes: {} });
+        const cloudRes = await cloudInsertAccount(newAcc, { checks: {}, passedQuizzes: {} });
         if (!cloudRes.ok) {
-          regError.textContent = `Не удалось создать аккаунт в базе: ${cloudRes.error}`;
+          const msg = String(cloudRes.error || "");
+          regError.textContent = msg.includes("duplicate") || msg.includes("unique")
+            ? `Аккаунт с табельным № «${tabNum}» уже существует! Перейдите во вкладку «Войти в аккаунт».`
+            : `Не удалось создать аккаунт в базе: ${msg}`;
           regError.hidden = false;
           return;
         }
@@ -2007,29 +2074,60 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      await syncAccountsFromCloud();
-      const query = loginId.value.trim().toLowerCase();
+      const rawQuery = loginId.value.trim();
+      const query = rawQuery.toLowerCase();
       const pass = loginPass.value;
-      const accounts = loadAccounts();
-      const found = accounts.find(
-        (a) => (a.tabNum && a.tabNum.toLowerCase() === query) || a.fullName.toLowerCase() === query
-      );
-      if (!found) {
-        loginError.textContent = "Аккаунт не найден. Проверьте ФИО / табельный № или создайте новый.";
+
+      if (!query) {
+        loginError.textContent = "Введите ваш табельный номер.";
         loginError.hidden = false;
         return;
       }
-      const hash = await hashWorkerPass(pass);
-      if (hash !== found.passHash) {
-        loginError.textContent = "Неверный пароль или PIN.";
+      if (!pass) {
+        loginError.textContent = "Введите пароль или PIN-код.";
         loginError.hidden = false;
         return;
       }
-      setActiveAccountId(found.id);
-      loginForm.reset();
-      loginError.hidden = true;
-      refreshAllAfterAccountChange();
-      dialog.close();
+
+      const submitBtn = loginForm.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Проверка данных...";
+      }
+
+      try {
+        const synced = await syncAccountsFromCloud();
+        const accounts = loadAccounts();
+        if (!synced && !accounts.length) {
+          loginError.textContent = "Нет связи с базой данных. Проверьте интернет и попробуйте снова.";
+          loginError.hidden = false;
+          return;
+        }
+        const found = accounts.find(
+          (a) => a.tabNum && a.tabNum.trim().toLowerCase() === query
+        );
+        if (!found) {
+          loginError.textContent = `Аккаунт с табельным № «${rawQuery}» не найден. Проверьте номер или создайте профиль во вкладке «Создать аккаунт».`;
+          loginError.hidden = false;
+          return;
+        }
+        const hash = await hashWorkerPass(pass);
+        if (hash !== found.passHash) {
+          loginError.textContent = `Неверный пароль для табельного № «${found.tabNum}». Проверьте раскладку или Caps Lock и попробуйте ещё раз.`;
+          loginError.hidden = false;
+          return;
+        }
+        setActiveAccountId(found.id);
+        loginForm.reset();
+        loginError.hidden = true;
+        refreshAllAfterAccountChange();
+        dialog.close();
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Войти в личный кабинет";
+        }
+      }
     });
 
     saveProfBtn.addEventListener("click", () => {

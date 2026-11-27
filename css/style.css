@@ -2552,9 +2552,14 @@ body {
 }
 
 .acc-error {
-  color: var(--accent);
-  font-size: 0.82rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 9px 11px;
+  color: #b91c1c;
+  font-size: 0.84rem;
   font-weight: 600;
+  line-height: 1.4;
 }
 
 .acc-saved-list {
@@ -3163,4 +3168,24 @@ body {
   .dialog-header h3 {
     font-size: 0.94rem;
   }
+}
+
+/* Подсказка в окне SOS про звонок по клику */
+.sos-hint-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+  border-radius: 9px;
+  padding: 9px 11px;
+  margin-bottom: 10px;
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.sos-hint-banner svg {
+  flex-shrink: 0;
+  color: var(--accent);
 }

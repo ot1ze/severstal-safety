@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=22">
+  <link rel="stylesheet" href="css/style.css?v=24">
 </head>
 <body>
   <!-- Шапка с матовым стеклом и чёткими SVG-иконками -->
@@ -664,8 +664,8 @@
                 <input type="text" id="adminAccName" required placeholder="ФИО">
               </label>
               <label class="fb-label">
-                <span>Табельный №</span>
-                <input type="text" id="adminAccTab" placeholder="№">
+                <span>Табельный № *</span>
+                <input type="text" id="adminAccTab" required placeholder="Уникальный таб. №">
               </label>
             </div>
             <div class="protocol-form-row">
@@ -725,8 +725,8 @@
             <input type="text" id="accRegName" required placeholder="Например: Смирнов Алексей Петрович">
           </label>
           <label class="fb-label">
-            <span>Табельный номер</span>
-            <input type="text" id="accRegTabNum" placeholder="Например: 48291">
+            <span>Табельный номер *</span>
+            <input type="text" id="accRegTabNum" required placeholder="Например: 48291 (уникальный для входа)">
           </label>
           <label class="fb-label">
             <span>Ваша специальность (профессия) *</span>
@@ -736,7 +736,7 @@
             <span>Пароль или PIN для входа (от 4 символов) *</span>
             <input type="password" id="accRegPass" required minlength="4" placeholder="Минимум 4 символа">
           </label>
-          <div id="accRegError" class="acc-error" hidden></div>
+          <div id="accRegError" class="acc-error" role="alert" hidden></div>
           <button type="submit" class="btn btn-primary-sm" style="width: 100%; margin-top: 4px;">
             Создать аккаунт и открыть статус
           </button>
@@ -747,14 +747,14 @@
 
         <form id="accLoginForm" class="acc-form" hidden>
           <label class="fb-label">
-            <span>ФИО или табельный номер *</span>
-            <input type="text" id="accLoginId" required placeholder="Введите ФИО или таб. №">
+            <span>Табельный номер *</span>
+            <input type="text" id="accLoginId" required placeholder="Введите ваш табельный №">
           </label>
           <label class="fb-label">
             <span>Пароль / PIN *</span>
             <input type="password" id="accLoginPass" required placeholder="Введите пароль">
           </label>
-          <div id="accLoginError" class="acc-error" hidden></div>
+          <div id="accLoginError" class="acc-error" role="alert" hidden></div>
           <button type="submit" class="btn btn-primary-sm" style="width: 100%; margin-top: 4px;">
             Войти в личный кабинет
           </button>
@@ -803,7 +803,7 @@
     </div>
   </dialog>
 
-  <script src="js/data.js?v=23"></script>
-  <script src="js/app.js?v=23"></script>
+  <script src="js/data.js?v=24"></script>
+  <script src="js/app.js?v=24"></script>
 </body>
 </html>
