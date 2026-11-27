@@ -450,7 +450,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   aboutHideBtn.addEventListener("click", () => {
     aboutExpandedByUser = false;
-    renderAboutScreenState();
+    aboutFullScreen.classList.add("is-closing");
+    setTimeout(() => {
+      aboutFullScreen.classList.remove("is-closing");
+      renderAboutScreenState();
+    }, 220);
   });
 
   aboutScrollProfsBtn.addEventListener("click", () => {
@@ -2820,8 +2824,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ok) refreshAllAfterAccountChange();
   });
   const params = new URLSearchParams(window.location.search);
-  const startProfId = params.get("prof");
-  const startSec = params.get("sec") || "video";
+  const hashParams = new URLSearchParams(window.location.hash ? window.location.hash.replace(/^#/, "") : "");
+  const startProfId = params.get("prof") || hashParams.get("prof");
+  const startSec = params.get("sec") || hashParams.get("sec") || "video";
   if (startProfId) {
     const found = data.professions.find((p) => p.id === startProfId);
     if (found) {
@@ -2845,6 +2850,198 @@ document.addEventListener("DOMContentLoaded", () => {
   syncOfflineBanner();
   window.addEventListener("online", syncOfflineBanner);
   window.addEventListener("offline", syncOfflineBanner);
+
+  // Прямая ссылка на текущий раздел профессии (Deep Linking)
+  const copyDeepLinkBtn = document.getElementById("copyDeepLinkBtn");
+  if (copyDeepLinkBtn) {
+    copyDeepLinkBtn.addEventListener("click", async () => {
+      if (!currentProfession) return;
+      const url = `${window.location.origin}${window.location.pathname}?prof=${currentProfession.id}&sec=${currentSection}`;
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch {
+        const tmp = document.createElement("textarea");
+        tmp.value = url;
+        document.body.appendChild(tmp);
+        tmp.select();
+        document.execCommand("copy");
+        document.body.removeChild(tmp);
+      }
+      const prevText = copyDeepLinkBtn.innerHTML;
+      copyDeepLinkBtn.textContent = "✓ Скопировано";
+      setTimeout(() => {
+        copyDeepLinkBtn.innerHTML = prevText;
+      }, 1800);
+    });
+  }
+
+  // Глобальный мгновенный офлайн-поиск по всему порталу (Ctrl+K или /)
+  const openGlobalSearchBtn = document.getElementById("openGlobalSearchBtn");
+  const globalSearchDialog = document.getElementById("globalSearchDialog");
+  const closeGlobalSearchBtn = document.getElementById("closeGlobalSearchBtn");
+  const globalSearchInput = document.getElementById("globalSearchInput");
+  const globalSearchResults = document.getElementById("globalSearchResults");
+
+  function buildSearchIndex() {
+    const entries = [];
+    data.professions.forEach((p) => {
+      entries.push({
+        badge: `${p.title} · Профессия`,
+        title: `${p.title} (${p.department})`,
+        text: `${p.description} ${p.iotNumber}`,
+        action: () => openProfession(p, "video")
+      });
+      (p.ppe || []).forEach((item) => {
+        entries.push({
+          badge: `${p.title} · СИЗ`,
+          title: item,
+          text: item,
+          action: () => openProfession(p, "ppe")
+        });
+      });
+      (p.ppeDetails || []).forEach((d) => {
+        entries.push({
+          badge: `${p.title} · СИЗ`,
+          title: d.item,
+          text: `${d.why} Без СИЗ: ${d.riskWithout}`,
+          action: () => openProfession(p, "ppe")
+        });
+      });
+      (p.risks || []).forEach((r) => {
+        entries.push({
+          badge: `${p.title} · Риски TOP-10`,
+          title: "Опасность из ИОТ",
+          text: r,
+          action: () => openProfession(p, "risks")
+        });
+      });
+      (p.forbidden || []).forEach((f) => {
+        entries.push({
+          badge: `${p.title} · Запреты`,
+          title: "Категорически запрещено",
+          text: f,
+          action: () => openProfession(p, "risks")
+        });
+      });
+      (p.mistakes || []).forEach((m) => {
+        entries.push({
+          badge: `${p.title} · Ошибки`,
+          title: m.action,
+          text: `Последствие: ${m.consequence}`,
+          action: () => openProfession(p, "mistakes")
+        });
+      });
+      (p.emergencyCases || []).forEach((ec) => {
+        entries.push({
+          badge: `${p.title} · Аварии и ЧС`,
+          title: ec.title,
+          text: ec.steps.join(" "),
+          action: () => openProfession(p, "emergency")
+        });
+      });
+    });
+
+    (data.glossary || []).forEach((g) => {
+      entries.push({
+        badge: "Глоссарий",
+        title: g.term,
+        text: g.desc,
+        action: () => {
+          openGlossaryModal();
+          glossarySearch.value = g.term;
+          renderGlossary(g.term);
+        }
+      });
+    });
+
+    (data.sosGuide.firstAid || []).forEach((fa) => {
+      entries.push({
+        badge: "SOS · Первая помощь",
+        title: fa.title,
+        text: fa.text,
+        action: () => openSosModal()
+      });
+    });
+
+    return entries;
+  }
+
+  let cachedSearchIndex = null;
+
+  function highlightMatch(text, q) {
+    const safe = String(text || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    if (!q) return safe;
+    const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return safe.replace(new RegExp(`(${escaped})`, "gi"), "<mark>$1</mark>");
+  }
+
+  function renderGlobalSearchResults(rawQuery = "") {
+    if (!globalSearchResults) return;
+    if (!cachedSearchIndex) cachedSearchIndex = buildSearchIndex();
+    const q = rawQuery.trim().toLowerCase();
+
+    if (!q) {
+      globalSearchResults.innerHTML =
+        '<p class="muted" style="font-size:0.86rem;">Введите слово для поиска по всем профессиям, СИЗ, рискам, ЧС, ошибкам, глоссарию и первой помощи. Например: <em>ожог</em>, <em>газ</em>, <em>каска</em>, <em>перчатки</em>.</p>';
+      return;
+    }
+
+    const matches = cachedSearchIndex
+      .filter((e) => e.title.toLowerCase().includes(q) || e.text.toLowerCase().includes(q) || e.badge.toLowerCase().includes(q))
+      .slice(0, 20);
+
+    if (!matches.length) {
+      globalSearchResults.innerHTML = '<p class="muted">По этому запросу ничего не найдено.</p>';
+      return;
+    }
+
+    globalSearchResults.innerHTML = "";
+    matches.forEach((m) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "global-search-item";
+      btn.innerHTML = `
+        <div class="global-search-top">
+          <span class="global-search-title">${highlightMatch(m.title, rawQuery.trim())}</span>
+          <span class="global-search-badge">${m.badge}</span>
+        </div>
+        <div class="global-search-snippet">${highlightMatch(m.text, rawQuery.trim())}</div>
+      `;
+      btn.addEventListener("click", () => {
+        globalSearchDialog.close();
+        m.action();
+      });
+      globalSearchResults.appendChild(btn);
+    });
+  }
+
+  function openGlobalSearch() {
+    if (!globalSearchDialog) return;
+    globalSearchInput.value = "";
+    renderGlobalSearchResults("");
+    globalSearchDialog.showModal();
+    setTimeout(() => globalSearchInput.focus(), 40);
+  }
+
+  if (openGlobalSearchBtn && globalSearchDialog) {
+    openGlobalSearchBtn.addEventListener("click", openGlobalSearch);
+    closeGlobalSearchBtn.addEventListener("click", () => globalSearchDialog.close());
+    globalSearchDialog.addEventListener("click", (e) => {
+      if (e.target === globalSearchDialog) globalSearchDialog.close();
+    });
+    globalSearchInput.addEventListener("input", (e) => renderGlobalSearchResults(e.target.value));
+    document.addEventListener("keydown", (e) => {
+      const tag = (e.target && e.target.tagName) || "";
+      const isTyping = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        openGlobalSearch();
+      } else if (!isTyping && e.key === "/" && !document.querySelector("dialog[open]")) {
+        e.preventDefault();
+        openGlobalSearch();
+      }
+    });
+  }
 
   if ("serviceWorker" in navigator && (window.location.protocol === "https:" || window.location.hostname === "localhost")) {
     navigator.serviceWorker.register("./sw.js").catch(() => {});

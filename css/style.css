@@ -4154,6 +4154,91 @@ body {
   transform-origin: top center;
 }
 
+@keyframes aboutCollapseOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.985);
+  }
+}
+
+.about-full-card.is-closing {
+  animation: aboutCollapseOut 0.22s ease forwards !important;
+  pointer-events: none;
+}
+
+/* =========================================================
+   v40: Глобальный поиск (Command Palette)
+   ========================================================= */
+.btn-search-ico {
+  padding: 7px 10px;
+}
+
+.global-search-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
+.global-search-item {
+  width: 100%;
+  text-align: left;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.global-search-item:hover {
+  background: #eef4ff;
+  border-color: var(--primary);
+}
+
+.global-search-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.global-search-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: #dbeafe;
+  padding: 2px 8px;
+  border-radius: 5px;
+}
+
+.global-search-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.global-search-snippet {
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.global-search-snippet mark {
+  background: #fef08a;
+  color: #0f172a;
+  padding: 0 2px;
+  border-radius: 3px;
+}
+
 .sidebar-group-label {
   font-size: 0.68rem;
   font-weight: 800;

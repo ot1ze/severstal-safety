@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=39">
+  <link rel="stylesheet" href="css/style.css?v=40">
 </head>
 <body>
   <!-- Шапка с матовым стеклом и чёткими SVG-иконками -->
@@ -30,6 +30,9 @@
         <button type="button" id="openSosBtn" class="btn btn-sos" title="Экстренная помощь и телефоны">
           <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           <span>SOS</span>
+        </button>
+        <button type="button" id="openGlobalSearchBtn" class="btn btn-outline btn-search-ico" title="Быстрый поиск по инструкциям (Ctrl+K)" aria-label="Быстрый поиск">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </button>
         <button type="button" id="openJournalAllBtn" class="btn btn-outline" hidden>
           <span>Журнал</span>
@@ -286,6 +289,9 @@
           </button>
           <button type="button" id="restartProfOnboardingBtn" class="btn btn-secondary btn-sm" hidden title="Показать подсказки по разделам">
             ? Гид по профессии
+          </button>
+          <button type="button" id="copyDeepLinkBtn" class="btn btn-secondary btn-sm" title="Скопировать прямую ссылку на этот раздел">
+            &#128279; Ссылка
           </button>
         </div>
         <span id="profBadge" class="prof-badge"></span>
@@ -637,6 +643,18 @@
     <iframe id="pdfViewerFrame" class="pdf-iframe" src="" title="Просмотр PDF"></iframe>
   </dialog>
 
+  <!-- Модальное окно Глобального мгновенного поиска -->
+  <dialog id="globalSearchDialog" class="dialog dialog-wide">
+    <div class="dialog-header">
+      <h3>Быстрый поиск по всем инструкциям</h3>
+      <button type="button" id="closeGlobalSearchBtn" class="btn-close" aria-label="Закрыть">&times;</button>
+    </div>
+    <div class="dialog-search-wrap">
+      <input type="search" id="globalSearchInput" class="dialog-search" placeholder="Например: ожог, газ CO, каска, перчатки, кран...">
+    </div>
+    <div id="globalSearchResults" class="dialog-body global-search-list"></div>
+  </dialog>
+
   <!-- Модальное окно Глоссария -->
   <dialog id="glossaryDialog" class="dialog">
     <div class="dialog-header">
@@ -968,7 +986,7 @@
     </div>
   </dialog>
 
-  <script src="js/data.js?v=39"></script>
-  <script src="js/app.js?v=39"></script>
+  <script src="js/data.js?v=40"></script>
+  <script src="js/app.js?v=40"></script>
 </body>
 </html>
