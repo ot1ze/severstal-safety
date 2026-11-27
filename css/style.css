@@ -4567,6 +4567,9 @@ html.workshop-mode .briefing-btn:not(.active),
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    min-height: 52px;
+    padding: 12px 14px;
+    font-size: 0.94rem;
   }
 }
 
