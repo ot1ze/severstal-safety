@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=54">
+  <link rel="stylesheet" href="css/style.css?v=55">
 </head>
 <body>
   <!-- Шапка с матовым стеклом и чёткими SVG-иконками -->
@@ -95,8 +95,10 @@
         <button type="button" id="aboutTopOpenBtn" class="btn btn-secondary btn-sm">Зачем нужен сайт? &#9662;</button>
       </div>
 
-      <!-- Приветственный блок: по умолчанию свёрнут, открывается по кнопке сверху или из меню «Ещё» -->
-      <section id="aboutFullScreen" class="about-full-card" hidden>
+      <!-- Приветственный блок: плавный аккордеон (по умолчанию свёрнут) -->
+      <div id="aboutAccordionWrap" class="about-accordion-wrap">
+        <div class="about-accordion-inner">
+          <section id="aboutFullScreen" class="about-full-card">
         <div class="about-top-badges">
           <span class="about-student-badge">Тестовый студенческий проект (ЧГУ) • Прототип для ПАО «Северсталь»</span>
           <button type="button" id="aboutHideBtn" class="about-close-btn" hidden>Свернуть описание &times;</button>
@@ -162,6 +164,8 @@
           </div>
         </div>
       </section>
+      </div>
+      </div>
 
       <div class="split-hero">
         <div class="hero-main">
@@ -1008,7 +1012,7 @@
     </div>
   </dialog>
 
-  <script src="js/data.js?v=54"></script>
-  <script src="js/app.js?v=54"></script>
+  <script src="js/data.js?v=55"></script>
+  <script src="js/app.js?v=55"></script>
 </body>
 </html>

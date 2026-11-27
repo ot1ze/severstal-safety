@@ -424,11 +424,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const aboutTopStrip = document.getElementById("aboutTopStrip");
   const aboutTopOpenBtn = document.getElementById("aboutTopOpenBtn");
+  const aboutAccordionWrap = document.getElementById("aboutAccordionWrap");
   let aboutExpandedByUser = false;
 
   function renderAboutScreenState() {
     const acc = getActiveAccount();
-    aboutFullScreen.hidden = !aboutExpandedByUser;
+    if (aboutAccordionWrap) aboutAccordionWrap.classList.toggle("open", aboutExpandedByUser);
     if (aboutTopStrip) aboutTopStrip.hidden = false;
     if (aboutTopOpenBtn) {
       aboutTopOpenBtn.innerHTML = aboutExpandedByUser ? "Свернуть описание &#9652;" : "Зачем нужен сайт? &#9662;";
@@ -440,34 +441,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function openAboutPanelAnimated() {
     aboutExpandedByUser = true;
-    aboutFullScreen.style.maxHeight = "";
-    aboutFullScreen.classList.add("about-anim-hidden");
     renderAboutScreenState();
-    const targetH = aboutFullScreen.scrollHeight;
-    requestAnimationFrame(() => {
-      aboutFullScreen.style.maxHeight = `${targetH}px`;
-      aboutFullScreen.classList.remove("about-anim-hidden");
-      setTimeout(() => {
-        if (aboutExpandedByUser) aboutFullScreen.style.maxHeight = "none";
-      }, 290);
-    });
   }
 
   function closeAboutPanelAnimated() {
     aboutExpandedByUser = false;
-    if (aboutTopOpenBtn) aboutTopOpenBtn.innerHTML = "Зачем нужен сайт? &#9662;";
-    aboutFullScreen.style.maxHeight = `${aboutFullScreen.scrollHeight}px`;
-    requestAnimationFrame(() => {
-      aboutFullScreen.style.maxHeight = "";
-      aboutFullScreen.classList.add("about-anim-hidden");
-      setTimeout(() => {
-        if (!aboutExpandedByUser) {
-          aboutFullScreen.classList.remove("about-anim-hidden");
-          aboutFullScreen.style.maxHeight = "";
-          renderAboutScreenState();
-        }
-      }, 280);
-    });
+    renderAboutScreenState();
   }
 
   if (aboutTopOpenBtn) {
