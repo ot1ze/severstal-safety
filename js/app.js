@@ -804,7 +804,7 @@ document.addEventListener("DOMContentLoaded", () => {
     dashChecksCount.textContent = `${status.doneChecks} / ${status.totalChecks}`;
     dashJournalCount.textContent = String(status.myProtocols);
     dashIotCode.textContent = status.prof.iotNumber;
-    dashIotPages.textContent = `${status.prof.iotPages} стр. ИОТ`;
+    dashIotPages.textContent = "Актуальная ИОТ";
   }
 
   // Полоса фильтров TOP-10 рисков
@@ -939,7 +939,7 @@ document.addEventListener("DOMContentLoaded", () => {
         : "";
       const rightMeta = isMine
         ? `Чек: ${chkDone}/${prof.checklist.length}`
-        : `${prof.iotPages} стр. оригинала`;
+        : "Инструкция ИОТ";
       const visual = getProfVisual(prof.id);
 
       const card = document.createElement("button");
@@ -979,7 +979,7 @@ document.addEventListener("DOMContentLoaded", () => {
     currentBriefing = data.briefingTypes[0];
 
     profBadge.textContent = prof.department;
-    profIotBadge.textContent = `На базе ${prof.iotNumber} (${prof.iotPages} стр. оригинала)`;
+    profIotBadge.textContent = `На базе ${prof.iotNumber}`;
     profHeaderEmblem.className = `prof-header-emblem prof-theme-${prof.id}`;
     profHeaderEmblem.innerHTML = getProfVisual(prof.id).svg;
     profHeaderSceneImg.src = `media/professions/${prof.id}.webp`;
