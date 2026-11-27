@@ -2,15 +2,15 @@
 // Кэширует интерфейс, данные инструкций, картинки СИЗ и QR-коды.
 // Тяжёлые видео и PDF не кэшируются заранее, чтобы не перегружать память телефона.
 
-const CACHE_NAME = "severstal-ot-v51";
+const CACHE_NAME = "severstal-ot-v52";
 
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./css/style.css?v=51",
-  "./js/data.js?v=51",
-  "./js/app.js?v=51",
+  "./css/style.css?v=52",
+  "./js/data.js?v=52",
+  "./js/app.js?v=52",
   "./media/brand/logo_color.png",
   "./media/brand/symbol_red.png",
   "./media/brand/app_icon_192.png",
