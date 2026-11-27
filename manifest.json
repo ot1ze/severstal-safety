@@ -1,0 +1,22 @@
+{
+  "name": "Инструктажи по ОТ - ПАО «Северсталь»",
+  "short_name": "ОТ Северсталь",
+  "description": "Цифровая медиатека инструктажей по охране труда и SOS-памятка с поддержкой автономной работы",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#002f6c",
+  "icons": [
+    {
+      "src": "media/brand/symbol_red.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "media/brand/symbol_red.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

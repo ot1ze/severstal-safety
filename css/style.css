@@ -4043,3 +4043,22 @@ body {
   font-weight: 700;
   color: var(--primary);
 }
+
+/* =========================================================
+   v33: Индикатор автономного (офлайн) режима PWA
+   ========================================================= */
+.offline-banner {
+  background: #fef3c7;
+  color: #78350f;
+  border-bottom: 1px solid #f59e0b;
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+@media print {
+  .offline-banner {
+    display: none !important;
+  }
+}

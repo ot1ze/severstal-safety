@@ -2828,4 +2828,17 @@ document.addEventListener("DOMContentLoaded", () => {
       history.replaceState({ screen: "home" }, "", window.location.pathname);
     } catch {}
   }
+
+  // Автономный режим PWA: индикатор офлайна и регистрация Service Worker
+  const offlineBanner = document.getElementById("offlineBanner");
+  function syncOfflineBanner() {
+    if (offlineBanner) offlineBanner.hidden = navigator.onLine !== false;
+  }
+  syncOfflineBanner();
+  window.addEventListener("online", syncOfflineBanner);
+  window.addEventListener("offline", syncOfflineBanner);
+
+  if ("serviceWorker" in navigator && (window.location.protocol === "https:" || window.location.hostname === "localhost")) {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  }
 });
