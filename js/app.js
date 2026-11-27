@@ -1183,7 +1183,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (currentBriefing.id === "vvodny") {
       briefingStatusPill.textContent = "Видеоролик доступен";
-      const videoSrc = "media/videos/vvodny.mp4?v=30";
+      const videoSrc = "media/videos/vvodny.mp4?v=44";
       if (briefingVideo.getAttribute("src") !== videoSrc) {
         briefingVideo.setAttribute("src", videoSrc);
         briefingVideo.load();
