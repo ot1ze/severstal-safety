@@ -141,7 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const backToHomeBtn = document.getElementById("backToHomeBtn");
   const profBadge = document.getElementById("profBadge");
   const profIotBadge = document.getElementById("profIotBadge");
-  const profHeaderImg = document.getElementById("profHeaderImg");
+  const profHeaderEmblem = document.getElementById("profHeaderEmblem");
   const profTitle = document.getElementById("profTitle");
   const profDesc = document.getElementById("profDesc");
   const briefingButtons = document.getElementById("briefingButtons");
@@ -346,6 +346,72 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   heroQuickSosBtn.addEventListener("click", openSosModal);
 
+  // Минималистичные SVG-эмблемы и акценты для каждой профессии (чтобы карточки сразу различались)
+  const PROFESSION_VISUALS = {
+    steelmaker: {
+      tag: "Расплав 1600 °C",
+      sub: "Конвертер и ковш",
+      svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 7h10l-1.5 7.5a3 3 0 0 1-3 2.5H8.5a3 3 0 0 1-3-2.5L4 7z"/>
+        <path d="M15 8h2.5a2 2 0 0 1 0 4H14.2"/>
+        <path d="M9.5 17v3"/>
+        <path d="M18.5 14c1.3 1.5 2 2.7 2 3.8a2 2 0 1 1-4 0c0-1.1.7-2.3 2-3.8z"/>
+        <path d="M8 3.5c0 .9.8 1.2.8 2M11 3c0 .9.8 1.2.8 2"/>
+      </svg>`
+    },
+    roller: {
+      tag: "Прокатный стан",
+      sub: "Валки и стальная полоса",
+      svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="7" r="3.5"/>
+        <circle cx="12" cy="17" r="3.5"/>
+        <line x1="2.5" y1="12" x2="21.5" y2="12"/>
+        <polyline points="18.5 9.5 21.5 12 18.5 14.5"/>
+      </svg>`
+    },
+    mechanic: {
+      tag: "Механизмы и ГПМ",
+      sub: "Монтаж и LOTO",
+      svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+      </svg>`
+    },
+    blast_furnace: {
+      tag: "Доменная печь • CO",
+      sub: "Выпуск чугуна и шлака",
+      svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 3h6l2 8 1.5 9h-13L7 11l2-8z"/>
+        <line x1="7" y1="11" x2="17" y2="11"/>
+        <path d="M12 14.5c1.2 1.2 1.8 2.2 1.8 3.2a1.8 1.8 0 1 1-3.6 0c0-1 .6-2 1.8-3.2z"/>
+        <path d="M7.5 5.5H4.5V9"/>
+      </svg>`
+    },
+    electrician: {
+      tag: "Электроустановки",
+      sub: "До и свыше 1000 В",
+      svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <polygon points="13 7 8.5 13 12 13 11 17 15.5 11 12 11 13 7"/>
+      </svg>`
+    },
+    belaz: {
+      tag: "Карьерный самосвал",
+      sub: "БелАЗ 130+ т",
+      svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 7h11l2 5h4.5a1.5 1.5 0 0 1 1.5 1.5V16h-2"/>
+        <path d="M3 7l1.2 9h3.3"/>
+        <path d="M11.5 16h5"/>
+        <path d="M15 9.5h3.5l1.5 2.5"/>
+        <circle cx="7.5" cy="17.5" r="2.5"/>
+        <circle cx="17.5" cy="17.5" r="2.5"/>
+      </svg>`
+    }
+  };
+
+  function getProfVisual(profId) {
+    return PROFESSION_VISUALS[profId] || PROFESSION_VISUALS.mechanic;
+  }
+
   // 1. Отрисовка информативных карточек профессий (поиск + фильтр рисков)
   function renderProfessions(filter = "") {
     const q = filter.trim().toLowerCase();
@@ -379,12 +445,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const rightMeta = isMine
         ? `Чек: ${chkDone}/${prof.checklist.length}`
         : `${prof.iotPages} стр. оригинала`;
+      const visual = getProfVisual(prof.id);
 
       const card = document.createElement("button");
       card.type = "button";
       card.className = `prof-card${isMine ? " prof-card-mine" : ""}`;
       card.innerHTML = `
-        <img class="prof-card-img" src="media/professions/${prof.id}.webp" alt="${prof.title}">
+        <div class="prof-card-cover prof-theme-${prof.id}" aria-hidden="true">
+          <div class="prof-emblem-box">${visual.svg}</div>
+          <div class="prof-cover-meta">
+            <span class="prof-cover-tag">${visual.tag}</span>
+            <span class="prof-cover-sub">${visual.sub}</span>
+          </div>
+        </div>
         <div class="prof-card-top">
           <span class="prof-card-dept">${prof.department}</span>
           ${statusBadges ? `<div style="display:flex;gap:4px;flex-wrap:wrap;">${statusBadges}</div>` : ""}
@@ -412,8 +485,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     profBadge.textContent = prof.department;
     profIotBadge.textContent = `На базе ${prof.iotNumber} (${prof.iotPages} стр. оригинала)`;
-    profHeaderImg.src = `media/professions_square/${prof.id}.webp`;
-    profHeaderImg.alt = prof.title;
+    profHeaderEmblem.className = `prof-header-emblem prof-theme-${prof.id}`;
+    profHeaderEmblem.innerHTML = getProfVisual(prof.id).svg;
     profTitle.textContent = prof.title;
     profDesc.textContent = prof.description;
 

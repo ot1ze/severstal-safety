@@ -2758,3 +2758,150 @@ body {
   flex-wrap: wrap;
   gap: 6px;
 }
+
+/* =========================================================
+   v19: Минималистичные SVG-эмблемы профессий вместо одинаковых картинок
+   ========================================================= */
+.prof-card-cover {
+  position: relative;
+  height: 112px;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  background: var(--prof-bg, linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%));
+}
+
+.prof-card-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(15, 23, 42, 0.06) 1px, transparent 1px);
+  background-size: 14px 14px;
+  pointer-events: none;
+}
+
+.prof-emblem-box {
+  position: relative;
+  z-index: 1;
+  width: 62px;
+  height: 62px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--prof-accent, var(--primary));
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.prof-card:hover .prof-emblem-box {
+  transform: scale(1.06);
+}
+
+.prof-emblem-box svg {
+  width: 34px;
+  height: 34px;
+}
+
+.prof-cover-meta {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  gap: 4px;
+}
+
+.prof-cover-tag {
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--prof-accent, var(--primary));
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.prof-cover-sub {
+  font-size: 0.73rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.prof-header-emblem {
+  width: 68px;
+  height: 68px;
+  border-radius: 14px;
+  background: var(--prof-bg, #f8fafc);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  color: var(--prof-accent, var(--primary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.prof-header-emblem svg {
+  width: 36px;
+  height: 36px;
+}
+
+/* Цветовые акценты под каждую специальность */
+.prof-theme-steelmaker {
+  --prof-accent: #dc2626;
+  --prof-bg: linear-gradient(135deg, #fff5f5 0%, #ffe4e6 100%);
+}
+
+.prof-theme-roller {
+  --prof-accent: #0284c7;
+  --prof-bg: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+.prof-theme-mechanic {
+  --prof-accent: #0f766e;
+  --prof-bg: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+}
+
+.prof-theme-blast_furnace {
+  --prof-accent: #c2410c;
+  --prof-bg: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+}
+
+.prof-theme-electrician {
+  --prof-accent: #4f46e5;
+  --prof-bg: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+}
+
+.prof-theme-belaz {
+  --prof-accent: #b45309;
+  --prof-bg: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);
+}
+
+@media (max-width: 600px) {
+  .prof-card-cover {
+    height: 98px;
+    padding: 10px 12px;
+  }
+  .prof-emblem-box {
+    width: 54px;
+    height: 54px;
+  }
+  .prof-emblem-box svg {
+    width: 30px;
+    height: 30px;
+  }
+  .prof-header-emblem {
+    width: 58px;
+    height: 58px;
+  }
+}
