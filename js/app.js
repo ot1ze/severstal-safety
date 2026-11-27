@@ -2840,4 +2840,46 @@ document.addEventListener("DOMContentLoaded", () => {
   if ("serviceWorker" in navigator && (window.location.protocol === "https:" || window.location.hostname === "localhost")) {
     navigator.serviceWorker.register("./sw.js").catch(() => {});
   }
+
+  // Установка PWA «Добавить на главный экран» в меню «Ещё»
+  const moreInstallPwaBtn = document.getElementById("moreInstallPwaBtn");
+  let deferredInstallPrompt = null;
+  const isStandalonePwa =
+    window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+
+  if (moreInstallPwaBtn && isStandalonePwa) {
+    moreInstallPwaBtn.hidden = true;
+  }
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    if (moreInstallPwaBtn) moreInstallPwaBtn.hidden = false;
+  });
+
+  window.addEventListener("appinstalled", () => {
+    deferredInstallPrompt = null;
+    if (moreInstallPwaBtn) moreInstallPwaBtn.hidden = true;
+  });
+
+  if (moreInstallPwaBtn) {
+    moreInstallPwaBtn.addEventListener("click", async () => {
+      closeMoreMenu();
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const choice = await deferredInstallPrompt.userChoice;
+        if (choice && choice.outcome === "accepted") {
+          moreInstallPwaBtn.hidden = true;
+        }
+        deferredInstallPrompt = null;
+        return;
+      }
+      const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      if (isIos) {
+        alert("Чтобы добавить на главный экран iPhone/iPad: нажмите «Поделиться» (квадрат со стрелкой вверх) и выберите «На экран «Домой»».");
+      } else {
+        alert("Чтобы установить приложение на телефон: откройте меню браузера (⋮) и выберите «Добавить на главный экран» или «Установить приложение».");
+      }
+    });
+  }
 });
