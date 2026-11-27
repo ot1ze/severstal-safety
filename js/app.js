@@ -3384,6 +3384,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Режим «В цеху»: высокий контраст и крупный шрифт
   const WORKSHOP_MODE_KEY = "severstal_workshop_mode";
   const toggleWorkshopModeBtn = document.getElementById("toggleWorkshopModeBtn");
+  const moreWorkshopModeBtn = document.getElementById("moreWorkshopModeBtn");
 
   function applyWorkshopMode(enabled) {
     document.documentElement.classList.toggle("workshop-mode", enabled);
@@ -3391,6 +3392,17 @@ document.addEventListener("DOMContentLoaded", () => {
       toggleWorkshopModeBtn.classList.toggle("btn-workshop-active", enabled);
       toggleWorkshopModeBtn.setAttribute("aria-pressed", String(enabled));
     }
+    if (moreWorkshopModeBtn) {
+      moreWorkshopModeBtn.textContent = enabled ? "Режим в цеху: Вкл" : "Режим в цеху: Выкл";
+    }
+  }
+
+  function toggleWorkshopMode() {
+    const next = !document.documentElement.classList.contains("workshop-mode");
+    applyWorkshopMode(next);
+    try {
+      localStorage.setItem(WORKSHOP_MODE_KEY, next ? "1" : "0");
+    } catch {}
   }
 
   try {
@@ -3398,12 +3410,12 @@ document.addEventListener("DOMContentLoaded", () => {
   } catch {}
 
   if (toggleWorkshopModeBtn) {
-    toggleWorkshopModeBtn.addEventListener("click", () => {
-      const next = !document.documentElement.classList.contains("workshop-mode");
-      applyWorkshopMode(next);
-      try {
-        localStorage.setItem(WORKSHOP_MODE_KEY, next ? "1" : "0");
-      } catch {}
+    toggleWorkshopModeBtn.addEventListener("click", toggleWorkshopMode);
+  }
+  if (moreWorkshopModeBtn) {
+    moreWorkshopModeBtn.addEventListener("click", () => {
+      closeMoreMenu();
+      toggleWorkshopMode();
     });
   }
 });
