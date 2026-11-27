@@ -3409,16 +3409,16 @@ body {
    v27: Полноэкранный блок «Зачем нужен этот сайт» (Welcome Screen)
    ========================================================= */
 .about-full-card {
-  min-height: calc(100vh - 96px);
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 20px;
+  justify-content: flex-start;
+  gap: 16px;
   background: linear-gradient(145deg, #001f47 0%, #002f6c 55%, #0a4694 100%);
   color: #ffffff;
   border-radius: 10px;
-  padding: 28px 26px;
-  margin-bottom: 22px;
+  padding: 22px 24px;
+  margin-bottom: 16px;
   box-shadow: 0 18px 42px rgba(0, 47, 108, 0.22);
   border: 1px solid rgba(255, 255, 255, 0.14);
 }

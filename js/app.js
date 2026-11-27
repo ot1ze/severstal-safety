@@ -434,7 +434,7 @@ document.addEventListener("DOMContentLoaded", () => {
       aboutTopOpenBtn.innerHTML = aboutExpandedByUser ? "Свернуть описание &#9652;" : "Зачем нужен сайт? &#9662;";
     }
     aboutCompactSlot.hidden = true;
-    aboutHideBtn.hidden = false;
+    aboutHideBtn.hidden = true;
     aboutAccountCtaBox.hidden = Boolean(acc);
   }
 
