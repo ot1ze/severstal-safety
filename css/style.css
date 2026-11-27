@@ -4447,21 +4447,28 @@ html.workshop-mode .briefing-btn:not(.active),
 }
 
 .ppe-opt-photo {
-  height: 100px;
+  height: 168px;
   border-radius: 6px;
   background: #ffffff;
   border: 1px solid var(--border);
-  padding: 6px;
+  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
 }
 
+@media (max-width: 720px) {
+  .ppe-opt-photo {
+    height: 145px;
+  }
+}
+
 .ppe-opt-photo img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  object-position: center;
 }
 
 .ppe-opt-stub {
