@@ -1914,9 +1914,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   glossarySearch.addEventListener("input", (e) => renderGlossary(e.target.value));
-  const footerGlossaryBtn = document.getElementById("footerGlossaryBtn");
-  if (footerGlossaryBtn) footerGlossaryBtn.addEventListener("click", openGlossaryModal);
-
   // Выпадающее меню «Ещё» в шапке (для компактности на телефоне и быстрого доступа)
   const openMoreMenuBtn = document.getElementById("openMoreMenuBtn");
   const headerMoreMenu = document.getElementById("headerMoreMenu");
