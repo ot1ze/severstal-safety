@@ -60,6 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const sideButtons = document.querySelectorAll(".side-btn");
   const sidebarNav = document.getElementById("sidebarNav");
   const openDrawerBtn = document.getElementById("openDrawerBtn");
+  const headerDrawerBtn = document.getElementById("headerDrawerBtn");
   const closeDrawerBtn = document.getElementById("closeDrawerBtn");
   const drawerBackdrop = document.getElementById("drawerBackdrop");
   const mobileCurrentSectionLabel = document.getElementById("mobileCurrentSectionLabel");
@@ -192,6 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     homeScreen.hidden = true;
     professionScreen.hidden = false;
+    headerDrawerBtn.hidden = false;
 
     switchSection(section, false);
     renderBriefingButtons();
@@ -215,6 +217,8 @@ document.addEventListener("DOMContentLoaded", () => {
     briefingVideo.pause();
     professionScreen.hidden = true;
     homeScreen.hidden = false;
+    headerDrawerBtn.hidden = true;
+    closeDrawer();
     currentProfession = null;
     renderProfessions(profSearchInput.value);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -269,6 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   openDrawerBtn.addEventListener("click", openDrawer);
+  headerDrawerBtn.addEventListener("click", openDrawer);
   closeDrawerBtn.addEventListener("click", closeDrawer);
   drawerBackdrop.addEventListener("click", closeDrawer);
 
