@@ -261,7 +261,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const aboutShowBtn = document.getElementById("aboutShowBtn");
 
   const profOnboardingSlot = document.getElementById("profOnboardingSlot");
-  const profOnboardingArchive = document.getElementById("profOnboardingArchive");
   const profOnbStepPill = document.getElementById("profOnbStepPill");
   const profOnbTitle = document.getElementById("profOnbTitle");
   const profOnbDesc = document.getElementById("profOnbDesc");
@@ -683,7 +682,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const acc = getActiveAccount();
     if (!acc || professionScreen.hidden) {
       profOnboardingSlot.hidden = true;
-      profOnboardingArchive.hidden = true;
+      restartProfOnboardingBtn.hidden = true;
       return;
     }
 
@@ -691,11 +690,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (progress.profOnboardingDone) {
       profOnboardingSlot.hidden = true;
-      profOnboardingArchive.hidden = false;
+      restartProfOnboardingBtn.hidden = false;
       return;
     }
 
-    profOnboardingArchive.hidden = true;
+    restartProfOnboardingBtn.hidden = true;
     profOnboardingSlot.hidden = false;
 
     const total = PROF_ONBOARDING_STEPS.length;
@@ -1018,7 +1017,7 @@ document.addEventListener("DOMContentLoaded", () => {
     closeDrawer();
     clearOnboardingHighlight();
     profOnboardingSlot.hidden = true;
-    profOnboardingArchive.hidden = true;
+    restartProfOnboardingBtn.hidden = true;
     currentProfession = null;
     renderProfessions(profSearchInput.value);
     renderOnboardingState();

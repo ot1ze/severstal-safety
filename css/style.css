@@ -4057,6 +4057,13 @@ body {
   text-align: center;
 }
 
+.top-nav-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 @media print {
   .offline-banner {
     display: none !important;

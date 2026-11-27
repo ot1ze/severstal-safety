@@ -272,9 +272,14 @@
     <!-- ЭКРАН 2: Профессия с левым боковым меню -->
     <section id="professionScreen" class="screen fade-in" hidden>
       <div class="top-nav">
-        <button type="button" id="backToHomeBtn" class="btn btn-secondary btn-back">
-          &larr; Все профессии
-        </button>
+        <div class="top-nav-left">
+          <button type="button" id="backToHomeBtn" class="btn btn-secondary btn-back">
+            &larr; Все профессии
+          </button>
+          <button type="button" id="restartProfOnboardingBtn" class="btn btn-secondary btn-sm" hidden title="Показать подсказки по разделам">
+            ? Гид по профессии
+          </button>
+        </div>
         <span id="profBadge" class="prof-badge"></span>
       </div>
 
@@ -578,15 +583,6 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Архивная плашка гида внутри специальности (переезжает вниз после прохождения) -->
-      <div id="profOnboardingArchive" class="onboarding-archive-bar" hidden>
-        <div>
-          <strong>Навигация по профессии:</strong>
-          Вы уже прошли гид по разделам. Можно повторно посмотреть подсказки по кнопкам.
-        </div>
-        <button type="button" id="restartProfOnboardingBtn" class="btn btn-secondary btn-sm">Повторить гид по профессии</button>
       </div>
     </section>
   </main>
