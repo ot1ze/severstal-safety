@@ -422,21 +422,24 @@ document.addEventListener("DOMContentLoaded", () => {
     if (currentProfession) renderProfOnboardingState();
   }
 
+  const aboutTopStrip = document.getElementById("aboutTopStrip");
+  const aboutTopOpenBtn = document.getElementById("aboutTopOpenBtn");
   let aboutExpandedByUser = false;
 
   function renderAboutScreenState() {
     const acc = getActiveAccount();
-    if (!acc) {
-      aboutFullScreen.hidden = false;
-      aboutAccountCtaBox.hidden = false;
-      aboutHideBtn.hidden = true;
-      aboutCompactSlot.hidden = true;
-    } else {
-      aboutAccountCtaBox.hidden = true;
-      aboutHideBtn.hidden = false;
-      aboutFullScreen.hidden = !aboutExpandedByUser;
-      aboutCompactSlot.hidden = true;
-    }
+    aboutFullScreen.hidden = !aboutExpandedByUser;
+    if (aboutTopStrip) aboutTopStrip.hidden = aboutExpandedByUser;
+    aboutCompactSlot.hidden = true;
+    aboutHideBtn.hidden = false;
+    aboutAccountCtaBox.hidden = Boolean(acc);
+  }
+
+  if (aboutTopOpenBtn) {
+    aboutTopOpenBtn.addEventListener("click", () => {
+      aboutExpandedByUser = true;
+      renderAboutScreenState();
+    });
   }
 
   aboutShowBtn.addEventListener("click", () => {
@@ -485,7 +488,7 @@ document.addEventListener("DOMContentLoaded", () => {
       targetSelector: "#professionsGrid",
       pointerText: "↓ Откройте профессию",
       title: "Карточки профессий и разделы внутри",
-      desc: "Внутри специальности слева открывается меню: видеоролик, обязательные СИЗ, риски, ошибки, ЧС, чек-лист смены, плакат А4, тест (15 вопросов) и официальные PDF.",
+      desc: "Внутри специальности слева открывается меню: видеоролик, обязательные СИЗ, риски, ошибки, ЧС, чек-лист смены, плакат (A3/A4/A5), тест (18 заданий: 15 вопросов + 3 кейса) и официальные PDF.",
       hint: "Подсвечен каталог профессий ↓"
     }
   ];
@@ -556,17 +559,12 @@ document.addEventListener("DOMContentLoaded", () => {
     onbPointerEl.hidden = true;
   }
 
+  let manualHomeOnboardingOpen = false;
+
   function renderOnboardingState(shouldScroll = false) {
-    const acc = getActiveAccount();
     clearOnboardingHighlight();
 
-    if (!acc || homeScreen.hidden) {
-      onboardingTopSlot.hidden = true;
-      onboardingArchiveSlot.hidden = true;
-      return;
-    }
-
-    if (progress.onboardingDone) {
+    if (homeScreen.hidden || !manualHomeOnboardingOpen) {
       onboardingTopSlot.hidden = true;
       onboardingArchiveSlot.hidden = true;
       return;
@@ -607,6 +605,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function finishOnboarding() {
+    manualHomeOnboardingOpen = false;
     const acc = getActiveAccount();
     if (acc) {
       progress.onboardingDone = true;
@@ -635,10 +634,7 @@ document.addEventListener("DOMContentLoaded", () => {
   onbSkipBtn.addEventListener("click", finishOnboarding);
 
   restartOnboardingBtn.addEventListener("click", () => {
-    const acc = getActiveAccount();
-    if (!acc) return;
-    progress.onboardingDone = false;
-    saveProgress();
+    manualHomeOnboardingOpen = true;
     onbStepIndex = 0;
     renderOnboardingState(true);
   });
@@ -657,7 +653,7 @@ document.addEventListener("DOMContentLoaded", () => {
         window.innerWidth <= 820 ? document.querySelector(".mobile-drawer-bar") : document.getElementById("sidebarNav"),
       pointerText: "↓ Меню всех разделов",
       title: "2. Меню разделов профессии",
-      desc: "Внутри меню собрано всё: видео, обязательные СИЗ с фото, риски и запреты, частые ошибки, 6 аварий/ЧС, чек-лист смены, плакат А4 (QR), тест (15 вопросов) и официальные PDF.",
+      desc: "Внутри меню собрано всё: видео, обязательные СИЗ с фото, риски и запреты, частые ошибки, 6 аварий/ЧС, чек-лист смены, плакат (A3/A4/A5), тест (18 заданий: 15 вопросов + 3 кейса) и официальные PDF.",
       hint: "Подсвечено меню разделов ↓"
     },
     {
@@ -677,10 +673,10 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
 
   let profOnbStepIndex = 0;
+  let manualProfOnboardingOpen = false;
 
   function renderProfOnboardingState(shouldScroll = false) {
-    const acc = getActiveAccount();
-    if (!acc || professionScreen.hidden) {
+    if (professionScreen.hidden) {
       profOnboardingSlot.hidden = true;
       restartProfOnboardingBtn.hidden = true;
       return;
@@ -688,7 +684,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     clearOnboardingHighlight();
 
-    if (progress.profOnboardingDone) {
+    if (!manualProfOnboardingOpen) {
       profOnboardingSlot.hidden = true;
       restartProfOnboardingBtn.hidden = false;
       return;
@@ -729,6 +725,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function finishProfOnboarding() {
+    manualProfOnboardingOpen = false;
     const acc = getActiveAccount();
     if (acc) {
       progress.profOnboardingDone = true;
@@ -757,10 +754,7 @@ document.addEventListener("DOMContentLoaded", () => {
   profOnbSkipBtn.addEventListener("click", finishProfOnboarding);
 
   restartProfOnboardingBtn.addEventListener("click", () => {
-    const acc = getActiveAccount();
-    if (!acc) return;
-    progress.profOnboardingDone = false;
-    saveProgress();
+    manualProfOnboardingOpen = true;
     profOnbStepIndex = 0;
     renderProfOnboardingState(true);
   });
@@ -1731,7 +1725,7 @@ document.addEventListener("DOMContentLoaded", () => {
     openMoreMenuBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       const willOpen = headerMoreMenu.hidden;
-      if (moreOnboardingBtn) moreOnboardingBtn.hidden = !getActiveAccount();
+      if (moreOnboardingBtn) moreOnboardingBtn.hidden = false;
       headerMoreMenu.hidden = !willOpen;
       openMoreMenuBtn.setAttribute("aria-expanded", String(willOpen));
     });
@@ -1867,7 +1861,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const items = getJournalHistory();
     if (!items.length) {
       journalAllBody.innerHTML =
-        '<p class="muted">Записей пока нет. Откройте любую профессию &rarr; «Тест (15) и журнал» &rarr; «Сформировать протокол».</p>';
+        '<p class="muted">Записей пока нет. Откройте любую профессию &rarr; «Тест (18) и журнал» &rarr; «Сформировать протокол».</p>';
       return;
     }
     journalAllBody.innerHTML = `

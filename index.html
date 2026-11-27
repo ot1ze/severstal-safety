@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=34">
+  <link rel="stylesheet" href="css/style.css?v=38">
 </head>
 <body>
   <!-- Шапка с матовым стеклом и чёткими SVG-иконками -->
@@ -45,7 +45,7 @@
             <button type="button" id="moreJournalBtn" class="more-menu-item">Журнал инструктажей</button>
             <button type="button" id="moreMasterBtn" class="more-menu-item">Памятка мастеру</button>
             <button type="button" id="moreGlossaryBtn" class="more-menu-item">Глоссарий терминов</button>
-            <button type="button" id="moreOnboardingBtn" class="more-menu-item" hidden>Гид по сайту</button>
+            <button type="button" id="moreOnboardingBtn" class="more-menu-item">Гид по сайту</button>
             <button type="button" id="moreAboutBtn" class="more-menu-item">Зачем нужен сайт</button>
             <button type="button" id="moreInstallPwaBtn" class="more-menu-item">Добавить на главный экран</button>
           </div>
@@ -82,11 +82,17 @@
         </div>
       </div>
 
-      <!-- Полноэкранный приветственный блок: зачем нужен сайт, функционал и вход в аккаунт -->
-      <section id="aboutFullScreen" class="about-full-card">
+      <!-- Компактная строка о проекте сверху: не мешает выбору профессий, разворачивает описание по клику -->
+      <div id="aboutTopStrip" class="about-top-strip">
+        <span><strong>Студенческий проект ЧГУ &bull; ПАО «Северсталь»:</strong> цифровая шпаргалка и проверка знаний по ОТ</span>
+        <button type="button" id="aboutTopOpenBtn" class="btn btn-secondary btn-sm">Зачем нужен сайт? &#9662;</button>
+      </div>
+
+      <!-- Приветственный блок: по умолчанию свёрнут, открывается по кнопке сверху или из меню «Ещё» -->
+      <section id="aboutFullScreen" class="about-full-card" hidden>
         <div class="about-top-badges">
           <span class="about-student-badge">Тестовый студенческий проект (ЧГУ) • Прототип для ПАО «Северсталь»</span>
-          <button type="button" id="aboutHideBtn" class="about-close-btn" hidden>Свернуть описание &times;</button>
+          <button type="button" id="aboutHideBtn" class="about-close-btn">Свернуть описание &times;</button>
         </div>
 
         <div>
@@ -111,8 +117,8 @@
               <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
             </div>
             <div>
-              <strong>Чек-лист смены, тест и плакат А4</strong>
-              <span>Самопроверка перед сменой, экзамен из 15 вопросов и готовый плакат с QR-кодом для печати в цех.</span>
+              <strong>Чек-лист смены, тест и плакат</strong>
+              <span>Самопроверка перед сменой, тест из 18 заданий (15 вопросов + 3 кейса) и готовый плакат (A3/A4/A5) с QR-кодом.</span>
             </div>
           </div>
           <div class="about-feature-card">
@@ -958,7 +964,7 @@
     </div>
   </dialog>
 
-  <script src="js/data.js?v=34"></script>
-  <script src="js/app.js?v=34"></script>
+  <script src="js/data.js?v=38"></script>
+  <script src="js/app.js?v=38"></script>
 </body>
 </html>

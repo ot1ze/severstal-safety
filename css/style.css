@@ -4076,6 +4076,65 @@ body {
   border-color: var(--primary);
 }
 
+/* =========================================================
+   v38: Компактная плашка «Зачем нужен сайт» и разгрузка первого экрана
+   ========================================================= */
+.about-top-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  font-size: 0.83rem;
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.about-top-strip strong {
+  color: var(--primary);
+}
+
+.about-top-strip .btn {
+  flex-shrink: 0;
+}
+
+.split-hero {
+  margin-bottom: 14px;
+}
+
+@media (min-width: 821px) {
+  .split-hero {
+    padding: 18px 22px;
+  }
+  .split-hero h1 {
+    font-size: 1.48rem;
+  }
+  .hero-lead {
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .about-top-strip {
+    font-size: 0.78rem;
+    padding: 8px 10px;
+  }
+  .split-hero {
+    padding: 14px 14px;
+    margin-bottom: 12px;
+  }
+  .split-hero h1 {
+    font-size: 1.24rem;
+  }
+}
+
 @media print {
   .offline-banner {
     display: none !important;
