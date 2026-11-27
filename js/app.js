@@ -116,6 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const heroLoginAccBtn = document.getElementById("heroLoginAccBtn");
 
   const dashProfTitle = document.getElementById("dashProfTitle");
+  const dashProfThumb = document.getElementById("dashProfThumb");
   const dashWorkerMeta = document.getElementById("dashWorkerMeta");
   const dashReadyBadge = document.getElementById("dashReadyBadge");
   const dashProgressFill = document.getElementById("dashProgressFill");
@@ -142,6 +143,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const profBadge = document.getElementById("profBadge");
   const profIotBadge = document.getElementById("profIotBadge");
   const profHeaderEmblem = document.getElementById("profHeaderEmblem");
+  const profHeaderSceneBtn = document.getElementById("profHeaderSceneBtn");
+  const profHeaderSceneImg = document.getElementById("profHeaderSceneImg");
+  const ppeShowcaseBox = document.getElementById("ppeShowcaseBox");
   const profTitle = document.getElementById("profTitle");
   const profDesc = document.getElementById("profDesc");
   const briefingButtons = document.getElementById("briefingButtons");
@@ -302,6 +306,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const status = computeAccountStatus(acc);
     dashProfTitle.textContent = status.prof.title;
+    dashProfThumb.src = `media/professions_square/${status.prof.id}.webp`;
+    dashProfThumb.alt = status.prof.title;
+    dashProfThumb.hidden = false;
     dashWorkerMeta.textContent = acc.tabNum ? `${acc.fullName} • Таб. №${acc.tabNum}` : acc.fullName;
     dashReadyBadge.textContent = `${status.pct}%`;
     dashProgressFill.style.width = `${status.pct}%`;
@@ -487,6 +494,8 @@ document.addEventListener("DOMContentLoaded", () => {
     profIotBadge.textContent = `На базе ${prof.iotNumber} (${prof.iotPages} стр. оригинала)`;
     profHeaderEmblem.className = `prof-header-emblem prof-theme-${prof.id}`;
     profHeaderEmblem.innerHTML = getProfVisual(prof.id).svg;
+    profHeaderSceneImg.src = `media/professions/${prof.id}.webp`;
+    profHeaderSceneImg.alt = `${prof.title} — схема рабочего места`;
     profTitle.textContent = prof.title;
     profDesc.textContent = prof.description;
 
@@ -678,8 +687,26 @@ document.addEventListener("DOMContentLoaded", () => {
     renderQuiz(currentProfession.quiz);
   }
 
-  // Вкладка СИЗ с зумом
+  // Вкладка СИЗ с зумом (включая обзорную иллюстрацию рабочего в экипировке)
   function renderPpeTab() {
+    const sqPath = `media/professions_square/${currentProfession.id}.webp`;
+    ppeShowcaseBox.innerHTML = `
+      <img src="${sqPath}" alt="${currentProfession.title} — экипировка" class="ppe-showcase-img">
+      <div class="ppe-showcase-text">
+        <h4>Экипировка и рабочая зона: ${currentProfession.title}</h4>
+        <p>Полный комплект СИЗ по ${currentProfession.iotNumber} (${currentProfession.ppe.length} обязательные позиции). Нажмите на иллюстрацию, чтобы приблизить детали.</p>
+      </div>
+    `;
+    const showcaseImg = ppeShowcaseBox.querySelector("img");
+    if (showcaseImg) {
+      showcaseImg.addEventListener("click", () => {
+        zoomImage.src = showcaseImg.src;
+        zoomImage.alt = showcaseImg.alt;
+        zoomCaption.textContent = `${currentProfession.title} — экипировка`;
+        imageZoomDialog.showModal();
+      });
+    }
+
     ppeTabCards.innerHTML = currentProfession.ppe
       .map((item, idx) => {
         const conseq = currentProfession.ppeConsequences[idx];
@@ -706,6 +733,14 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
   }
+
+  profHeaderSceneBtn.addEventListener("click", () => {
+    if (!currentProfession || !profHeaderSceneImg.getAttribute("src")) return;
+    zoomImage.src = profHeaderSceneImg.src;
+    zoomImage.alt = profHeaderSceneImg.alt;
+    zoomCaption.textContent = `${currentProfession.title} — схема рабочего места`;
+    imageZoomDialog.showModal();
+  });
 
   closeZoomBtn.addEventListener("click", () => imageZoomDialog.close());
   imageZoomDialog.addEventListener("click", (e) => {
@@ -1034,17 +1069,24 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === masterDialog) masterDialog.close();
   });
 
-  // SOS-модалка
+  // SOS-модалка (с кликабельными tel:-ссылками для звонка в 1 нажатие)
   function openSosModal() {
     const phonesHtml = data.sosGuide.phones
-      .map(
-        (p) => `
-      <div class="sos-phone-card">
+      .map((p) => {
+        const cleanTel = p.tel || String(p.number || "").replace(/[^+\d]/g, "");
+        return `
+      <a href="tel:${cleanTel}" class="sos-phone-card sos-phone-link" title="Позвонить: ${p.number}">
         <div style="font-size:0.78rem; color:var(--muted);">${p.name}</div>
-        <div class="sos-phone-num">${p.number}</div>
-      </div>
-    `
-      )
+        <div class="sos-phone-call-row">
+          <span class="sos-phone-num mono">${p.number}</span>
+          <span class="sos-call-pill">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            Вызов
+          </span>
+        </div>
+      </a>
+    `;
+      })
       .join("");
 
     const cardsHtml = data.sosGuide.cards
