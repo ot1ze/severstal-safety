@@ -1,10 +1,13 @@
-// Основная логика веб-приложения ПАО «Северсталь»
+// Основная логика веб-приложения ПАО «Северсталь» (v12)
 
 document.addEventListener("DOMContentLoaded", () => {
   const data = window.SAFETY_DATA;
   const STORAGE_KEY = "severstal_safety_progress_v1";
   const JOURNAL_KEY = "severstal_demo_journal_v1";
   const FEEDBACK_KEY = "severstal_demo_feedback_v1";
+  const DOCS_UNLOCK_KEY = "severstal_docs_unlocked_v1";
+  // Пароль для просмотра/скачивания PDF (141otz141) — проверяется по SHA-256
+  const SHARED_PASS_HASH = "ec95e177f99cec044567e838340bae7a4c89371963d7c72bb9b3a48b3bf0ac04";
 
   let progress = loadProgress();
 
@@ -20,6 +23,16 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
     } catch {}
+  }
+
+  async function sha256(str) {
+    if (window.crypto && window.crypto.subtle) {
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+    }
+    return str === "141otz141" ? SHARED_PASS_HASH : "";
   }
 
   // Элементы экранов и поиска
@@ -43,15 +56,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const briefingSummary = document.getElementById("briefingSummary");
   const briefingFocusBox = document.getElementById("briefingFocusBox");
 
-  // Элементы вкладок
-  const tabButtons = document.querySelectorAll(".tab-btn");
-  const tabPanels = {
-    video: document.getElementById("tabPanelVideo"),
-    infographic: document.getElementById("tabPanelInfographic"),
-    ppe: document.getElementById("tabPanelPpe"),
-    emergency: document.getElementById("tabPanelEmergency"),
-    quiz: document.getElementById("tabPanelQuiz")
+  // Левое боковое меню и панели разделов
+  const sideButtons = document.querySelectorAll(".side-btn");
+  const sectionPanels = {
+    video: document.getElementById("secPanelVideo"),
+    ppe: document.getElementById("secPanelPpe"),
+    risks: document.getElementById("secPanelRisks"),
+    mistakes: document.getElementById("secPanelMistakes"),
+    emergency: document.getElementById("secPanelEmergency"),
+    checklist: document.getElementById("secPanelChecklist"),
+    poster: document.getElementById("secPanelPoster"),
+    quiz: document.getElementById("secPanelQuiz"),
+    docs: document.getElementById("secPanelDocs")
   };
+
   const videoPlayerWrap = document.getElementById("videoPlayerWrap");
   const videoPlaceholderWrap = document.getElementById("videoPlaceholderWrap");
   const briefingVideo = document.getElementById("briefingVideo");
@@ -64,9 +82,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const emergencyCasesList = document.getElementById("emergencyCasesList");
   const checklistItems = document.getElementById("checklistItems");
   const checklistProgress = document.getElementById("checklistProgress");
+  const sidebarCheckBadge = document.getElementById("sidebarCheckBadge");
   const quizContainer = document.getElementById("quizContainer");
   const resetQuizBtn = document.getElementById("resetQuizBtn");
   const docsDownloadList = document.getElementById("docsDownloadList");
+
+  // Элементы замка и просмотрщика PDF
+  const docsLockBox = document.getElementById("docsLockBox");
+  const docsUnlockedBox = document.getElementById("docsUnlockedBox");
+  const docsPassInput = document.getElementById("docsPassInput");
+  const docsUnlockBtn = document.getElementById("docsUnlockBtn");
+  const docsPassError = document.getElementById("docsPassError");
+  const docsLockAgainBtn = document.getElementById("docsLockAgainBtn");
+  const pdfViewerDialog = document.getElementById("pdfViewerDialog");
+  const pdfViewerTitle = document.getElementById("pdfViewerTitle");
+  const pdfViewerFrame = document.getElementById("pdfViewerFrame");
+  const pdfOpenTabLink = document.getElementById("pdfOpenTabLink");
+  const pdfDownloadLink = document.getElementById("pdfDownloadLink");
+  const closePdfViewerBtn = document.getElementById("closePdfViewerBtn");
 
   // Модальные окна
   const glossaryDialog = document.getElementById("glossaryDialog");
@@ -99,6 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let currentProfession = null;
   let currentBriefing = data.briefingTypes[0];
+  let currentSection = "video";
 
   // 1. Отрисовка карточек профессий с живым поиском
   function renderProfessions(filter = "") {
@@ -132,15 +166,15 @@ document.addEventListener("DOMContentLoaded", () => {
         <span class="prof-card-desc">${prof.description}</span>
         <span class="prof-card-cta">Открыть инструктаж &rarr;</span>
       `;
-      card.addEventListener("click", () => openProfession(prof));
+      card.addEventListener("click", () => openProfession(prof, "video", true));
       professionsGrid.appendChild(card);
     });
   }
 
   profSearchInput.addEventListener("input", (e) => renderProfessions(e.target.value));
 
-  // 2. Открытие экрана конкретной профессии
-  function openProfession(prof) {
+  // 2. Открытие профессии (с поддержкой кнопки «Назад» через History API)
+  function openProfession(prof, section = "video", pushHistory = true) {
     currentProfession = prof;
     currentBriefing = data.briefingTypes[0];
 
@@ -154,18 +188,99 @@ document.addEventListener("DOMContentLoaded", () => {
     homeScreen.hidden = true;
     professionScreen.hidden = false;
 
-    switchTab("video");
-
+    switchSection(section, false);
     renderBriefingButtons();
     renderBriefingContent();
     renderPoster();
     renderPpeTab();
     renderEmergencyCases();
-    renderDocs();
+    renderDocsState();
+
+    if (pushHistory) {
+      try {
+        history.pushState({ screen: "prof", profId: prof.id, section }, "", `?prof=${prof.id}`);
+      } catch {}
+    }
+
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  // 3. 5 кнопок видов инструктажей
+  // Возврат на главную (визуально)
+  function showHomeScreen() {
+    briefingVideo.pause();
+    professionScreen.hidden = true;
+    homeScreen.hidden = false;
+    currentProfession = null;
+    renderProfessions(profSearchInput.value);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // Кнопка "Все профессии" и логотип
+  function goHome(pushHistory = true) {
+    if (pushHistory && !professionScreen.hidden) {
+      try {
+        history.pushState({ screen: "home" }, "", window.location.pathname);
+      } catch {}
+    }
+    showHomeScreen();
+  }
+
+  backToHomeBtn.addEventListener("click", () => goHome(true));
+  document.getElementById("brandHomeBtn").addEventListener("click", () => goHome(true));
+
+  // Обработка системной кнопки «Назад» в браузере / на телефоне
+  window.addEventListener("popstate", (e) => {
+    const state = e.state;
+    const params = new URLSearchParams(window.location.search);
+    const profId = (state && state.profId) || params.get("prof");
+
+    if (profId) {
+      const found = data.professions.find((p) => p.id === profId);
+      if (found) {
+        if (!currentProfession || currentProfession.id !== found.id) {
+          openProfession(found, (state && state.section) || "video", false);
+        } else if (state && state.section) {
+          switchSection(state.section, false);
+        }
+        return;
+      }
+    }
+    showHomeScreen();
+  });
+
+  // 3. Переключение разделов левого бокового меню
+  function switchSection(target, pushHistory = true) {
+    currentSection = target;
+    if (target !== "video") {
+      briefingVideo.pause();
+    }
+    sideButtons.forEach((b) => {
+      const isActive = b.dataset.section === target;
+      b.classList.toggle("active", isActive);
+      b.setAttribute("aria-selected", String(isActive));
+    });
+    Object.keys(sectionPanels).forEach((key) => {
+      const active = key === target;
+      sectionPanels[key].hidden = !active;
+      sectionPanels[key].classList.toggle("active", active);
+    });
+
+    if (pushHistory && currentProfession) {
+      try {
+        history.pushState(
+          { screen: "prof", profId: currentProfession.id, section: target },
+          "",
+          `?prof=${currentProfession.id}&sec=${target}`
+        );
+      } catch {}
+    }
+  }
+
+  sideButtons.forEach((btn) => {
+    btn.addEventListener("click", () => switchSection(btn.dataset.section, true));
+  });
+
+  // 4. 5 кнопок видов инструктажей
   function renderBriefingButtons() {
     briefingButtons.innerHTML = "";
     data.briefingTypes.forEach((bType) => {
@@ -182,7 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 4. Заполнение контента выбранного инструктажа
+  // 5. Заполнение контента выбранного инструктажа
   function renderBriefingContent() {
     metaPeriod.textContent = currentBriefing.period;
     metaInstructor.textContent = currentBriefing.instructor;
@@ -213,7 +328,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     document.getElementById("risksList").innerHTML = currentProfession.risks.map((r) => `<li>${r}</li>`).join("");
-    document.getElementById("ppeList").innerHTML = currentProfession.ppe.map((p) => `<li>${p}</li>`).join("");
     document.getElementById("forbiddenList").innerHTML = currentProfession.forbidden.map((f) => `<li>${f}</li>`).join("");
     document.getElementById("emergencyList").innerHTML = currentProfession.emergency.map((e) => `<li>${e}</li>`).join("");
 
@@ -223,17 +337,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="consequence-card">
         <div class="consequence-action">&#10060; Ошибка: ${m.action}</div>
         <div class="consequence-result">&rarr; <strong>Последствие:</strong> ${m.consequence}</div>
-      </div>
-    `
-      )
-      .join("");
-
-    document.getElementById("ppeConsequencesList").innerHTML = currentProfession.ppeConsequences
-      .map(
-        (c) => `
-      <div class="consequence-card">
-        <div class="consequence-action">&#9888; ${c.item}</div>
-        <div class="consequence-result">&rarr; <strong>Последствие:</strong> ${c.consequence}</div>
       </div>
     `
       )
@@ -277,7 +380,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === imageZoomDialog) imageZoomDialog.close();
   });
 
-  // Вкладка Аварии / ЧС (6 подробных кейсов)
+  // Аварии / ЧС (6 подробных кейсов)
   function renderEmergencyCases() {
     const cases = currentProfession.emergencies || [];
     emergencyCasesList.innerHTML = cases
@@ -319,6 +422,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     checklistProgress.textContent = `${checkedCount} / ${total}`;
+    sidebarCheckBadge.textContent = `${checkedCount}/${total}`;
   }
 
   function updateChecklistCounter() {
@@ -328,6 +432,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (progress.checks[`${currentProfession.id}_${idx}`]) checkedCount++;
     });
     checklistProgress.textContent = `${checkedCount} / ${total}`;
+    sidebarCheckBadge.textContent = `${checkedCount}/${total}`;
   }
 
   // Плакат А4 с QR-кодом
@@ -380,22 +485,97 @@ document.addEventListener("DOMContentLoaded", () => {
 
   printPosterBtn.addEventListener("click", () => window.print());
 
-  // Кнопки скачивания PDF-инструкций
-  function renderDocs() {
+  // Раздел PDF с защитой паролем и встроенным просмотром без скачивания
+  function isDocsUnlocked() {
+    try {
+      return sessionStorage.getItem(DOCS_UNLOCK_KEY) === "1";
+    } catch {
+      return false;
+    }
+  }
+
+  function renderDocsState() {
+    const unlocked = isDocsUnlocked();
+    docsLockBox.hidden = unlocked;
+    docsUnlockedBox.hidden = !unlocked;
+    docsPassError.hidden = true;
+    if (unlocked) {
+      renderDocsList();
+    }
+  }
+
+  function renderDocsList() {
     const docs = currentProfession.docs || [];
     docsDownloadList.innerHTML = docs
       .map(
-        (d) => `
-      <a class="doc-download-btn" href="${d.file}" download target="_blank" rel="noopener">
-        <span>&#128229; ${d.title}</span>
-        <span class="doc-size-tag">${d.size}</span>
-      </a>
+        (d, idx) => `
+      <div class="doc-card-row">
+        <div class="doc-card-top">
+          <span>&#128196; ${d.title}</span>
+          <span class="doc-size-tag">${d.size}</span>
+        </div>
+        <div class="doc-card-actions">
+          <button type="button" class="btn btn-primary-sm doc-view-btn" data-doc-idx="${idx}">
+            &#128065; Открыть на сайте
+          </button>
+          <a class="btn btn-secondary btn-sm" href="${d.file}" download style="text-decoration:none;">
+            &#128229; Скачать PDF
+          </a>
+        </div>
+      </div>
     `
       )
       .join("");
+
+    docsDownloadList.querySelectorAll(".doc-view-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const doc = docs[Number(btn.dataset.docIdx)];
+        if (!doc) return;
+        pdfViewerTitle.textContent = doc.title;
+        pdfViewerFrame.src = doc.file;
+        pdfOpenTabLink.href = doc.file;
+        pdfDownloadLink.href = doc.file;
+        pdfViewerDialog.showModal();
+      });
+    });
   }
 
-  // 5. Тест (15 вопросов, зачёт от 80%)
+  docsUnlockBtn.addEventListener("click", async () => {
+    const hash = await sha256(docsPassInput.value);
+    if (hash === SHARED_PASS_HASH) {
+      try {
+        sessionStorage.setItem(DOCS_UNLOCK_KEY, "1");
+      } catch {}
+      docsPassInput.value = "";
+      renderDocsState();
+    } else {
+      docsPassError.hidden = false;
+    }
+  });
+
+  docsPassInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") docsUnlockBtn.click();
+  });
+
+  docsLockAgainBtn.addEventListener("click", () => {
+    try {
+      sessionStorage.removeItem(DOCS_UNLOCK_KEY);
+    } catch {}
+    renderDocsState();
+  });
+
+  closePdfViewerBtn.addEventListener("click", () => {
+    pdfViewerFrame.src = "";
+    pdfViewerDialog.close();
+  });
+  pdfViewerDialog.addEventListener("click", (e) => {
+    if (e.target === pdfViewerDialog) {
+      pdfViewerFrame.src = "";
+      pdfViewerDialog.close();
+    }
+  });
+
+  // Тест (15 вопросов)
   function renderQuiz(questions) {
     quizContainer.innerHTML = "";
     let answered = 0;
@@ -452,34 +632,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (currentProfession) renderQuiz(currentProfession.quiz);
   });
 
-  // 6. Переключение вкладок
-  function switchTab(target) {
-    tabButtons.forEach((b) => {
-      const isActive = b.dataset.tab === target;
-      b.classList.toggle("active", isActive);
-      b.setAttribute("aria-selected", String(isActive));
-    });
-    Object.keys(tabPanels).forEach((key) => {
-      tabPanels[key].hidden = key !== target;
-    });
-  }
-
-  tabButtons.forEach((btn) => {
-    btn.addEventListener("click", () => switchTab(btn.dataset.tab));
-  });
-
-  // Возврат на главную
-  function goHome() {
-    briefingVideo.pause();
-    professionScreen.hidden = true;
-    homeScreen.hidden = false;
-    renderProfessions(profSearchInput.value);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-  backToHomeBtn.addEventListener("click", goHome);
-  document.getElementById("brandHomeBtn").addEventListener("click", goHome);
-
-  // 7. Глоссарий с поиском
+  // Глоссарий
   function renderGlossary(filter = "") {
     const q = filter.trim().toLowerCase();
     const items = data.glossary.filter(
@@ -510,7 +663,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === glossaryDialog) glossaryDialog.close();
   });
 
-  // 8. Памятка мастеру
+  // Памятка мастеру
   masterGuideList.innerHTML = data.masterGuide
     .map(
       (m) => `
@@ -528,7 +681,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === masterDialog) masterDialog.close();
   });
 
-  // 9. Экстренная памятка SOS
+  // SOS-модалка
   function openSosModal() {
     const phonesHtml = data.sosGuide.phones
       .map(
@@ -568,7 +721,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === sosDialog) sosDialog.close();
   });
 
-  // 10. Сводный Электронный журнал из шапки
+  // Сводный Электронный журнал
   function getJournalHistory() {
     try {
       return JSON.parse(localStorage.getItem(JOURNAL_KEY)) || [];
@@ -581,7 +734,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const items = getJournalHistory();
     if (!items.length) {
       journalAllBody.innerHTML =
-        '<p class="muted">Записей пока нет. Откройте любую профессию &rarr; вкладка «Тест (15)» &rarr; «Сформировать протокол».</p>';
+        '<p class="muted">Записей пока нет. Откройте любую профессию &rarr; «Тест (15) и журнал» &rarr; «Сформировать протокол».</p>';
       return;
     }
     journalAllBody.innerHTML = `
@@ -631,7 +784,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderAllJournal();
   });
 
-  // 11. Демо-протокол из вкладки Тест
+  // Демо-протокол из раздела Тест
   (function initProtocolDialog() {
     const openBtn = document.getElementById("openProtocolBtn");
     const closeBtn = document.getElementById("closeProtocolBtn");
@@ -720,13 +873,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   })();
 
-  // 12. Обратная связь (1-5 звёзд) + Панель разработчика (ot1ze) + Google Таблица
+  // Обратная связь + Панель разработчика (ot1ze)
   (function initFeedback() {
-    // Сюда позже вставь ссылку своего Google Apps Script (см. ГАЙД_ОТЗЫВЫ_GOOGLE_ТАБЛИЦА.md), чтобы отзывы летели с любых телефонов
     const GOOGLE_SCRIPT_URL = "";
     const AUTH_USER = "ot1ze";
-    // SHA-256 хэш пароля 141otz141 (чтобы пароль не лежал открытым текстом в коде)
-    const AUTH_PASS_HASH = "ec95e177f99cec044567e838340bae7a4c89371963d7c72bb9b3a48b3bf0ac04";
 
     const dialog = document.getElementById("feedbackDialog");
     const openBtns = [document.getElementById("openFeedbackBtn"), document.getElementById("footerFeedbackBtn")];
@@ -757,16 +907,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let selectedRating = 0;
     let cachedReviews = [];
 
-    async function sha256(str) {
-      if (window.crypto && window.crypto.subtle) {
-        const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
-        return Array.from(new Uint8Array(buf))
-          .map((b) => b.toString(16).padStart(2, "0"))
-          .join("");
-      }
-      return str === "141otz141" ? AUTH_PASS_HASH : "";
-    }
-
     function getLocalReviews() {
       try {
         return JSON.parse(localStorage.getItem(FEEDBACK_KEY) || "[]");
@@ -781,9 +921,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
           const res = await fetch(GOOGLE_SCRIPT_URL);
           const remote = await res.json();
-          if (Array.isArray(remote)) {
-            list = remote;
-          }
+          if (Array.isArray(remote)) list = remote;
         } catch {}
       }
       cachedReviews = list;
@@ -906,7 +1044,7 @@ document.addEventListener("DOMContentLoaded", () => {
     devLoginBtn.addEventListener("click", async () => {
       const login = devLoginInput.value.trim();
       const passHash = await sha256(devPassInput.value);
-      if (login === AUTH_USER && passHash === AUTH_PASS_HASH) {
+      if (login === AUTH_USER && passHash === SHARED_PASS_HASH) {
         devLoginError.hidden = true;
         userPane.hidden = true;
         adminPane.hidden = false;
@@ -935,12 +1073,23 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   })();
 
-  // Старт приложения + поддержка прямой ссылки по QR-коду (?prof=steelmaker)
+  // Старт приложения + инициализация History API и QR-ссылок (?prof=...&sec=...)
   renderProfessions();
   const params = new URLSearchParams(window.location.search);
   const startProfId = params.get("prof");
+  const startSec = params.get("sec") || "video";
   if (startProfId) {
     const found = data.professions.find((p) => p.id === startProfId);
-    if (found) openProfession(found);
+    if (found) {
+      try {
+        history.replaceState({ screen: "home" }, "", window.location.pathname);
+        history.pushState({ screen: "prof", profId: found.id, section: startSec }, "", `?prof=${found.id}`);
+      } catch {}
+      openProfession(found, startSec, false);
+    }
+  } else {
+    try {
+      history.replaceState({ screen: "home" }, "", window.location.pathname);
+    } catch {}
   }
 });
