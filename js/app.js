@@ -1284,7 +1284,7 @@ document.addEventListener("DOMContentLoaded", () => {
       indexedOpts.sort(() => Math.random() - 0.5);
 
       indexedOpts.forEach((opt) => {
-        const imgPath = `media/ppe_trainer/${currentProfession.id}_${tIdx + 1}_${opt.origIdx + 1}.webp`;
+        const imgPath = `media/ppe_trainer/${currentProfession.id}_${tIdx + 1}_${opt.origIdx + 1}.webp?v=45`;
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "ppe-opt-card";
